@@ -2,7 +2,7 @@
 	"name": "zokugun-folding",
 	"displayName": "Zokugun Folding",
 	"description": "Customize your folding",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"publisher": "zokugun",
 	"homepage": "https://github.com/zokugun/vscode-folding",
 	"repository": {
@@ -26,6 +26,18 @@
 	"activationEvents": [
 		"*"
 	],
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "The folding configuration",
+			"properties": {
+				"folding": {
+					"type": "object",
+					"description": "The folding configuration"
+				}
+			}
+		}
+	},
 	"main": "./out/extension",
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
