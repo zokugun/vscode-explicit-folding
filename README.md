@@ -5,24 +5,10 @@ Zokugun Folding
 
 Customize you folding!
 
-## Configuration
+## Moving Notice
 
-In your Settings
-```
-"folding": {
-    "*": {
-        "start": "\\{\\{\\{",
-        "end": "\\}\\}\\}"
-    },
-    "typescript": {
-        "start": "#region",
-        "end": "#endregion"
-    }
-}
-```
+[The extension is moving.](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
 
-## Known Issues
+Please uninstall this extension and install the newer version ;)
 
-- It's unable to remove existing folding
-
-**Enjoy!**
+Sorry for the trouble.
