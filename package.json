@@ -2,15 +2,15 @@
 	"name": "explicit-folding",
 	"displayName": "Explicit Folding",
 	"description": "Manually controls how and where to fold your code",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"publisher": "zokugun",
-	"homepage": "https://github.com/zokugun/vscode-folding",
+	"homepage": "https://github.com/zokugun/vscode-explicit-folding",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/zokugun/vscode-folding.git"
+		"url": "https://github.com/zokugun/vscode-explicit-folding.git"
 	},
 	"bugs": {
-		"url": "https://github.com/zokugun/vscode-folding/issues"
+		"url": "https://github.com/zokugun/vscode-explicit-folding/issues"
 	},
 	"author": {
 		"name": "Baptiste Augrain",

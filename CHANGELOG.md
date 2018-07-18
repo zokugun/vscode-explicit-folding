@@ -1,3 +1,6 @@
+## v0.2.1
+- rename repository
+
 ## v0.2.0
 - rename extension
 - support multiple markers for a language
