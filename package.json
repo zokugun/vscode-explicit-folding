@@ -1,8 +1,8 @@
 {
-	"name": "zokugun-folding",
-	"displayName": "Zokugun Folding",
-	"description": "Customize your folding",
-	"version": "0.1.1",
+	"name": "explicit-folding",
+	"displayName": "Explicit Folding",
+	"description": "Manually controls how and where to fold your code",
+	"version": "0.2.0",
 	"publisher": "zokugun",
 	"homepage": "https://github.com/zokugun/vscode-folding",
 	"repository": {
@@ -29,11 +29,11 @@
 	"contributes": {
 		"configuration": {
 			"type": "object",
-			"title": "The folding configuration",
+			"title": "The Explicit Folding configuration",
 			"properties": {
 				"folding": {
 					"type": "object",
-					"description": "The folding configuration"
+					"description": "Markers that will determine the folding ranges."
 				}
 			}
 		}

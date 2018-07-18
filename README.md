@@ -1,9 +1,9 @@
-Zokugun Folding
+Explicit Folding
 ===============
 
 **Experimental**
 
-Customize you folding!
+Manually controls how and where to fold your code
 
 ## Configuration
 
@@ -11,13 +11,23 @@ In your Settings
 ```
 "folding": {
     "*": {
-        "start": "\\{\\{\\{",
+        "begin": "\\{\\{\\{",
         "end": "\\}\\}\\}"
     },
     "typescript": {
-        "start": "#region",
+        "begin": "#region",
         "end": "#endregion"
-    }
+    },
+    "javascriptreact": [
+        {
+            "begin": "\\{/\\*",
+            "end": "\\*/\\}"
+        },
+        {
+            "begin": "<",
+            "end": "/>"
+        }
+    ]
 }
 ```
 
