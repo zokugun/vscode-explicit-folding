@@ -1,3 +1,7 @@
+## v0.3.0
+- change configuration's properties `begin` and `end` as regular string (**not regex**)
+- add configuration's properties `beginRegex` and `endRegex` to be able to use **regex**
+
 ## v0.2.1
 - rename repository
 
