@@ -35,16 +35,19 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 	}
 
 	private addRegex(configuration: FoldingConfig) {
-		if (configuration.beginRegex && configuration.endRegex) {
-			this.regexes.push({
-				begin: new RegExp(configuration.beginRegex),
-				end: new RegExp(configuration.endRegex)
-			});
-		} else if (configuration.begin && configuration.end) {
-			this.regexes.push({
-				begin: new RegExp(escapeRegex(configuration.begin)),
-				end: new RegExp(escapeRegex(configuration.end))
-			});
+		try {
+			if (configuration.beginRegex && configuration.endRegex) {
+				this.regexes.push({
+					begin: new RegExp(configuration.beginRegex),
+					end: new RegExp(configuration.endRegex)
+				});
+			} else if (configuration.begin && configuration.end) {
+				this.regexes.push({
+					begin: new RegExp(escapeRegex(configuration.begin)),
+					end: new RegExp(escapeRegex(configuration.end))
+				});
+			}
+		} catch (err) {
 		}
 	}
 
