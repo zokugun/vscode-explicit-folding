@@ -1,5 +1,5 @@
-[Explicit Folding](https://github.com/zokugun/vscode-explicit-folding)
-======================================================================
+Explicit Folding
+================
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/zokugun.explicit-folding.svg)](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
