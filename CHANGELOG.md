@@ -1,3 +1,7 @@
+## v0.3.2
+- show message when the extension is updated
+- update dependencies due to security issue
+
 ## v0.3.1
 - catch error due to bad regexes
 
