@@ -30,6 +30,32 @@ In your Settings:
             "begin": "<",
             "end": "/>"
         }
+    ],
+    "php":[
+        {
+            "comment":"//"
+        },
+        {
+            "begin": "\/*",
+            "end": "*\/",
+            "offsetTop":1,
+        },
+        {
+            "begin":"<?",
+            "end":"?>"
+        },
+        {
+            "begin": "{",
+            "end": "}"
+        },
+        {
+            "begin": "[",
+            "end": "]"
+        },
+        {
+            "begin": "(",
+            "end": ")"
+        },
     ]
 }
 ```
@@ -55,7 +81,12 @@ or with **regex**:
             "begin": "<",
             "end": "/>"
         }
-    ]
+    ],
+    "php":{
+        "comment":"//",
+        "beginRegex": "\\(|\\[|\\{|\\<\\?",
+        "endRegex": "\\}|\\]|\\)|\\?\\>"
+    }
 }
 ```
 

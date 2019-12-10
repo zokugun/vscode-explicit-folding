@@ -4,15 +4,22 @@ type FoldingConfig = {
 	begin?: string,
 	end?: string,
 	beginRegex?: string,
-	endRegex?: string
+	endRegex?: string,
+	offsetTop?: number,
+	comment?: string,
+	autoFix?: string,
 }
-
 type FoldingRegex = {
 	begin: RegExp,
-	end: RegExp
+	end: RegExp,
+	offsetTop: number,
+}
+type FoldingOption = {
+	comment?: string,
+	autoFix?: string,
 }
 
-const matchOperatorRegex  = /[-|\\{}()[\]^$+*?.]/g;
+const matchOperatorRegex = /[-|\\{}()[\]^$+*?.]/g;
 
 function escapeRegex(str: string) {
 	return str.replace(matchOperatorRegex, '\\$&');
@@ -20,7 +27,7 @@ function escapeRegex(str: string) {
 
 export default class ConfigurableFoldingProvider implements FoldingRangeProvider {
 	private regexes: Array<FoldingRegex> = [];
-	private regexLength: number = 0;
+	private option: FoldingOption = {};
 
 	constructor(configuration: FoldingConfig | Array<FoldingConfig>) {
 		if (configuration instanceof Array) {
@@ -31,7 +38,6 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 			this.addRegex(configuration);
 		}
 
-		this.regexLength = this.regexes.length;
 	}
 
 	private addRegex(configuration: FoldingConfig) {
@@ -39,97 +45,85 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 			if (configuration.beginRegex && configuration.endRegex) {
 				this.regexes.push({
 					begin: new RegExp(configuration.beginRegex),
-					end: new RegExp(configuration.endRegex)
+					end: new RegExp(configuration.endRegex),
+					offsetTop: configuration.offsetTop || 0,
 				});
 			} else if (configuration.begin && configuration.end) {
 				this.regexes.push({
 					begin: new RegExp(escapeRegex(configuration.begin)),
-					end: new RegExp(escapeRegex(configuration.end))
+					end: new RegExp(escapeRegex(configuration.end)),
+					offsetTop: configuration.offsetTop || 0,
 				});
+			}
+			if (configuration.autoFix) {
+				this.option.autoFix = configuration.autoFix;
+			}
+			if (configuration.comment) {
+				this.option.comment = escapeRegex(configuration.comment);
 			}
 		} catch (err) {
 		}
 	}
-
-	private confirmFoldingRangeOf(document: TextDocument, lineCount: number, foldingRanges: FoldingRange[], foldingRangeStart: number, marker: FoldingRegex): number {
-		let i = foldingRangeStart + 1;
-		let line, j;
-
-		while (i < lineCount) {
-			line = document.lineAt(i).text;
-			if ((j = this.findFoldingRange(document, lineCount, foldingRanges, i, document.lineAt(i).text)) !== i) {
-				i = j;
-			} else if(marker.end.test(line)) {
-				foldingRanges.push(new FoldingRange(foldingRangeStart, i));
-
-				return i + 1;
-			} else {
-				i++;
-			}
-		}
-
-		return i;
-	}
-
-	private confirmFoldingRangeOfZero(document: TextDocument, lineCount: number, foldingRanges: FoldingRange[], foldingRangeStart: number): number {
-		let i = foldingRangeStart + 1;
-		let line;
-
-		while (i < lineCount) {
-			line = document.lineAt(i).text;
-			if (this.regexes[0].begin.test(line)) {
-				i = this.confirmFoldingRangeOfZero(document, lineCount, foldingRanges, i);
-			} else if(this.regexes[0].end.test(line)) {
-				foldingRanges.push(new FoldingRange(foldingRangeStart, i));
-
-				return i + 1;
-			} else {
-				i++;
-			}
-		}
-
-		return i;
-	}
-
-	private findFoldingRange(document: TextDocument, lineCount: number, foldingRanges: FoldingRange[], foldingRangeStart: number, line: string): number {
-		for (let i = 0; i < this.regexLength; i++) {
-			if (this.regexes[i].begin.test(line)) {
-				return this.confirmFoldingRangeOf(document, lineCount, foldingRanges, foldingRangeStart, this.regexes[i]);
-			}
-		}
-
-		return foldingRangeStart;
-	}
-
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> {
-		const foldingRanges: FoldingRange[] = [];
-		const lineCount = document.lineCount;
-		let i = 0;
-
-		if (this.regexLength > 1) {
-			let j;
-
-			while (i < lineCount) {
-				if ((j = this.findFoldingRange(document, lineCount, foldingRanges, i, document.lineAt(i).text)) === i) {
-					i++;
-				}
-				else {
-					i = j;
-				}
-			}
-		} else {
-			let line;
-
-			while (i < lineCount) {
-				line = document.lineAt(i).text;
-				if (this.regexes[0].begin.test(line)) {
-					i = this.confirmFoldingRangeOfZero(document, lineCount, foldingRanges, i);
+		let foldingRanges = [];
+		let stack: { r: FoldingRegex, i: number }[] = [];
+		var regstr = this.regexes.map((regexp, i) => `(?<begin${i}>${regexp.begin.source})|(?<end${i}>${regexp.end.source})`).join('|')
+			+ (this.option.comment ? `|(?<comment>${this.option.comment})` : '');
+		let findOfRegexp = function* (line: string, str: string, strlen: number) {
+			let left = 0;
+			while (true) {
+				let res = line.substring(left || 0).match(str) as { groups?: { [key: string]: string }, index?: number };
+				if (res && res.groups) {
+					if (res.groups['comment']) {
+						break;
+					}
+					left = left + (res.index || 0) + 1;
+					for (let index = 0; index < strlen; index++) {
+						if (res.groups['begin' + (index)]) {
+							yield { type: 1, index };
+							continue;
+						}
+						if (res.groups['end' + (index)]) {
+							yield { type: 2, index };
+							continue;
+						}
+					}
 				} else {
-					i++;
+					break;
 				}
 			}
 		}
-
+		for (let i = 0; i < document.lineCount; i++) {
+			for (const { type, index } of findOfRegexp(document.lineAt(i).text, regstr, this.regexes.length)) {
+				switch (type) {
+					case 1:
+						stack.unshift({ r: this.regexes[index], i: i });
+						break;
+					case 2:
+						if (this.option.autoFix) {
+							if (stack[0].r != this.regexes[index]) {
+								let tmp = stack.slice();
+								while (tmp.length && tmp[0].r != this.regexes[index]) {
+									tmp.shift();
+								}
+								if (tmp.length) {
+									stack = tmp;
+								} else {
+									break;
+								}
+							}
+						}
+						let a = stack[0].i, b = i, c = stack[0].r.offsetTop;
+						if (stack[0]) {
+							if (a != b) {
+								foldingRanges.push(new FoldingRange(a + c, b - 1));
+							}
+						}
+						stack.shift();
+						break;
+				}
+			}
+		}
 		return foldingRanges;
 	}
 }
