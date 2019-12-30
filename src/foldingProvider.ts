@@ -6,6 +6,7 @@ type FoldingConfig = {
 	beginRegex?: string,
 	endRegex?: string,
 	offsetTop?: number,
+	offsetBottom?: number,
 	comment?: string,
 	autoFix?: string,
 }
@@ -13,6 +14,7 @@ type FoldingRegex = {
 	begin: RegExp,
 	end: RegExp,
 	offsetTop: number,
+	offsetBottom: number,
 }
 type FoldingOption = {
 	comment?: string,
@@ -47,12 +49,14 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 					begin: new RegExp(configuration.beginRegex),
 					end: new RegExp(configuration.endRegex),
 					offsetTop: configuration.offsetTop || 0,
+					offsetBottom: configuration.offsetBottom || 0,
 				});
 			} else if (configuration.begin && configuration.end) {
 				this.regexes.push({
 					begin: new RegExp(escapeRegex(configuration.begin)),
 					end: new RegExp(escapeRegex(configuration.end)),
 					offsetTop: configuration.offsetTop || 0,
+					offsetBottom: configuration.offsetBottom || 0,
 				});
 			}
 			if (configuration.autoFix) {
@@ -65,11 +69,13 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 		}
 	}
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> {
+		const BEGIN = 1;
+		const END = 2;
 		let foldingRanges = [];
 		let stack: { r: FoldingRegex, i: number }[] = [];
-		var regstr = this.regexes.map((regexp, i) => `(?<begin${i}>${regexp.begin.source})|(?<end${i}>${regexp.end.source})`).join('|')
+		var regstr = this.regexes.map((regexp, i) => `(?<_${BEGIN}_${i}>${regexp.begin.source})|(?<_${END}_${i}>${regexp.end.source})`).join('|')
 			+ (this.option.comment ? `|(?<comment>${this.option.comment})` : '');
-		let findOfRegexp = function* (line: string, str: string, strlen: number) {
+		let findOfRegexp = function* (line: string, str: string) {
 			let left = 0;
 			while (true) {
 				let res = line.substring(left || 0).match(str) as { groups?: { [key: string]: string }, index?: number };
@@ -78,14 +84,11 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 						break;
 					}
 					left = left + (res.index || 0) + 1;
-					for (let index = 0; index < strlen; index++) {
-						if (res.groups['begin' + (index)]) {
-							yield { type: 1, index };
-							continue;
-						}
-						if (res.groups['end' + (index)]) {
-							yield { type: 2, index };
-							continue;
+					for (const key in res.groups) {
+						if(res.groups[key]){
+							let keys = key.split('_').map(x => parseInt(x));
+							yield { type: keys[1], index: keys[2] };
+							break;
 						}
 					}
 				} else {
@@ -94,12 +97,12 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 			}
 		}
 		for (let i = 0; i < document.lineCount; i++) {
-			for (const { type, index } of findOfRegexp(document.lineAt(i).text, regstr, this.regexes.length)) {
+			for (const { type, index } of findOfRegexp(document.lineAt(i).text, regstr)) {
 				switch (type) {
-					case 1:
+					case BEGIN:
 						stack.unshift({ r: this.regexes[index], i: i });
 						break;
-					case 2:
+					case END:
 						if (this.option.autoFix) {
 							if (stack[0].r != this.regexes[index]) {
 								let tmp = stack.slice();
@@ -113,10 +116,10 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 								}
 							}
 						}
-						let a = stack[0].i, b = i, c = stack[0].r.offsetTop;
+						let a = stack[0].i, b = i, c = stack[0].r.offsetTop, d = stack[0].r.offsetBottom;
 						if (stack[0]) {
 							if (a != b) {
-								foldingRanges.push(new FoldingRange(a + c, b - 1));
+								foldingRanges.push(new FoldingRange(a + c, b - 1 + d));
 							}
 						}
 						stack.shift();
