@@ -59,9 +59,38 @@ or with **regex**:
 }
 ```
 
-## Migrate from v0.2 to v0.3
+### `middle` property
 
-The configuration's properties `begin` and `end` should be renamed as `beginRegex` and `endRegex`.
+```
+"folding": {
+	"*": {
+		"begin": "#if",
+		"middle": "#else",
+		"end": "#endif"
+	}
+}
+```
+
+It will allow VSCode to fold the following code:
+
+```cpp
+#if test
+	code1()
+#else
+	code2()
+#endif
+```
+
+### `foldLastLine` property
+
+The `foldLastLine` property is a boolean (`true` by default).
+
+If it's true the folding range will incluse the last line.
+It not, the last line will still be visiable when the range is closed.
+
+### `kind` property
+
+The `kind` property indicates if the folding range is a `comment` or a `region` (`region` by default).
 
 ## Known Issues
 

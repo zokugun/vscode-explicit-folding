@@ -1,3 +1,9 @@
+## v0.4.0
+- fix bug when `begin` and `end` markers are on the same line
+- add `middle` marker
+- add `foldLastLine` property
+- add `kind` property to indicate if the range is a `comment` or a `region`
+
 ## v0.3.2
 - show message when the extension is updated
 - update dependencies due to security issue
