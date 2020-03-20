@@ -31,33 +31,34 @@ function escapeRegex(str: string) {
 	return str.replace(matchOperatorRegex, '\\$&');
 }
 
-export default class ConfigurableFoldingProvider implements FoldingRangeProvider {
+export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private masterRegex: RegExp;
 	private regexes: Array<FoldingRegex> = [];
 
+	public id: string = 'explicit';
+
 	constructor(configuration: FoldingConfig | Array<FoldingConfig>) {
-		let source = ''
+		let source = '';
 
 		if (configuration instanceof Array) {
 			for (const value of configuration) {
-				const src = this.addRegex(value)
+				const src = this.addRegex(value);
 
 				if (src.length !== 0) {
 					if (source.length !== 0) {
-						source += '|'
+						source += '|';
 					}
 
 					source += src;
 				}
 			}
 		} else {
-			source = this.addRegex(configuration)
+			source = this.addRegex(configuration);
 		}
 
 		if (source.length === 0) {
 			this.masterRegex = new RegExp('a^');
-		}
-		else {
+		} else {
 			this.masterRegex = new RegExp(source);
 		}
 	}
@@ -84,7 +85,7 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 				};
 			}
 		} catch (err) {
-			return ''
+			return '';
 		}
 
 		if (regex) {
@@ -93,9 +94,8 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 			this.regexes.push(regex);
 
 			return `(?<_${Marker.BEGIN}_${index}>${regex.begin.source})|(?<_${Marker.MIDDLE}_${index}>${regex.middle.source})|(?<_${Marker.END}_${index}>${regex.end.source})`;
-		}
-		else {
-			return ''
+		} else {
+			return '';
 		}
 	}
 
@@ -103,7 +103,7 @@ export default class ConfigurableFoldingProvider implements FoldingRangeProvider
 		let left = 0;
 
 		while (true) {
-			const res = this.masterRegex.exec(line.substring(left || 0)) as { groups?: { [key: string]: string }, index?: number, [key: number]: string }
+			const res = this.masterRegex.exec(line.substring(left || 0)) as { groups?: { [key: string]: string }, index?: number, [key: number]: string };
 
 			if (res && res.groups) {
 				left = left + (res.index || 0) + res[0].length;
