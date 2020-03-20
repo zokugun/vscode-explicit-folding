@@ -1,3 +1,6 @@
+## v0.5.1
+- fix missing dependency
+
 ## v0.5.0
 - support capturing groups
 - fix known issue only for [MrCode](https://github.com/zokugun/MrCode)

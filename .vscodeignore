@@ -5,4 +5,5 @@
 !package.json
 !LICENSE
 !README.md
-!out/*
+!out/**
+!node_modules/**

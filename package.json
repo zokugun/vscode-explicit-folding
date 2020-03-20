@@ -2,7 +2,7 @@
 	"name": "explicit-folding",
 	"displayName": "Explicit Folding",
 	"description": "Manually controls how and where to fold your code",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"publisher": "zokugun",
 	"homepage": "https://github.com/zokugun/vscode-explicit-folding",
 	"repository": {
@@ -29,7 +29,7 @@
 	"contributes": {
 		"configuration": {
 			"type": "object",
-			"title": "The Explicit Folding configuration",
+			"title": "Explicit Folding configuration",
 			"properties": {
 				"folding": {
 					"type": "object",
@@ -45,6 +45,9 @@
 		"watch": "tsc -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install"
 	},
+	"dependencies": {
+		"regexp2": "^1.2.1"
+	},
 	"devDependencies": {
 		"@types/node": "^10.17.17",
 		"typescript": "^2.9.2",
@@ -57,8 +60,5 @@
 		"id": "6ccb8d60-0e25-4a00-8f74-e8b9ef6133ce",
 		"publisherDisplayName": "zokugun",
 		"publisherId": "7981b718-ae65-4fd8-ad42-96331c0f9872"
-	},
-	"dependencies": {
-		"regexp2": "^1.2.1"
 	}
 }
