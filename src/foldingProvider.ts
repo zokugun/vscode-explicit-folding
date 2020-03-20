@@ -1,3 +1,4 @@
+import { parse } from 'regexp2'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, TextDocument } from 'vscode'
 
 type FoldingConfig = {
@@ -13,10 +14,11 @@ type FoldingConfig = {
 
 type FoldingRegex = {
 	begin: RegExp,
-	middle: RegExp,
+	middle?: RegExp,
 	end: RegExp,
 	foldLastLine: boolean,
-	kind: FoldingRangeKind
+	kind: FoldingRangeKind,
+	endMatcher?: (...args: string[]) => string
 }
 
 enum Marker {
@@ -32,6 +34,7 @@ function escapeRegex(str: string) {
 }
 
 export default class ExplicitFoldingProvider implements FoldingRangeProvider {
+	private groupIndex: number = 0;
 	private masterRegex: RegExp;
 	private regexes: Array<FoldingRegex> = [];
 
@@ -68,18 +71,74 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 		try {
 			if (configuration.beginRegex && configuration.endRegex) {
+				let begin = new RegExp(configuration.beginRegex)
+				let end = new RegExp(configuration.endRegex)
+
+				let index = this.groupIndex + 1
+
+				let middle
+				if (configuration.middleRegex) {
+					middle = new RegExp(configuration.middleRegex)
+
+					this.groupIndex += 3;
+				} else {
+					this.groupIndex += 2;
+				}
+
+				const groups = parse(configuration.beginRegex).body.filter(token => token.type == 'capture-group');
+
+				let endMatcher
+				if (groups.length !== 0) {
+					this.groupIndex += groups.length
+
+					let captures = configuration.endRegex.split(/\\(\d+)/g);
+
+					if (captures.length > 0) {
+						const last = captures.length - 1;
+
+						let src = '""';
+
+						for (let i = 0; i <= last; i += 2) {
+							if (i === last) {
+								if (captures[i].length !== 0) {
+									src += ' + "' + captures[i].replace(/"/g, '\\"') + '"';
+								}
+							} else {
+								src += ' + "' + captures[i].replace(/"/g, '\\"') + '" + args[' + (++index) + ']';
+							}
+						}
+
+						endMatcher = eval('(function(){return function(...args) { return ' + src + ';};})()') as (...args: string[]) => string;
+
+						end = new RegExp(configuration.endRegex.replace(/\\(\d+)/g, (_, group) => groups[Number(group) - 1].text));
+					}
+				}
+
 				regex = {
-					begin: new RegExp(configuration.beginRegex),
-					middle: new RegExp(configuration.middleRegex || 'a^'),
-					end: new RegExp(configuration.endRegex),
+					begin,
+					middle,
+					end,
 					foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
-					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
+					endMatcher
 				};
 			} else if (configuration.begin && configuration.end) {
+				const begin = new RegExp(escapeRegex(configuration.begin))
+				const end = new RegExp(escapeRegex(configuration.end))
+
+				let middle
+				if (configuration.middle) {
+					middle = new RegExp(escapeRegex(configuration.middle))
+
+					this.groupIndex += 3;
+				} else {
+					this.groupIndex += 2;
+				}
+
 				regex = {
-					begin: new RegExp(escapeRegex(configuration.begin)),
-					middle: new RegExp(configuration.middle ? escapeRegex(configuration.middle) : 'a^'),
-					end: new RegExp(escapeRegex(configuration.end)),
+					begin,
+					middle,
+					end,
 					foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
 					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 				};
@@ -93,7 +152,15 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 			this.regexes.push(regex);
 
-			return `(?<_${Marker.BEGIN}_${index}>${regex.begin.source})|(?<_${Marker.MIDDLE}_${index}>${regex.middle.source})|(?<_${Marker.END}_${index}>${regex.end.source})`;
+			let src = `(?<_${Marker.BEGIN}_${index}>${regex.begin.source})`
+
+			if (regex.middle) {
+				src += `|(?<_${Marker.MIDDLE}_${index}>${regex.middle.source})`;
+			}
+
+			src += `|(?<_${Marker.END}_${index}>${regex.end.source})`;
+
+			return src;
 		} else {
 			return '';
 		}
@@ -103,18 +170,19 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		let left = 0;
 
 		while (true) {
-			const res = this.masterRegex.exec(line.substring(left || 0)) as { groups?: { [key: string]: string }, index?: number, [key: number]: string };
+			const match = this.masterRegex.exec(line.substring(left || 0)) as { groups?: { [key: string]: string }, index?: number, [key: number]: string };
 
-			if (res && res.groups) {
-				left = left + (res.index || 0) + res[0].length;
+			if (match && match.groups) {
+				left = left + (match.index || 0) + match[0].length;
 
-				for (const key in res.groups) {
-					if (res.groups[key]) {
+				for (const key in match.groups) {
+					if (match.groups[key]) {
 						const keys = key.split('_').map(x => parseInt(x));
 
 						yield {
 							type: keys[1],
-							index: keys[2]
+							index: keys[2],
+							match: (match as string[])
 						};
 
 						break;
@@ -128,37 +196,42 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> {
 		const foldingRanges = [];
-		const stack: { r: FoldingRegex, i: number }[] = [];
+		const stack: { regex: FoldingRegex, line: number, expectedEnd?: string }[] = [];
 
-		for (let i = 0; i < document.lineCount; i++) {
-			for (const { type, index } of this.findOfRegexp(document.lineAt(i).text)) {
+		for (let line = 0; line < document.lineCount; line++) {
+			for (const { type, index, match } of this.findOfRegexp(document.lineAt(line).text)) {
 				const regex = this.regexes[index]
 
 				switch (type) {
 					case Marker.BEGIN:
-						stack.unshift({ r: regex, i: i });
+						let expectedEnd
+						if (regex.endMatcher) {
+							expectedEnd = regex.endMatcher(...match)
+						}
+
+						stack.unshift({ regex, line, expectedEnd });
 						break;
 					case Marker.MIDDLE:
-						if (stack[0]) {
-							const start = stack[0].i;
-							const end = i;
+						if (stack[0] && stack[0].regex === regex) {
+							const begin = stack[0].line;
+							const end = line;
 
-							if (start != end) {
-								foldingRanges.push(new FoldingRange(start, end - 1, regex.kind));
+							if (begin != end) {
+								foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
 							}
 
 							stack.shift();
 						}
 
-						stack.unshift({ r: regex, i: i });
+						stack.unshift({ regex, line });
 						break;
 					case Marker.END:
-						if (stack[0]) {
-							const start = stack[0].i;
-							const end = i;
+						if (stack[0] && stack[0].regex === regex && (!stack[0].expectedEnd || match[0] === stack[0].expectedEnd)) {
+							const begin = stack[0].line;
+							const end = line;
 
-							if (start != end) {
-								foldingRanges.push(new FoldingRange(start, regex.foldLastLine ? end : end - 1, regex.kind));
+							if (begin != end) {
+								foldingRanges.push(new FoldingRange(begin, regex.foldLastLine ? end : end - 1, regex.kind));
 							}
 
 							stack.shift();
