@@ -1,3 +1,7 @@
+## v0.5.0
+- support capturing groups
+- fix known issue only for [MrCode](https://github.com/zokugun/MrCode)
+
 ## v0.4.0
 - fix bug when `begin` and `end` markers are on the same line
 - add `middle` marker

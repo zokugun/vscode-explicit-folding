@@ -59,7 +59,7 @@ or with **regex**:
 }
 ```
 
-### `middle` property
+### `middle` & `middleRegex` properties
 
 ```
 "folding": {
@@ -92,8 +92,25 @@ It not, the last line will still be visiable when the range is closed.
 
 The `kind` property indicates if the folding range is a `comment` or a `region` (`region` by default).
 
-## Known Issues
+## Capturing Groups
 
-- It's unable to remove existing folding
+`beginRegex` supports capturing groups which can be matched in `endRegex`.
+
+```
+{
+	"beginRegex": "#begin ([\\w]+)",
+	"endRegex": "#end \\1"
+}
+```
+
+## Known Issue
+
+- In VSCode, it's unable to remove existing folding.
+
+## MrCode
+
+[MrCode](https://github.com/zokugun/MrCode) is my own spin of VSCode with the [PR](https://github.com/microsoft/vscode/pull/54200). It fixes the known issue.
+
+In [MrCode](https://github.com/zokugun/MrCode), by setting `editor.foldingStrategy = 'explicit'`, only the folding ranges of this extension are used.
 
 **Enjoy!**
