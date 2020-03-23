@@ -103,14 +103,16 @@ The `kind` property indicates if the folding range is a `comment` or a `region` 
 }
 ```
 
-## Known Issue
+## VSCode
 
-- In VSCode, it's unable to remove existing folding.
+VSCode is using the folding ranges provided:
+- by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
+- <u>**and**</u> by the folding range provider defined by this extension
 
 ## MrCode
 
-[MrCode](https://github.com/zokugun/MrCode) is my own spin of VSCode with the [PR](https://github.com/microsoft/vscode/pull/54200). It fixes the known issue.
-
-In [MrCode](https://github.com/zokugun/MrCode), by setting `editor.foldingStrategy = 'explicit'`, only the folding ranges of this extension are used.
+[MrCode](https://github.com/zokugun/MrCode) is using the folding ranges provided:
+- by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
+- <u>**or**</u> by the folding range provider defined by this extension if `editor.foldingStrategy` is set to `explicit`
 
 **Enjoy!**
