@@ -1,3 +1,6 @@
+## v0.6.0
+- `separator` property
+
 ## v0.5.1
 - fix missing dependency
 

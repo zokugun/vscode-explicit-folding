@@ -1,7 +1,5 @@
 {
-	"files.exclude": {
-		"out": true
-	},
+	"files.exclude": {},
 	"search.exclude": {
 		"out": true
 	}

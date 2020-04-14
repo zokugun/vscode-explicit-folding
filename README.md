@@ -86,7 +86,8 @@ It will allow VSCode to fold the following code:
 The `foldLastLine` property is a boolean (`true` by default).
 
 If it's true the folding range will incluse the last line.
-It not, the last line will still be visiable when the range is closed.
+
+It not, the last line will still be visible when the range is closed.
 
 ### `kind` property
 
@@ -103,16 +104,34 @@ The `kind` property indicates if the folding range is a `comment` or a `region` 
 }
 ```
 
-## VSCode
+## Separator
+
+The `separator` or `separatorRegex` properties allow to fold a file based on a separator.
+
+In this mode, the `foldLastLine` property and capturing groups are not supported.
+
+```
+"folding": {
+    "log": {
+		"separator": "process"
+	}
+}
+```
+
+## Editors support
+
+### VSCode
 
 VSCode is using the folding ranges provided:
 - by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
 - <ins>**and**</ins> by the folding range provider defined by this extension
 
-## MrCode
+### MrCode
 
 [MrCode](https://github.com/zokugun/MrCode) is using the folding ranges provided:
 - by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
 - <ins>**or**</ins> by the folding range provider defined by this extension if `editor.foldingStrategy` is set to `explicit`
+
+The long-standing [PR](https://github.com/microsoft/vscode/pull/54200) tries to bring this new behaviour to VSCode.
 
 **Enjoy!**
