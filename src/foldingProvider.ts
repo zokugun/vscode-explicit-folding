@@ -74,14 +74,14 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 		try {
 			if (configuration.beginRegex && configuration.endRegex) {
-				let begin = new RegExp(configuration.beginRegex)
-				let end = new RegExp(configuration.endRegex)
+				let begin = new RegExp(configuration.beginRegex);
+				let end = new RegExp(configuration.endRegex);
 
-				let index = this.groupIndex + 1
+				let index = this.groupIndex + 1;
 
 				let middle
 				if (configuration.middleRegex) {
-					middle = new RegExp(configuration.middleRegex)
+					middle = new RegExp(configuration.middleRegex);
 
 					this.groupIndex += 3;
 				} else {
@@ -90,7 +90,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 				const groups = parse(configuration.beginRegex).body.filter(token => token.type == 'capture-group');
 
-				let endMatcher
+				let endMatcher;
 				if (groups.length !== 0) {
 					this.groupIndex += groups.length
 
@@ -126,12 +126,12 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					endMatcher
 				};
 			} else if (configuration.begin && configuration.end) {
-				const begin = new RegExp(escapeRegex(configuration.begin))
-				const end = new RegExp(escapeRegex(configuration.end))
+				const begin = new RegExp(escapeRegex(configuration.begin));
+				const end = new RegExp(escapeRegex(configuration.end));
 
-				let middle
+				let middle;
 				if (configuration.middle) {
-					middle = new RegExp(escapeRegex(configuration.middle))
+					middle = new RegExp(escapeRegex(configuration.middle));
 
 					this.groupIndex += 3;
 				} else {
@@ -146,9 +146,9 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 				};
 			} else if (configuration.separatorRegex) {
-				const separator = new RegExp(configuration.separatorRegex)
+				const separator = new RegExp(configuration.separatorRegex);
 
-				this.groupIndex += 2;
+				this.groupIndex += 1;
 
 				regex = {
 					begin: separator,
@@ -156,9 +156,9 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 				};
 			} else if (configuration.separator) {
-				const separator = new RegExp(escapeRegex(configuration.separator))
+				const separator = new RegExp(escapeRegex(configuration.separator));
 
-				this.groupIndex += 2;
+				this.groupIndex += 1;
 
 				regex = {
 					begin: separator,
@@ -279,7 +279,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 								foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
 							}
 
-							stack[0].line = line
+							stack[0].line = line;
 						} else {
 							if (line > 1) {
 								foldingRanges.push(new FoldingRange(0, line - 1, regex.kind));
