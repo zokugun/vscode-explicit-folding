@@ -63,11 +63,11 @@ or with **regex**:
 
 ```
 "folding": {
-	"*": {
-		"begin": "#if",
-		"middle": "#else",
-		"end": "#endif"
-	}
+    "*": {
+        "begin": "#if",
+        "middle": "#else",
+        "end": "#endif"
+    }
 }
 ```
 
@@ -75,9 +75,9 @@ It will allow VSCode to fold the following code:
 
 ```cpp
 #if test
-	code1()
+    code1()
 #else
-	code2()
+    code2()
 #endif
 ```
 
@@ -99,8 +99,8 @@ The `kind` property indicates if the folding range is a `comment` or a `region` 
 
 ```
 {
-	"beginRegex": "#begin ([\\w]+)",
-	"endRegex": "#end \\1"
+    "beginRegex": "#begin ([\\w]+)",
+    "endRegex": "#end \\1"
 }
 ```
 
@@ -113,8 +113,8 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 ```
 "folding": {
     "log": {
-		"separator": "process"
-	}
+        "separator": "process"
+    }
 }
 ```
 
