@@ -104,6 +104,17 @@ The `kind` property indicates if the folding range is a `comment` or a `region` 
 }
 ```
 
+## Docstring blocks
+
+When `begin`/`beginRegex` and `end`/`endRegex` are identicals, the `middle` property, capturing groups and nested blocks aren't supported.
+
+```
+"py": {
+    "beginRegex": "\"\"\"",
+    "endRegex": "\"\"\"",
+}
+```
+
 ## Separator
 
 The `separator` or `separatorRegex` properties allow to fold a file based on a separator.

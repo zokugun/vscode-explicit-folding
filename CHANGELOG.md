@@ -1,5 +1,8 @@
+## v0.7.0
+- support docstring blocks
+
 ## v0.6.0
-- `separator` property
+- add `separator` property
 
 ## v0.5.1
 - fix missing dependency
