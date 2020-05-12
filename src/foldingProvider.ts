@@ -27,6 +27,7 @@ enum Marker {
 	BEGIN,
 	MIDDLE,
 	END,
+	DOCSTRING,
 	SEPARATOR
 }
 
@@ -70,125 +71,169 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	}
 
 	private addRegex(configuration: FoldingConfig): string {
-		let regex = null
+		const regexIndex = this.regexes.length;
 
 		try {
 			if (configuration.beginRegex && configuration.endRegex) {
-				let begin = new RegExp(configuration.beginRegex);
-				let end = new RegExp(configuration.endRegex);
+				if (configuration.beginRegex === configuration.endRegex) {
+					const begin = new RegExp(configuration.beginRegex);
 
-				let index = this.groupIndex + 1;
+					this.groupIndex += 1;
 
-				let middle
-				if (configuration.middleRegex) {
-					middle = new RegExp(configuration.middleRegex);
+					const regex = {
+						begin,
+						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+					};
 
-					this.groupIndex += 3;
+					this.regexes.push(regex);
+
+					return `(?<_${Marker.DOCSTRING}_${regexIndex}>${regex.begin.source})`;
 				} else {
-					this.groupIndex += 2;
-				}
+					let begin = new RegExp(configuration.beginRegex);
+					let end = new RegExp(configuration.endRegex);
 
-				const groups = parse(configuration.beginRegex).body.filter(token => token.type == 'capture-group');
+					let index = this.groupIndex + 1;
 
-				let endMatcher;
-				if (groups.length !== 0) {
-					this.groupIndex += groups.length
+					let middle
+					if (configuration.middleRegex) {
+						middle = new RegExp(configuration.middleRegex);
 
-					let captures = configuration.endRegex.split(/\\(\d+)/g);
-
-					if (captures.length > 0) {
-						const last = captures.length - 1;
-
-						let src = '""';
-
-						for (let i = 0; i <= last; i += 2) {
-							if (i === last) {
-								if (captures[i].length !== 0) {
-									src += ' + "' + captures[i].replace(/"/g, '\\"') + '"';
-								}
-							} else {
-								src += ' + "' + captures[i].replace(/"/g, '\\"') + '" + args[' + (++index) + ']';
-							}
-						}
-
-						endMatcher = eval('(function(){return function(...args) { return ' + src + ';};})()') as (...args: string[]) => string;
-
-						end = new RegExp(configuration.endRegex.replace(/\\(\d+)/g, (_, group) => groups[Number(group) - 1].text));
+						this.groupIndex += 3;
+					} else {
+						this.groupIndex += 2;
 					}
-				}
 
-				regex = {
-					begin,
-					middle,
-					end,
-					foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
-					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
-					endMatcher
-				};
+					const groups = parse(configuration.beginRegex).body.filter(token => token.type == 'capture-group');
+
+					let endMatcher;
+					if (groups.length !== 0) {
+						this.groupIndex += groups.length
+
+						let captures = configuration.endRegex.split(/\\(\d+)/g);
+
+						if (captures.length > 0) {
+							const last = captures.length - 1;
+
+							let src = '""';
+
+							for (let i = 0; i <= last; i += 2) {
+								if (i === last) {
+									if (captures[i].length !== 0) {
+										src += ' + "' + captures[i].replace(/"/g, '\\"') + '"';
+									}
+								} else {
+									src += ' + "' + captures[i].replace(/"/g, '\\"') + '" + args[' + (++index) + ']';
+								}
+							}
+
+							endMatcher = eval('(function(){return function(...args) { return ' + src + ';};})()') as (...args: string[]) => string;
+
+							end = new RegExp(configuration.endRegex.replace(/\\(\d+)/g, (_, group) => groups[Number(group) - 1].text));
+						}
+					}
+
+					const regex = {
+						begin,
+						middle,
+						end,
+						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
+						endMatcher
+					};
+
+					this.regexes.push(regex);
+
+					let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`
+
+					if (regex.middle) {
+						src += `|(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})`;
+					}
+
+					src += `|(?<_${Marker.END}_${regexIndex}>${regex.end.source})`;
+
+					return src;
+				}
 			} else if (configuration.begin && configuration.end) {
-				const begin = new RegExp(escapeRegex(configuration.begin));
-				const end = new RegExp(escapeRegex(configuration.end));
+				if (configuration.begin === configuration.end) {
+					const begin = new RegExp(escapeRegex(configuration.begin));
 
-				let middle;
-				if (configuration.middle) {
-					middle = new RegExp(escapeRegex(configuration.middle));
+					this.groupIndex += 1;
 
-					this.groupIndex += 3;
+					const regex = {
+						begin,
+						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+					};
+
+					this.regexes.push(regex);
+
+					return `(?<_${Marker.DOCSTRING}_${regexIndex}>${regex.begin.source})`;
 				} else {
-					this.groupIndex += 2;
-				}
+					const begin = new RegExp(escapeRegex(configuration.begin));
+					const end = new RegExp(escapeRegex(configuration.end));
 
-				regex = {
-					begin,
-					middle,
-					end,
-					foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
-					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
-				};
+					let middle;
+					if (configuration.middle) {
+						middle = new RegExp(escapeRegex(configuration.middle));
+
+						this.groupIndex += 3;
+					} else {
+						this.groupIndex += 2;
+					}
+
+					const regex = {
+						begin,
+						middle,
+						end,
+						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+					};
+
+					this.regexes.push(regex);
+
+					let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`
+
+					if (regex.middle) {
+						src += `|(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})`;
+					}
+
+					src += `|(?<_${Marker.END}_${regexIndex}>${regex.end.source})`;
+
+					return src;
+				}
 			} else if (configuration.separatorRegex) {
 				const separator = new RegExp(configuration.separatorRegex);
 
 				this.groupIndex += 1;
 
-				regex = {
+				const regex = {
 					begin: separator,
 					foldLastLine: false,
 					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 				};
+
+				this.regexes.push(regex);
+
+				return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
 			} else if (configuration.separator) {
 				const separator = new RegExp(escapeRegex(configuration.separator));
 
 				this.groupIndex += 1;
 
-				regex = {
+				const regex = {
 					begin: separator,
 					foldLastLine: false,
 					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 				};
+
+				this.regexes.push(regex);
+
+				return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
+			} else {
+				return '';
 			}
 		} catch (err) {
-			return '';
-		}
-
-		if (regex) {
-			const index = this.regexes.length;
-
-			this.regexes.push(regex);
-
-			if (regex.end) {
-				let src = `(?<_${Marker.BEGIN}_${index}>${regex.begin.source})`
-
-				if (regex.middle) {
-					src += `|(?<_${Marker.MIDDLE}_${index}>${regex.middle.source})`;
-				}
-
-				src += `|(?<_${Marker.END}_${index}>${regex.end.source})`;
-
-				return src;
-			} else {
-				return `(?<_${Marker.SEPARATOR}_${index}>${regex.begin.source})`;
-			}
-		} else {
 			return '';
 		}
 	}
@@ -268,6 +313,26 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 
 							stack.shift();
+						}
+						break;
+					case Marker.DOCSTRING:
+						if (stack[0] && stack[0].regex === regex) {
+							const begin = stack[0].line;
+							const end = line;
+
+							if (regex.foldLastLine) {
+								if (end > begin) {
+									foldingRanges.push(new FoldingRange(begin, end, regex.kind));
+								}
+							} else {
+								if (end > begin + 1) {
+									foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
+								}
+							}
+
+							stack.shift();
+						} else {
+							stack.unshift({ regex, line });
 						}
 						break;
 					case Marker.SEPARATOR:
