@@ -17,10 +17,6 @@ In your Settings:
         "begin": "{{{",
         "end": "}}}"
     },
-    "typescript": {
-        "begin": "#region",
-        "end": "#endregion"
-    },
     "javascriptreact": [
         {
             "begin": "{/*",
@@ -41,10 +37,6 @@ or with **regex**:
     "*": {
         "beginRegex": "\\{\\{\\{",
         "endRegex": "\\}\\}\\}"
-    },
-    "typescript": {
-        "beginRegex": "#region",
-        "endRegex": "#endregion"
     },
     "javascriptreact": [
         {
@@ -136,6 +128,70 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
     }
 }
 ```
+
+## Usages
+
+<table>
+    <thead>
+        <tr>
+            <th>Language</th>
+            <th>Config</th>
+        </tr>
+    </thead>
+    <tboby>
+        <tr>
+            <th><i>Emacs</i></th>
+            <td>
+<pre><code>
+"*": {
+    "begin": "{{{",
+    "end": "}}}"
+}
+</code></pre>
+            </td>
+        </tr>
+        <tr>
+            <th>C/C++</th>
+            <td>
+<pre><code>
+"cpp": [
+    {
+        "begin": "#if",
+        "middle": "#else",
+        "end": "#endif"
+    },
+    {
+        "begin": "/*",
+        "end": "*/",
+        "nested": false
+    }
+]
+</code></pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Python</th>
+            <td>
+<pre><code>
+"py": {
+    "beginRegex": "\"\"\"",
+    "endRegex": "\"\"\""
+}
+</code></pre>
+            </td>
+        </tr>
+        <tr>
+            <th>SASS</th>
+            <td>
+<pre><code>"scss": {
+    "beginRegex": " \\{\\s*$",
+    "endRegex": "^\\s*\\}"
+}
+</code></pre>
+            </td>
+        </tr>
+    </tobody>
+</table>
 
 ## Editors support
 
