@@ -11,6 +11,7 @@ type FoldingConfig = {
 	separator?: string,
 	separatorRegex?: string,
 	foldLastLine?: boolean,
+	nested?: boolean,
 	kind?: 'comment' | 'region'
 }
 
@@ -19,6 +20,7 @@ type FoldingRegex = {
 	middle?: RegExp,
 	end?: RegExp,
 	foldLastLine: boolean,
+	nested: boolean,
 	kind: FoldingRangeKind,
 	endMatcher?: (...args: string[]) => string
 }
@@ -83,6 +85,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					const regex = {
 						begin,
 						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
 						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 					};
 
@@ -138,6 +141,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						middle,
 						end,
 						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
 						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
 						endMatcher
 					};
@@ -163,6 +167,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					const regex = {
 						begin,
 						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
 						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 					};
 
@@ -187,6 +192,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						middle,
 						end,
 						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
 						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 					};
 
@@ -210,6 +216,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				const regex = {
 					begin: separator,
 					foldLastLine: false,
+					nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
 					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 				};
 
@@ -224,6 +231,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				const regex = {
 					begin: separator,
 					foldLastLine: false,
+					nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
 					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 				};
 
@@ -276,12 +284,14 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 				switch (type) {
 					case Marker.BEGIN:
-						let expectedEnd;
-						if (regex.endMatcher) {
-							expectedEnd = regex.endMatcher(...match);
-						}
+						if (!stack[0] || stack[0].regex.nested) {
+							let expectedEnd;
+							if (regex.endMatcher) {
+								expectedEnd = regex.endMatcher(...match);
+							}
 
-						stack.unshift({ regex, line, expectedEnd });
+							stack.unshift({ regex, line, expectedEnd });
+						}
 						break;
 					case Marker.MIDDLE:
 						if (stack[0] && stack[0].regex === regex) {
@@ -292,10 +302,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 								foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
 							}
 
-							stack.shift();
+							stack[0].line = line;
 						}
-
-						stack.unshift({ regex, line });
 						break;
 					case Marker.END:
 						if (stack[0] && stack[0].regex === regex && (!stack[0].expectedEnd || match[0] === stack[0].expectedEnd)) {
@@ -331,7 +339,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 
 							stack.shift();
-						} else {
+						} else if (!stack[0] || stack[0].regex.nested) {
 							stack.unshift({ regex, line });
 						}
 						break;
@@ -345,7 +353,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 
 							stack[0].line = line;
-						} else {
+						} else if (!stack[0] || stack[0].regex.nested) {
 							if (line > 1) {
 								foldingRanges.push(new FoldingRange(0, line - 1, regex.kind));
 							}
