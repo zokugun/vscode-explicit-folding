@@ -1,3 +1,6 @@
+## v0.7.1
+- add `nested` property
+
 ## v0.7.0
 - support docstring blocks
 

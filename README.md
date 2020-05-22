@@ -85,9 +85,17 @@ It will allow VSCode to fold the following code:
 
 The `foldLastLine` property is a boolean (`true` by default).
 
-If it's true the folding range will incluse the last line.
+If it's `true`, the folding range will incluse the last line.
 
-It not, the last line will still be visible when the range is closed.
+It `false`, the last line will still be visible when the range is closed.
+
+### `nested` property
+
+The `nested` property is a boolean (`true` by default).
+
+If it's `true`, the existing folding range will allow nested folding ranges.
+
+It `false`, no new folding ranges can be created in the existing folding range (example: C/C++ block comment).
 
 ### `kind` property
 
