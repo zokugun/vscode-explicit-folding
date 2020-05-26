@@ -1,4 +1,4 @@
-import { parse, Token, types as TokenType } from 'regexp2'
+import { parse, Token, types as TokenType, Quantified } from 'regexp2/lib'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, TextDocument } from 'vscode'
 
 type FoldingConfig = {
@@ -319,8 +319,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private getCaptureGroupCount(regex: string): number {
 		function count(tokens: Token[]): number {
 			return tokens
-				.map((token: Token): number => {
-					if (token.type == TokenType.CAPTURE_GROUP || (token.type == TokenType.QUANTIFIED && token.body.type == TokenType.CAPTURE_GROUP)) {
+				.map((token): number => {
+					if (token.type == TokenType.CAPTURE_GROUP || (token.type == TokenType.QUANTIFIED && (token as Quantified).body.type == TokenType.CAPTURE_GROUP)) {
 						return 1;
 					} else {
 						return 0;
