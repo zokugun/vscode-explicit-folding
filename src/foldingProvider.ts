@@ -1,4 +1,4 @@
-import { parse } from 'regexp2'
+import { parse, Token, types as TokenType } from 'regexp2'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, TextDocument } from 'vscode'
 
 type FoldingConfig = {
@@ -103,17 +103,15 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							return '';
 						}
 
-						this.groupIndex += 3;
-					} else {
-						this.groupIndex += 2;
+						this.groupIndex += 1 + this.getCaptureGroupCount(configuration.middleRegex)
 					}
 
-					const groups = parse(configuration.beginRegex).body.filter(token => token.type == 'capture-group');
+					this.groupIndex += 2 + this.getCaptureGroupCount(configuration.beginRegex) + this.getCaptureGroupCount(configuration.endRegex);
+
+					const groups = parse(configuration.beginRegex).body.filter(token => token.type == TokenType.CAPTURE_GROUP);
 
 					let endMatcher;
 					if (groups.length !== 0) {
-						this.groupIndex += groups.length
-
 						let captures = configuration.endRegex.split(/\\(\d+)/g);
 
 						if (captures.length > 0) {
@@ -237,7 +235,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			return '';
 		}
 
-		this.groupIndex += 2;
+		this.groupIndex += 2 + this.getCaptureGroupCount(begin.source) + this.getCaptureGroupCount(continuation.source);
 
 		const regex = {
 			begin,
@@ -257,7 +255,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			return '';
 		}
 
-		this.groupIndex += 1;
+		this.groupIndex += 1 + this.getCaptureGroupCount(begin.source);
 
 		const regex = {
 			begin,
@@ -276,7 +274,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			return '';
 		}
 
-		this.groupIndex += 1;
+		this.groupIndex += 1 + this.getCaptureGroupCount(separator.source);
 
 		const regex = {
 			begin: separator,
@@ -316,6 +314,22 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				break;
 			}
 		}
+	}
+
+	private getCaptureGroupCount(regex: string): number {
+		function count(tokens: Token[]): number {
+			return tokens
+				.map((token: Token): number => {
+					if (token.type == TokenType.CAPTURE_GROUP || (token.type == TokenType.QUANTIFIED && token.body.type == TokenType.CAPTURE_GROUP)) {
+						return 1;
+					} else {
+						return 0;
+					}
+				})
+				.reduce((a: number, b: number): number => a + b, 0);
+		}
+
+		return count(parse(regex).body);
 	}
 
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> {
