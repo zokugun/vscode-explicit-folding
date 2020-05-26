@@ -5,9 +5,11 @@ type FoldingConfig = {
 	begin?: string,
 	middle?: string,
 	end?: string,
+	continuation?: string,
 	beginRegex?: string,
 	middleRegex?: string,
 	endRegex?: string,
+	continuationRegex?: string,
 	separator?: string,
 	separatorRegex?: string,
 	foldLastLine?: boolean,
@@ -19,6 +21,7 @@ type FoldingRegex = {
 	begin: RegExp,
 	middle?: RegExp,
 	end?: RegExp,
+	continuation?: RegExp,
 	foldLastLine: boolean,
 	nested: boolean,
 	kind: FoldingRangeKind,
@@ -29,6 +32,7 @@ enum Marker {
 	BEGIN,
 	MIDDLE,
 	END,
+	CONTINUATION,
 	DOCSTRING,
 	SEPARATOR
 }
@@ -80,27 +84,24 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				if (configuration.beginRegex === configuration.endRegex) {
 					const begin = new RegExp(configuration.beginRegex);
 
-					this.groupIndex += 1;
-
-					const regex = {
-						begin,
-						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
-						nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
-						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
-					};
-
-					this.regexes.push(regex);
-
-					return `(?<_${Marker.DOCSTRING}_${regexIndex}>${regex.begin.source})`;
+					return this.addDocstringRegex(configuration, regexIndex, begin);
 				} else {
 					let begin = new RegExp(configuration.beginRegex);
 					let end = new RegExp(configuration.endRegex);
+
+					if (begin.test('') || end.test('')) {
+						return '';
+					}
 
 					let index = this.groupIndex + 1;
 
 					let middle
 					if (configuration.middleRegex) {
 						middle = new RegExp(configuration.middleRegex);
+
+						if (middle.test('')) {
+							return '';
+						}
 
 						this.groupIndex += 3;
 					} else {
@@ -162,25 +163,22 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				if (configuration.begin === configuration.end) {
 					const begin = new RegExp(escapeRegex(configuration.begin));
 
-					this.groupIndex += 1;
-
-					const regex = {
-						begin,
-						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
-						nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
-						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
-					};
-
-					this.regexes.push(regex);
-
-					return `(?<_${Marker.DOCSTRING}_${regexIndex}>${regex.begin.source})`;
+					return this.addDocstringRegex(configuration, regexIndex, begin);
 				} else {
 					const begin = new RegExp(escapeRegex(configuration.begin));
 					const end = new RegExp(escapeRegex(configuration.end));
 
+					if (begin.test('') || end.test('')) {
+						return '';
+					}
+
 					let middle;
 					if (configuration.middle) {
 						middle = new RegExp(escapeRegex(configuration.middle));
+
+						if (middle.test('')) {
+							return '';
+						}
 
 						this.groupIndex += 3;
 					} else {
@@ -208,42 +206,88 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 					return src;
 				}
+			} else if (configuration.beginRegex && configuration.continuationRegex) {
+				const continuation = new RegExp(`${configuration.continuationRegex}$`);
+				const begin = new RegExp(`${configuration.beginRegex}.*${continuation.source}`);
+
+				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
+			} else if (configuration.begin && configuration.continuation) {
+				const continuation = new RegExp(`${escapeRegex(configuration.continuation)}$`);
+				const begin = new RegExp(`${escapeRegex(configuration.begin)}.*${continuation.source}`);
+
+				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
 			} else if (configuration.separatorRegex) {
 				const separator = new RegExp(configuration.separatorRegex);
 
-				this.groupIndex += 1;
-
-				const regex = {
-					begin: separator,
-					foldLastLine: false,
-					nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
-					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
-				};
-
-				this.regexes.push(regex);
-
-				return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
+				return this.addSeparatorRegex(configuration, regexIndex, separator);
 			} else if (configuration.separator) {
 				const separator = new RegExp(escapeRegex(configuration.separator));
 
-				this.groupIndex += 1;
-
-				const regex = {
-					begin: separator,
-					foldLastLine: false,
-					nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
-					kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
-				};
-
-				this.regexes.push(regex);
-
-				return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
+				return this.addSeparatorRegex(configuration, regexIndex, separator);
 			} else {
 				return '';
 			}
 		} catch (err) {
 			return '';
 		}
+	}
+
+	private addContinuationRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, continuation: RegExp): string {
+		if (begin.test('') || continuation.test('')) {
+			return '';
+		}
+
+		this.groupIndex += 2;
+
+		const regex = {
+			begin,
+			continuation,
+			foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+			nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+		};
+
+		this.regexes.push(regex);
+
+		return `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})|(?<_${Marker.CONTINUATION}_${regexIndex}>${regex.continuation.source})`;
+	}
+
+	private addDocstringRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp): string {
+		if (begin.test('')) {
+			return '';
+		}
+
+		this.groupIndex += 1;
+
+		const regex = {
+			begin,
+			foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+			nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+		};
+
+		this.regexes.push(regex);
+
+		return `(?<_${Marker.DOCSTRING}_${regexIndex}>${regex.begin.source})`;
+	}
+
+	private addSeparatorRegex(configuration: FoldingConfig, regexIndex: number, separator: RegExp): string {
+		if (separator.test('')) {
+			return '';
+		}
+
+		this.groupIndex += 1;
+
+		const regex = {
+			begin: separator,
+			foldLastLine: false,
+			nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+		};
+
+		this.regexes.push(regex);
+
+		return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
 	}
 
 	private *findOfRegexp(line: string) {
@@ -276,7 +320,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> {
 		const foldingRanges = [];
-		const stack: { regex: FoldingRegex, line: number, expectedEnd?: string, separator?: boolean }[] = [];
+		const stack: { regex: FoldingRegex, line: number, expectedEnd?: string, separator?: boolean, continuation?: number }[] = [];
 
 		for (let line = 0; line < document.lineCount; line++) {
 			for (const { type, index, match } of this.findOfRegexp(document.lineAt(line).text)) {
@@ -323,6 +367,11 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							stack.shift();
 						}
 						break;
+					case Marker.CONTINUATION:
+						if (stack[0] && stack[0].regex === regex) {
+							stack[0].continuation = line
+						}
+						break;
 					case Marker.DOCSTRING:
 						if (stack[0] && stack[0].regex === regex) {
 							const begin = stack[0].line;
@@ -361,6 +410,31 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							stack.unshift({ regex, line, separator: true });
 						}
 						break;
+				}
+			}
+
+			if (stack[0] && stack[0].regex.continuation) {
+				if (stack[0].continuation) {
+					if (stack[0].continuation != line) {
+						const regex = stack[0].regex;
+						const begin = stack[0].line;
+						const end = line;
+
+						if (regex.foldLastLine) {
+							if (end > begin) {
+								foldingRanges.push(new FoldingRange(begin, end, regex.kind));
+							}
+						} else {
+							if (end > begin + 1) {
+								foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
+							}
+						}
+
+						stack.shift();
+					}
+				}
+				else if (stack[0].line != line) {
+					stack.shift();
 				}
 			}
 		}
