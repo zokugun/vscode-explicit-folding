@@ -7,7 +7,7 @@ const VERSION_ID = 'explicitFoldingVersion'
 
 let $disposable: vscode.Disposable | null = null;
 
-function setup(context: vscode.ExtensionContext) {
+function setup(context: vscode.ExtensionContext) { // {{{
 	if ($disposable !== null) {
 		$disposable.dispose();
 	}
@@ -38,9 +38,9 @@ function setup(context: vscode.ExtensionContext) {
 	}
 
 	$disposable = vscode.Disposable.from(...subscriptions);
-}
+} // }}}
 
-async function showWhatsNewMessage(version: string) {
+async function showWhatsNewMessage(version: string) { // {{{
 	const actions: vscode.MessageItem[] = [{
 		title: 'Homepage'
 	}, {
@@ -66,9 +66,9 @@ async function showWhatsNewMessage(version: string) {
 			);
 		}
 	}
-}
+} // }}}
 
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) { // {{{
 	const previousVersion = context.globalState.get<string>(VERSION_ID);
 	const currentVersion = pkg.version;
 
@@ -85,4 +85,4 @@ export async function activate(context: vscode.ExtensionContext) {
 			setup(context);
 		}
 	});
-};
+} // }}}
