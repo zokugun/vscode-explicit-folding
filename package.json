@@ -2,7 +2,7 @@
 	"name": "explicit-folding",
 	"displayName": "Explicit Folding",
 	"description": "Manually controls how and where to fold your code",
-	"version": "0.7.1",
+	"version": "0.8.0",
 	"publisher": "zokugun",
 	"homepage": "https://github.com/zokugun/vscode-explicit-folding",
 	"repository": {

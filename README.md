@@ -51,28 +51,6 @@ or with **regex**:
 }
 ```
 
-### `middle` & `middleRegex` properties
-
-```
-"folding": {
-    "*": {
-        "begin": "#if",
-        "middle": "#else",
-        "end": "#endif"
-    }
-}
-```
-
-It will allow VSCode to fold the following code:
-
-```cpp
-#if test
-    code1()
-#else
-    code2()
-#endif
-```
-
 ### `foldLastLine` property
 
 The `foldLastLine` property is a boolean (`true` by default).
@@ -101,6 +79,30 @@ The `kind` property indicates if the folding range is a `comment` or a `region` 
 {
     "beginRegex": "#begin ([\\w]+)",
     "endRegex": "#end \\1"
+}
+```
+
+## Middle markers
+
+With the `middle`/`middleRegex` markers, a folding block can be splitted into several sections.
+
+```
+"cpp": {
+    "begin": "#if",
+    "middle": "#else",
+    "end": "#endif"
+}
+```
+
+## Continuation markers
+
+The `continuation`/`continuationRegex` markers are allowing single-line comments to contain line-continuation character.
+
+```
+"cpp": {
+    "begin": "//",
+    "continuation": "\\",
+    "nested": false
 }
 ```
 
@@ -156,13 +158,18 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 <pre><code>
 "cpp": [
     {
-        "begin": "#if",
-        "middle": "#else",
-        "end": "#endif"
+        "beginRegex": "#if(?:n?def)?",
+        "middleRegex": "#el(?:se|if)",
+        "endRegex": "#endif"
     },
     {
         "begin": "/*",
         "end": "*/",
+        "nested": false
+    },
+    {
+        "begin": "//",
+        "continuation": "\\",
         "nested": false
     }
 ]

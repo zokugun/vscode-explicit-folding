@@ -1,3 +1,8 @@
+## v0.8.0
+- add `continuation` marker
+- fix infinity loop due to zero-length regexes
+- fix capturing groups
+
 ## v0.7.1
 - add `nested` property
 
