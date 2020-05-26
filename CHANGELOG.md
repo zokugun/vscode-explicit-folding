@@ -1,3 +1,6 @@
+## v0.8.1
+- improve handling of non-nested rules to test only necessary regexes
+
 ## v0.8.0
 - add `continuation` marker
 - fix infinity loop due to zero-length regexes

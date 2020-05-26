@@ -144,19 +144,16 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
         <tr>
             <th><i>Emacs</i></th>
             <td>
-<pre><code>
-"*": {
+<pre><code>"*": {
     "begin": "{{{",
     "end": "}}}"
-}
-</code></pre>
+}</code></pre>
             </td>
         </tr>
         <tr>
             <th>C/C++</th>
             <td>
-<pre><code>
-"cpp": [
+<pre><code>"cpp": [
     {
         "beginRegex": "#if(?:n?def)?",
         "middleRegex": "#el(?:se|if)",
@@ -172,19 +169,16 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
         "continuation": "\\",
         "nested": false
     }
-]
-</code></pre>
+]</code></pre>
             </td>
         </tr>
         <tr>
             <th>Python</th>
             <td>
-<pre><code>
-"py": {
+<pre><code>"py": {
     "beginRegex": "\"\"\"",
     "endRegex": "\"\"\""
-}
-</code></pre>
+}</code></pre>
             </td>
         </tr>
         <tr>
@@ -193,8 +187,7 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 <pre><code>"scss": {
     "beginRegex": " \\{\\s*$",
     "endRegex": "^\\s*\\}"
-}
-</code></pre>
+}</code></pre>
             </td>
         </tr>
     </tobody>
