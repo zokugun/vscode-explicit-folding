@@ -16,7 +16,7 @@ function setup(context: vscode.ExtensionContext) { // {{{
 	const subscriptions: vscode.Disposable[] = [];
 
 	let provider, disposable;
-	for(let name in config) {
+	for(let name of Object.keys(config).filter(name => typeof config[name] === 'object')) {
 		if(name === '*') {
 			provider = new FoldingProvider(config[name]);
 
