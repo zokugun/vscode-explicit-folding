@@ -111,7 +111,7 @@ The `continuation`/`continuationRegex` markers are allowing single-line comments
 When `begin`/`beginRegex` and `end`/`endRegex` are identicals, the `middle` property, capturing groups and nested blocks aren't supported.
 
 ```
-"py": {
+"python": {
     "beginRegex": "\"\"\"",
     "endRegex": "\"\"\"",
 }
@@ -175,7 +175,7 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
         <tr>
             <th>Python</th>
             <td>
-<pre><code>"py": {
+<pre><code>"python": {
     "beginRegex": "\"\"\"",
     "endRegex": "\"\"\""
 }</code></pre>

@@ -1,3 +1,7 @@
+## v0.8.2
+- fix `continuation` marker when first match doesn't include the line-continuation character
+- fix looping on configuration
+
 ## v0.8.1
 - improve handling of non-nested rules to test only necessary regexes
 
