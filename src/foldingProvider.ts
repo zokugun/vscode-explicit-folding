@@ -242,13 +242,13 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					return src;
 				}
 			} else if (configuration.beginRegex && configuration.continuationRegex) {
+				const begin = new RegExp(configuration.beginRegex);
 				const continuation = new RegExp(`${configuration.continuationRegex}$`);
-				const begin = new RegExp(`${configuration.beginRegex}.*${continuation.source}`);
 
 				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
 			} else if (configuration.begin && configuration.continuation) {
+				const begin = new RegExp(escapeRegex(configuration.begin));
 				const continuation = new RegExp(`${escapeRegex(configuration.continuation)}$`);
-				const begin = new RegExp(`${escapeRegex(configuration.begin)}.*${continuation.source}`);
 
 				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
 			} else if (configuration.separatorRegex) {
@@ -425,6 +425,14 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 
 							return position.line + 1
+						}
+						else if (regex.continuation) {
+							if (regex.continuation.test(document.lineAt(line).text)) {
+								stack.unshift({ regex, line });
+							}
+							else {
+								return line + 1;
+							}
 						}
 						else {
 							stack.unshift({ regex, line, expectedEnd });
