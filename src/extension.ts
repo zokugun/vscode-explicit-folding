@@ -72,13 +72,38 @@ export async function activate(context: vscode.ExtensionContext) { // {{{
 	const previousVersion = context.globalState.get<string>(VERSION_ID);
 	const currentVersion = pkg.version;
 
-	if(previousVersion === undefined || currentVersion !== previousVersion) {
-		await showWhatsNewMessage(currentVersion);
+	const config = vscode.workspace.getConfiguration('explicitFolding');
 
+	if(previousVersion === undefined || currentVersion !== previousVersion) {
 		context.globalState.update(VERSION_ID, currentVersion);
+
+		const notification = config.get<string>('notification');
+
+		if(previousVersion === undefined) {
+			// don't show notification on install
+		}
+		else if(notification === 'major') {
+			if(currentVersion.split('.')[0] > previousVersion.split('.')[0]) {
+				await showWhatsNewMessage(currentVersion);
+			}
+		}
+		else if(notification === 'minor') {
+			if(currentVersion.split('.')[0] > previousVersion.split('.')[0] || (currentVersion.split('.')[0] === previousVersion.split('.')[0]) && currentVersion.split('.')[1] > previousVersion.split('.')[1]) {
+				await showWhatsNewMessage(currentVersion);
+			}
+		}
+		else if(notification !== 'none') {
+			await showWhatsNewMessage(currentVersion);
+		}
 	}
 
-	setup(context);
+	const delay = config.get<number>('startupDelay');
+	if(delay && delay > 0) {
+		setTimeout(() => setup(context), delay);
+	}
+	else {
+		setup(context)
+	}
 
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if(event.affectsConfiguration('folding')) {
