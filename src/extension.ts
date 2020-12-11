@@ -84,16 +84,16 @@ export async function activate(context: vscode.ExtensionContext) { // {{{
 		}
 		else if(notification === 'major') {
 			if(currentVersion.split('.')[0] > previousVersion.split('.')[0]) {
-				await showWhatsNewMessage(currentVersion);
+				showWhatsNewMessage(currentVersion);
 			}
 		}
 		else if(notification === 'minor') {
 			if(currentVersion.split('.')[0] > previousVersion.split('.')[0] || (currentVersion.split('.')[0] === previousVersion.split('.')[0]) && currentVersion.split('.')[1] > previousVersion.split('.')[1]) {
-				await showWhatsNewMessage(currentVersion);
+				showWhatsNewMessage(currentVersion);
 			}
 		}
 		else if(notification !== 'none') {
-			await showWhatsNewMessage(currentVersion);
+			showWhatsNewMessage(currentVersion);
 		}
 	}
 
