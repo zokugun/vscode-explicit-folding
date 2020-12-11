@@ -193,19 +193,25 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
     </tobody>
 </table>
 
+## FAQ
+
+**Q:** Why don't I see the foldings ?
+
+**A:** Firstly, make sure you have the setting `"editor.showFoldingControls": "always"` and that you don't have `"editor.foldingStrategy": "indentation"`. Then, verify your config :wink:
+
 ## Editors support
 
 ### VSCode
 
 VSCode is using the folding ranges provided:
 - by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
-- <ins>**and**</ins> by the folding range provider defined by this extension
+- <ins>**and**</ins>, by the folding range provider defined by this extension if `editor.foldingStrategy` is set to **`auto`**
 
 ### MrCode
 
 [MrCode](https://github.com/zokugun/MrCode) is using the folding ranges provided:
 - by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
-- <ins>**or**</ins> by the folding range provider defined by this extension if `editor.foldingStrategy` is set to `explicit`
+- <ins>**or**</ins> by the folding range provider defined by this extension if `editor.foldingStrategy` is set to **`explicit`**
 
 The long-standing [PR](https://github.com/microsoft/vscode/pull/54200) tries to bring this new behaviour to VSCode.
 
