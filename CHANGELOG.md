@@ -1,3 +1,7 @@
+## 0.9.1
+- allows provider on all schemes
+- fix README
+
 ## 0.9.0
 - add the configuration `explicitFolding.startupDelay` which will delay the registration of the folding providers when starting up (1000ms by default). It's fixing the issue when the editor wasn't using the correct foldings at startup.
 - add the configuration `explicitFolding.notification` to manage the notifications. By default, the notifications will be shown only for minor revisions
