@@ -5,6 +5,8 @@ Explicit Folding
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/zokugun.explicit-folding.svg)](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/zokugun.explicit-folding.svg)](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
 [![License](https://img.shields.io/badge/donate-ko--fi-green)](https://ko-fi.com/daiyam)
+[![License](https://img.shields.io/badge/donate-liberapay-green)](https://liberapay.com/daiyam/donate)
+[![License](https://img.shields.io/badge/donate-paypal-green)](https://paypal.me/daiyam99)
 
 Manually controls how and where to fold your code
 
@@ -208,6 +210,14 @@ Support this project by becoming a financial contributor.
 	<tr>
 		<td><img src="https://github.githubassets.com/images/modules/site/icons/funding_platforms/ko_fi.svg" alt="Ko-fi" width="80px" height="80px"></td>
 		<td><a href="https://ko-fi.com/daiyam" target="_blank">ko-fi.com/daiyam</a></td>
+	</tr>
+	<tr>
+		<td><img src="https://github.githubassets.com/images/modules/site/icons/funding_platforms/liberapay.svg" alt="Liberapay" width="80px" height="80px"></td>
+		<td><a href="https://liberapay.com/daiyam/donate" target="_blank">liberapay.com/daiyam/donate</a></td>
+	</tr>
+	<tr>
+		<td><img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/PayPal_Logo_Icon_2014.svg" alt="PayPal" width="80px" height="80px"></td>
+		<td><a href="https://paypal.me/daiyam99" target="_blank">paypal.me/daiyam99</a></td>
 	</tr>
 </table>
 
