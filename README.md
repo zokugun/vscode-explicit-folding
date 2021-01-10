@@ -4,6 +4,7 @@ Explicit Folding
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/zokugun.explicit-folding.svg)](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/zokugun.explicit-folding.svg)](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
+[![License](https://img.shields.io/badge/donate-ko--fi-green)](https://ko-fi.com/daiyam)
 
 Manually controls how and where to fold your code
 
@@ -198,6 +199,17 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 **Q:** Why don't I see the foldings ?
 
 **A:** Firstly, make sure you have the setting `"editor.showFoldingControls": "always"` and that you don't have `"editor.foldingStrategy": "indentation"`. Then, verify your config :wink:
+
+## Donations
+
+Support this project by becoming a financial contributor.
+
+<table>
+	<tr>
+		<td><img src="https://github.githubassets.com/images/modules/site/icons/funding_platforms/ko_fi.svg" alt="Ko-fi" width="80px" height="80px"></td>
+		<td><a href="https://ko-fi.com/daiyam" target="_blank">ko-fi.com/daiyam</a></td>
+	</tr>
+</table>
 
 ## Editors support
 
