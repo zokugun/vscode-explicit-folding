@@ -1,3 +1,6 @@
+## 0.9.2
+- register provider to all applicable schemes
+
 ## 0.9.1
 - allows provider on all schemes
 - fix README
