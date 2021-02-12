@@ -3,6 +3,7 @@ const pkg = require('../package.json')
 
 import FoldingProvider from './foldingProvider'
 
+const SCHEMES = ['file', 'untitled', 'vscode-userdata']
 const VERSION_ID = 'explicitFoldingVersion'
 
 let $disposable: vscode.Disposable | null = null;
@@ -16,17 +17,11 @@ function setup(context: vscode.ExtensionContext) { // {{{
 	const subscriptions: vscode.Disposable[] = [];
 
 	let provider, disposable;
-	for(let name of Object.keys(config).filter(name => typeof config[name] === 'object')) {
-		if(name === '*') {
-			provider = new FoldingProvider(config[name]);
+	for(let language of Object.keys(config).filter(name => typeof config[name] === 'object')) {
+		provider = new FoldingProvider(config[language]);
 
-			subscriptions.push(disposable = vscode.languages.registerFoldingRangeProvider({ scheme: '*' }, provider));
-			context.subscriptions.push(disposable);
-		}
-		else {
-			provider = new FoldingProvider(config[name]);
-
-			subscriptions.push(disposable = vscode.languages.registerFoldingRangeProvider({ language: name, scheme: '*' }, provider));
+		for(const scheme of SCHEMES) {
+			subscriptions.push(disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider));
 			context.subscriptions.push(disposable);
 		}
 	}
@@ -96,7 +91,7 @@ export async function activate(context: vscode.ExtensionContext) { // {{{
 		setTimeout(() => setup(context), delay);
 	}
 	else {
-		setup(context)
+		setup(context);
 	}
 
 	vscode.workspace.onDidChangeConfiguration(event => {
