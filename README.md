@@ -208,15 +208,15 @@ Support this project by becoming a financial contributor.
 
 <table>
 	<tr>
-		<td><img src="https://github.githubassets.com/images/modules/site/icons/funding_platforms/ko_fi.svg" alt="Ko-fi" width="80px" height="80px"></td>
+		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_kofi.png" alt="Ko-fi" width="80px" height="80px"></td>
 		<td><a href="https://ko-fi.com/daiyam" target="_blank">ko-fi.com/daiyam</a></td>
 	</tr>
 	<tr>
-		<td><img src="https://github.githubassets.com/images/modules/site/icons/funding_platforms/liberapay.svg" alt="Liberapay" width="80px" height="80px"></td>
+		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_liberapay.png" alt="Liberapay" width="80px" height="80px"></td>
 		<td><a href="https://liberapay.com/daiyam/donate" target="_blank">liberapay.com/daiyam/donate</a></td>
 	</tr>
 	<tr>
-		<td><img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/PayPal_Logo_Icon_2014.svg" alt="PayPal" width="80px" height="80px"></td>
+		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_paypal.png" alt="PayPal" width="80px" height="80px"></td>
 		<td><a href="https://paypal.me/daiyam99" target="_blank">paypal.me/daiyam99</a></td>
 	</tr>
 </table>
