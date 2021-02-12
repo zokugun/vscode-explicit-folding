@@ -20,13 +20,13 @@ function setup(context: vscode.ExtensionContext) { // {{{
 		if(name === '*') {
 			provider = new FoldingProvider(config[name]);
 
-			subscriptions.push(disposable = vscode.languages.registerFoldingRangeProvider({ scheme: '*' }, provider));
+			subscriptions.push(disposable = vscode.languages.registerFoldingRangeProvider({ scheme: 'file' }, provider));
 			context.subscriptions.push(disposable);
 		}
 		else {
 			provider = new FoldingProvider(config[name]);
 
-			subscriptions.push(disposable = vscode.languages.registerFoldingRangeProvider({ language: name, scheme: '*' }, provider));
+			subscriptions.push(disposable = vscode.languages.registerFoldingRangeProvider({ language: name, scheme: 'file' }, provider));
 			context.subscriptions.push(disposable);
 		}
 	}
