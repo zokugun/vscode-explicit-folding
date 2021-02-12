@@ -154,7 +154,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 					this.regexes.push(regex);
 
-					let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`
+					let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`;
 
 					this.groupIndex += 1 + this.getCaptureGroupCount(configuration.beginRegex);
 
@@ -171,10 +171,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					}
 					else {
 						if (regex.middle) {
-							regex.unnested = new RegExp(`(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`)
+							regex.unnested = new RegExp(`(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`);
 						}
 						else {
-							regex.unnested = new RegExp(`(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`)
+							regex.unnested = new RegExp(`(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`);
 						}
 					}
 
@@ -215,27 +215,27 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 					this.regexes.push(regex);
 
-					let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`
+					let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`;
 
-					this.groupIndex += 1
+					this.groupIndex += 1;
 
 					if (nested) {
 						if (regex.middle) {
 							src += `|(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})`;
 
-							this.groupIndex += 1
+							this.groupIndex += 1;
 						}
 
 						src += `|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`;
 
-						this.groupIndex += 1
+						this.groupIndex += 1;
 					}
 					else {
 						if (regex.middle) {
-							regex.unnested = new RegExp(`(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`)
+							regex.unnested = new RegExp(`(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`);
 						}
 						else {
-							regex.unnested = new RegExp(`(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`)
+							regex.unnested = new RegExp(`(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`);
 						}
 					}
 
