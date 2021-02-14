@@ -175,6 +175,15 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 ]</code></pre>
             </td>
         </tr>
+		<tr>
+            <th>HTML</th>
+            <td>
+<pre><code>"html": {
+   "beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z]+)[^>\\/]*>",
+   "endRegex": "<\\/\\1>"
+}</code></pre>
+            </td>
+        </tr>
         <tr>
             <th>Python</th>
             <td>
