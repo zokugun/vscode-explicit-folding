@@ -1,3 +1,6 @@
+## 0.10.0
+- add dynamic `foldLastLine`
+
 ## 0.9.2
 - register provider to all applicable schemes
 

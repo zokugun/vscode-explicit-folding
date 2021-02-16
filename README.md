@@ -134,6 +134,21 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 }
 ```
 
+## Dynamic foldLastLine
+
+When used with `endRegex`, `foldLastLine` can be an array of boolean.
+
+Each capture groups (`1...n`) in `endRegex` will require a boolean in `foldLastLine` (`1...n`).
+`foldLastLine[0]` will be used as the default value.
+
+```
+"php": {
+    "beginRegex": "(?:case|default)[^:]*:",
+    "endRegex": "break;|(.)(?=case|default|\\})",
+    "foldLastLine": [true, false]
+}
+```
+
 ## Usages
 
 <table>
@@ -175,13 +190,30 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 ]</code></pre>
             </td>
         </tr>
-		<tr>
+        <tr>
             <th>HTML</th>
             <td>
 <pre><code>"html": {
    "beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z]+)[^>\\/]*>",
    "endRegex": "<\\/\\1>"
 }</code></pre>
+            </td>
+        </tr>
+        <tr>
+            <th>PHP</th>
+            <td>
+<pre><code>"php": [
+    {
+        "beginRegex": "(?:case|default)[^:]*:",
+        "endRegex": "break;|(.)(?=case|default|\\})",
+        "foldLastLine": [true, false]
+    },
+    {
+        "beginRegex": "\\{",
+        "middleRegex": "\\}[^}]+\\{",
+        "endRegex": "\\}"
+    }
+]</code></pre>
             </td>
         </tr>
         <tr>
@@ -216,18 +248,18 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 Support this project by becoming a financial contributor.
 
 <table>
-	<tr>
-		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_kofi.png" alt="Ko-fi" width="80px" height="80px"></td>
-		<td><a href="https://ko-fi.com/daiyam" target="_blank">ko-fi.com/daiyam</a></td>
-	</tr>
-	<tr>
-		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_liberapay.png" alt="Liberapay" width="80px" height="80px"></td>
-		<td><a href="https://liberapay.com/daiyam/donate" target="_blank">liberapay.com/daiyam/donate</a></td>
-	</tr>
-	<tr>
-		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_paypal.png" alt="PayPal" width="80px" height="80px"></td>
-		<td><a href="https://paypal.me/daiyam99" target="_blank">paypal.me/daiyam99</a></td>
-	</tr>
+    <tr>
+        <td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_kofi.png" alt="Ko-fi" width="80px" height="80px"></td>
+        <td><a href="https://ko-fi.com/daiyam" target="_blank">ko-fi.com/daiyam</a></td>
+    </tr>
+    <tr>
+        <td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_liberapay.png" alt="Liberapay" width="80px" height="80px"></td>
+        <td><a href="https://liberapay.com/daiyam/donate" target="_blank">liberapay.com/daiyam/donate</a></td>
+    </tr>
+    <tr>
+        <td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_paypal.png" alt="PayPal" width="80px" height="80px"></td>
+        <td><a href="https://paypal.me/daiyam99" target="_blank">paypal.me/daiyam99</a></td>
+    </tr>
 </table>
 
 ## Editors support
