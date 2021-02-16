@@ -1,4 +1,4 @@
-import { parse, Token, types as TokenType, Quantified } from 'regexp2/lib'
+import { parse, Token, types as TokenType, Quantified, Match, Alternate } from 'regexp2/lib'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, TextDocument } from 'vscode'
 
 type FoldingConfig = {
@@ -12,7 +12,7 @@ type FoldingConfig = {
 	continuationRegex?: string,
 	separator?: string,
 	separatorRegex?: string,
-	foldLastLine?: boolean,
+	foldLastLine?: boolean | boolean[],
 	nested?: boolean,
 	kind?: 'comment' | 'region'
 }
@@ -23,7 +23,7 @@ type FoldingRegex = {
 	end?: RegExp,
 	unnested?: RegExp,
 	continuation?: RegExp,
-	foldLastLine: boolean,
+	foldLastLine: (...args: string[]) => boolean,
 	nested: boolean,
 	kind: FoldingRangeKind,
 	endMatcher?: (...args: string[]) => string
@@ -50,6 +50,10 @@ const matchOperatorRegex = /[-|\\{}()[\]^$+*?.]/g;
 
 function escapeRegex(str: string) {
 	return str.replace(matchOperatorRegex, '\\$&');
+}
+
+function id<T>(value: T): () => T {
+	return () => value;
 }
 
 export default class ExplicitFoldingProvider implements FoldingRangeProvider {
@@ -140,13 +144,13 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						}
 					}
 
-					const nested = typeof configuration.nested === "boolean" ? configuration.nested : true;
+					const nested = typeof configuration.nested === 'boolean' ? configuration.nested : true;
 
 					const regex: FoldingRegex = {
 						begin,
 						middle,
 						end,
-						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
 						nested,
 						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
 						endMatcher
@@ -158,16 +162,34 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 					this.groupIndex += 1 + this.getCaptureGroupCount(configuration.beginRegex);
 
+					const middleGroupCount = regex.middle ? 1 + this.getCaptureGroupCount(configuration.middleRegex!) : 0;
+					const endGroupCount = 1 + this.getCaptureGroupCount(configuration.endRegex);
+
+					if (Array.isArray(configuration.foldLastLine) && configuration.foldLastLine.length === endGroupCount) {
+						const foldLastLine = configuration.foldLastLine;
+						const groupIndex = (nested ? this.groupIndex : 1) + 1 + middleGroupCount;
+
+						regex.foldLastLine = (...args) => {
+							for(let i = groupIndex + 1, l = groupIndex + endGroupCount; i < l; ++i) {
+								if(typeof args[i] !== 'undefined') {
+									return foldLastLine[i - groupIndex];
+								}
+							}
+
+							return foldLastLine[0];
+						}
+					}
+
 					if (nested) {
 						if (regex.middle) {
 							src += `|(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})`;
 
-							this.groupIndex += 1 + this.getCaptureGroupCount(configuration.middleRegex!);
+							this.groupIndex += middleGroupCount;
 						}
 
 						src += `|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`;
 
-						this.groupIndex += 1 + this.getCaptureGroupCount(configuration.endRegex);
+						this.groupIndex += endGroupCount;
 					}
 					else {
 						if (regex.middle) {
@@ -202,13 +224,13 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						}
 					}
 
-					const nested = typeof configuration.nested === "boolean" ? configuration.nested : true;
+					const nested = typeof configuration.nested === 'boolean' ? configuration.nested : true;
 
 					const regex: FoldingRegex = {
 						begin,
 						middle,
 						end,
-						foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
+						foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
 						nested,
 						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 					};
@@ -277,8 +299,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		const regex = {
 			begin,
 			continuation,
-			foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
-			nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
+			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
 			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 		};
 
@@ -296,8 +318,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 		const regex = {
 			begin,
-			foldLastLine: typeof configuration.foldLastLine === "boolean" ? configuration.foldLastLine : true,
-			nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
+			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
 			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 		};
 
@@ -315,8 +337,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 		const regex = {
 			begin: separator,
-			foldLastLine: false,
-			nested: typeof configuration.nested === "boolean" ? configuration.nested : true,
+			foldLastLine: id(false),
+			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
 			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 		};
 
@@ -354,6 +376,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 	private getCaptureGroupCount(regex: string): number { // {{{
 		function count(tokens: Token[]): number {
+			if(!tokens || tokens.length === 0) {
+				return 0;
+			}
+
 			return tokens
 				.map((token): number => {
 					if (token.type == TokenType.CAPTURE_GROUP || (token.type == TokenType.QUANTIFIED && (token as Quantified).body.type == TokenType.CAPTURE_GROUP)) {
@@ -365,7 +391,16 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				.reduce((a: number, b: number): number => a + b, 0);
 		}
 
-		return count(parse(regex).body);
+		const ast = parse(regex);
+
+		if(ast.body) {
+			return count(ast.body);
+		}
+		else {
+			const alt = ast as any as Alternate;
+
+			return count((alt.left as Match).body) + count((alt.right as Match).body)
+		}
 	} // }}}
 
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> { // {{{
@@ -456,7 +491,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						const begin = stack[0].line;
 						const end = line;
 
-						if (regex.foldLastLine) {
+						if (regex.foldLastLine(...match)) {
 							if (end > begin) {
 								foldingRanges.push(new FoldingRange(begin, end, regex.kind));
 							}
@@ -479,7 +514,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						const begin = stack[0].line;
 						const end = line;
 
-						if (regex.foldLastLine) {
+						if (regex.foldLastLine()) {
 							if (end > begin) {
 								foldingRanges.push(new FoldingRange(begin, end, regex.kind));
 							}
@@ -522,7 +557,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					const begin = stack[0].line;
 					const end = line;
 
-					if (regex.foldLastLine) {
+					if (regex.foldLastLine()) {
 						if (end > begin) {
 							foldingRanges.push(new FoldingRange(begin, end, regex.kind));
 						}
@@ -559,7 +594,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					if (!expectedEnd || match[0] === expectedEnd) {
 						const end = position.line;
 
-						if (regex.foldLastLine) {
+						if (regex.foldLastLine()) {
 							if (end > begin) {
 								foldingRanges.push(new FoldingRange(begin, end, regex.kind));
 							}
