@@ -1,4 +1,4 @@
-import { parse, Token, types as TokenType, Quantified, Match, Alternate } from 'regexp2/lib'
+import { parse, Token, types as TokenType, Quantified } from 'regexp2/lib'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, TextDocument } from 'vscode'
 
 type FoldingConfig = {
@@ -48,13 +48,25 @@ enum Marker {
 
 const matchOperatorRegex = /[-|\\{}()[\]^$+*?.]/g;
 
-function escapeRegex(str: string) {
+function escapeRegex(str: string) { // {{{
 	return str.replace(matchOperatorRegex, '\\$&');
-}
+} // }}}
 
-function id<T>(value: T): () => T {
+function id<T>(value: T): () => T { // {{{
 	return () => value;
-}
+} // }}}
+
+function shouldFoldLastLine(foldLastLine: boolean[], groupIndex: number, endGroupCount: number): (...args: string[]) => boolean { // {{{
+	return (...args) => {
+		for(let i = groupIndex + 1, l = groupIndex + endGroupCount; i < l; ++i) {
+			if(typeof args[i] !== 'undefined') {
+				return foldLastLine[i - groupIndex];
+			}
+		}
+
+		return foldLastLine[0];
+	}
+} // }}}
 
 export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private groupIndex: number = 0;
@@ -167,17 +179,9 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 					if (Array.isArray(configuration.foldLastLine) && configuration.foldLastLine.length === endGroupCount) {
 						const foldLastLine = configuration.foldLastLine;
-						const groupIndex = (nested ? this.groupIndex : 1) + 1 + middleGroupCount;
+						const groupIndex = 1 + (nested ? this.groupIndex : 0) + middleGroupCount;
 
-						regex.foldLastLine = (...args) => {
-							for(let i = groupIndex + 1, l = groupIndex + endGroupCount; i < l; ++i) {
-								if(typeof args[i] !== 'undefined') {
-									return foldLastLine[i - groupIndex];
-								}
-							}
-
-							return foldLastLine[0];
-						}
+						regex.foldLastLine = shouldFoldLastLine(foldLastLine, groupIndex, endGroupCount)
 					}
 
 					if (nested) {
@@ -391,15 +395,14 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				.reduce((a: number, b: number): number => a + b, 0);
 		}
 
-		const ast = parse(regex);
+		const ast = parse(regex) as any;
 
 		if(ast.body) {
 			return count(ast.body);
-		}
-		else {
-			const alt = ast as any as Alternate;
-
-			return count((alt.left as Match).body) + count((alt.right as Match).body)
+		} else if(ast.left && ast.right) {
+			return count(ast.left.body) + count(ast.right.body);
+		} else {
+			return 0;
 		}
 	} // }}}
 
