@@ -450,10 +450,6 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> { // {{{
 		const foldingRanges: FoldingRange[] = [];
 
-		if (this.useIndentation) {
-			this.resolveIndentationRange(document, foldingRanges);
-		}
-
 		const stack: StackItem[] = [];
 
 		let line = 0;
@@ -471,6 +467,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			}
 
 			stack.shift();
+		}
+
+		if (this.useIndentation) {
+			this.resolveIndentationRange(document, foldingRanges);
 		}
 
 		return foldingRanges;
@@ -632,6 +632,11 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private resolveIndentationRange(document: TextDocument, foldingRanges: FoldingRange[]): void { // {{{
 		const tabSize = window.activeTextEditor ? parseInt(`${window.activeTextEditor.options.tabSize || 4}`) : 4;
 
+		const existingRanges: {[key: string]: boolean} = {}
+		for(const range of foldingRanges) {
+			existingRanges[range.start] = true
+		}
+
 		const previousRegions: PreviousRegion[] = [{ indent: -1, begin: document.lineCount, end: document.lineCount }];
 
 		for (let line = document.lineCount - 1; line >= 0; line--) {
@@ -660,7 +665,9 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				// new folding range
 				let endLineNumber = previous.end - 1;
 				if (endLineNumber - line >= 1) { // needs at east size 1
-					foldingRanges.push(new FoldingRange(line, endLineNumber));
+					if(!existingRanges[line]) {
+						foldingRanges.push(new FoldingRange(line, endLineNumber));
+					}
 				}
 			}
 
