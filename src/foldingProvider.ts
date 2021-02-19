@@ -49,9 +49,9 @@ enum Marker {
 }
 
 interface PreviousRegion {
-	indent: number; // indent or -2 if a marker
-	endAbove: number; // end line number for the region above
-	line: number; // start line of the region. Only used for marker regions.
+	begin: number;
+	end: number;
+	indent: number;
 }
 
 const matchOperatorRegex = /[-|\\{}()[\]^$+*?.]/g;
@@ -632,7 +632,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private resolveIndentationRange(document: TextDocument, foldingRanges: FoldingRange[]): void { // {{{
 		const tabSize = window.activeTextEditor ? parseInt(`${window.activeTextEditor.options.tabSize || 4}`) : 4;
 
-		const previousRegions: PreviousRegion[] = [{ indent: -1, endAbove: document.lineCount, line: document.lineCount }];
+		const previousRegions: PreviousRegion[] = [{ indent: -1, begin: document.lineCount, end: document.lineCount }];
 
 		for (let line = document.lineCount - 1; line >= 0; line--) {
 			const lineContent = document.lineAt(line).text;
@@ -645,7 +645,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					// for offSide languages, empty lines are associated to the previous block
 					// note: the next block is already written to the results, so this only
 					// impacts the end position of the block before
-					previous.endAbove = line;
+					previous.end = line;
 				}
 				continue; // only whitespace
 			}
@@ -658,17 +658,17 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				} while (previous.indent > indent);
 
 				// new folding range
-				let endLineNumber = previous.endAbove - 1;
+				let endLineNumber = previous.end - 1;
 				if (endLineNumber - line >= 1) { // needs at east size 1
 					foldingRanges.push(new FoldingRange(line, endLineNumber));
 				}
 			}
 
 			if (previous.indent === indent) {
-				previous.endAbove = line;
+				previous.end = line;
 			} else { // previous.indent < indent
 				// new region with a bigger indent
-				previousRegions.push({ indent, endAbove: line, line });
+				previousRegions.push({ indent, begin: line, end: line });
 			}
 		}
 	} // }}}
