@@ -1,5 +1,5 @@
-import { parse, Token, types as TokenType, Quantified } from 'regexp2/lib'
-import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, TextDocument } from 'vscode'
+import { parse, Quantified, Token, types as TokenType } from 'regexp2/lib'
+import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, TextDocument, window } from 'vscode'
 
 type FoldingConfig = {
 	begin?: string,
@@ -12,6 +12,8 @@ type FoldingConfig = {
 	continuationRegex?: string,
 	separator?: string,
 	separatorRegex?: string,
+	indentation?: boolean,
+	offSide?: boolean;
 	foldLastLine?: boolean | boolean[],
 	nested?: boolean,
 	kind?: 'comment' | 'region'
@@ -46,7 +48,42 @@ enum Marker {
 	SEPARATOR
 }
 
+interface PreviousRegion {
+	indent: number; // indent or -2 if a marker
+	endAbove: number; // end line number for the region above
+	line: number; // start line of the region. Only used for marker regions.
+}
+
 const matchOperatorRegex = /[-|\\{}()[\]^$+*?.]/g;
+
+const Tab = 9
+const Space = 32
+
+function computeIndentLevel(line: string, tabSize: number): number { // {{{
+	let indent = 0;
+	let i = 0;
+	let len = line.length;
+
+	while (i < len) {
+		const chCode = line.charCodeAt(i);
+
+		if (chCode === Space) {
+			indent++;
+		} else if (chCode === Tab) {
+			indent = indent - indent % tabSize + tabSize;
+		} else {
+			break;
+		}
+
+		i++;
+	}
+
+	if (i === len) {
+		return -1; // line only consists of whitespace
+	}
+
+	return indent;
+} // }}}
 
 function escapeRegex(str: string) { // {{{
 	return str.replace(matchOperatorRegex, '\\$&');
@@ -71,7 +108,9 @@ function shouldFoldLastLine(foldLastLine: boolean[], groupIndex: number, endGrou
 export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private groupIndex: number = 0;
 	private masterRegex: RegExp;
+	private offSideIndentation: boolean = false;
 	private regexes: Array<FoldingRegex> = [];
+	private useIndentation: boolean = false;
 
 	public id: string = 'explicit';
 
@@ -285,12 +324,14 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				const separator = new RegExp(escapeRegex(configuration.separator));
 
 				return this.addSeparatorRegex(configuration, regexIndex, separator);
-			} else {
-				return '';
+			} else if (configuration.indentation) {
+				this.useIndentation = configuration.indentation;
+				this.offSideIndentation = configuration.offSide || false;
 			}
 		} catch (err) {
-			return '';
 		}
+
+		return '';
 	} // }}}
 
 	private addContinuationRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, continuation: RegExp): string { // {{{
@@ -408,12 +449,17 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> { // {{{
 		const foldingRanges: FoldingRange[] = [];
+
+		if (this.useIndentation) {
+			this.resolveIndentationRange(document, foldingRanges);
+		}
+
 		const stack: StackItem[] = [];
 
 		let line = 0;
 
 		while (line < document.lineCount) {
-			line = this.resolveFoldingRange(document, foldingRanges, stack, line, 0);
+			line = this.resolveExplicitRange(document, foldingRanges, stack, line, 0);
 		}
 
 		if (stack[0] && stack[0].separator) {
@@ -430,8 +476,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return foldingRanges;
 	} // }}}
 
-	private resolveFoldingRange(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[], line: number, lineOffset: number): number { // {{{
-		for (const { type, index, match, offset } of this.findOfRegexp(this.masterRegex, document.lineAt(line).text, lineOffset)) {
+	private resolveExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[], line: number, lineOffset: number): number { // {{{
+		const text = document.lineAt(line).text;
+
+		for (const { type, index, match, offset } of this.findOfRegexp(this.masterRegex, text, lineOffset)) {
 			const regex = this.regexes[index];
 
 			switch (type) {
@@ -450,14 +498,14 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 								offset
 							};
 
-							if (this.resolveUnnestedFoldingRange(document, foldingRanges, stack, regex, begin, expectedEnd, position)) {
+							if (this.resolveUnnestedExplicitRange(document, foldingRanges, stack, regex, begin, expectedEnd, position)) {
 								return position.line;
 							}
 
 							position.offset = 0;
 
 							while (position.line < document.lineCount) {
-								if (this.resolveUnnestedFoldingRange(document, foldingRanges, stack, regex, begin, expectedEnd, position)) {
+								if (this.resolveUnnestedExplicitRange(document, foldingRanges, stack, regex, begin, expectedEnd, position)) {
 									return position.line;
 								}
 							}
@@ -573,7 +621,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					stack.shift();
 				}
 			}
-			else if (stack[0].line != line) {
+			else if (stack[0].line !== line) {
 				stack.shift();
 			}
 		}
@@ -581,7 +629,51 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return line + 1;
 	} // }}}
 
-	private resolveUnnestedFoldingRange(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[], regex: FoldingRegex, begin: number, expectedEnd: string | null, position: {line: number, offset: number}): boolean { // {{{
+	private resolveIndentationRange(document: TextDocument, foldingRanges: FoldingRange[]): void { // {{{
+		const tabSize = window.activeTextEditor ? parseInt(`${window.activeTextEditor.options.tabSize || 4}`) : 4;
+
+		const previousRegions: PreviousRegion[] = [{ indent: -1, endAbove: document.lineCount, line: document.lineCount }];
+
+		for (let line = document.lineCount - 1; line >= 0; line--) {
+			const lineContent = document.lineAt(line).text;
+			const indent = computeIndentLevel(lineContent, tabSize);
+
+			let previous = previousRegions[previousRegions.length - 1];
+
+			if (indent === -1) {
+				if (this.offSideIndentation) {
+					// for offSide languages, empty lines are associated to the previous block
+					// note: the next block is already written to the results, so this only
+					// impacts the end position of the block before
+					previous.endAbove = line;
+				}
+				continue; // only whitespace
+			}
+
+			if (previous.indent > indent) {
+				// discard all regions with larger indent
+				do {
+					previousRegions.pop();
+					previous = previousRegions[previousRegions.length - 1];
+				} while (previous.indent > indent);
+
+				// new folding range
+				let endLineNumber = previous.endAbove - 1;
+				if (endLineNumber - line >= 1) { // needs at east size 1
+					foldingRanges.push(new FoldingRange(line, endLineNumber));
+				}
+			}
+
+			if (previous.indent === indent) {
+				previous.endAbove = line;
+			} else { // previous.indent < indent
+				// new region with a bigger indent
+				previousRegions.push({ indent, endAbove: line, line });
+			}
+		}
+	} // }}}
+
+	private resolveUnnestedExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[], regex: FoldingRegex, begin: number, expectedEnd: string | null, position: {line: number, offset: number}): boolean { // {{{
 		for (const { type, match, offset } of this.findOfRegexp(regex.unnested!, document.lineAt(position.line).text, position.offset)) {
 			switch (type) {
 				case Marker.MIDDLE:
@@ -607,7 +699,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 						}
 
-						position.line = this.resolveFoldingRange(document, foldingRanges, stack, position.line, offset);
+						position.line = this.resolveExplicitRange(document, foldingRanges, stack, position.line, offset);
 
 						return true;
 					}
