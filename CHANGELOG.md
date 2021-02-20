@@ -1,3 +1,7 @@
+## 0.11.0
+- add `indentation` property
+- add flag indicating that the extension is managing how to fold the last line (only for [MrCode](https://github.com/zokugun/MrCode))
+
 ## 0.10.0
 - add dynamic `foldLastLine`
 
