@@ -113,6 +113,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private useIndentation: boolean = false;
 
 	public id: string = 'explicit';
+	public isManagingLastLine: boolean = true;
 
 	constructor(configuration: FoldingConfig | Array<FoldingConfig>) { // {{{
 		let source = '';
