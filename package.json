@@ -35,6 +35,11 @@
 					"type": "object",
 					"description": "Markers that will determine the folding ranges."
 				},
+				"explicitFolding.debug": {
+					"type": "boolean",
+					"default": false,
+					"description": "Output debug logs."
+				},
 				"explicitFolding.notification": {
 					"type": "string",
 					"default": "minor",

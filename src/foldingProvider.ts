@@ -1,5 +1,5 @@
 import { parse, Quantified, Token, types as TokenType } from 'regexp2/lib'
-import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, TextDocument, window } from 'vscode'
+import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode'
 
 type FoldingConfig = {
 	begin?: string,
@@ -111,11 +111,14 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private offSideIndentation: boolean = false;
 	private regexes: Array<FoldingRegex> = [];
 	private useIndentation: boolean = false;
+	private debugChannel: OutputChannel | null = null;
 
 	public id: string = 'explicit';
 	public isManagingLastLine: boolean = true;
 
-	constructor(configuration: FoldingConfig | Array<FoldingConfig>) { // {{{
+	constructor(configuration: FoldingConfig | Array<FoldingConfig>, debugChannel: OutputChannel | null) { // {{{
+		this.debugChannel = debugChannel;
+
 		let source = '';
 
 		if (configuration instanceof Array) {
@@ -449,6 +452,12 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> { // {{{
+		if(this.debugChannel) {
+			this.debugChannel.show(true);
+
+			this.debugChannel.appendLine(`lang: ${document.languageId}, regex: ${this.masterRegex.toString()}`);
+		}
+
 		const foldingRanges: FoldingRange[] = [];
 
 		const stack: StackItem[] = [];
@@ -482,6 +491,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 		for (const { type, index, match, offset } of this.findOfRegexp(this.masterRegex, text, lineOffset)) {
 			const regex = this.regexes[index];
+
+			if(this.debugChannel) {
+				this.debugChannel.appendLine(`line: ${line + 1}, offset: ${lineOffset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
+			}
 
 			switch (type) {
 				case Marker.BEGIN:
@@ -683,6 +696,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 	private resolveUnnestedExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[], regex: FoldingRegex, begin: number, expectedEnd: string | null, position: {line: number, offset: number}): boolean { // {{{
 		for (const { type, match, offset } of this.findOfRegexp(regex.unnested!, document.lineAt(position.line).text, position.offset)) {
+			if(this.debugChannel) {
+				this.debugChannel.appendLine(`unnesting -- line: ${position.line + 1}, offset: ${position.offset}, type: ${Marker[type]}, match: ${match[0]}`);
+			}
+
 			switch (type) {
 				case Marker.MIDDLE:
 					const end = position.line;

@@ -8,17 +8,19 @@ const VERSION_ID = 'explicitFoldingVersion'
 
 let $disposable: vscode.Disposable | null = null;
 
-function setup(context: vscode.ExtensionContext) { // {{{
+function setup(context: vscode.ExtensionContext, debug: boolean) { // {{{
 	if ($disposable !== null) {
 		$disposable.dispose();
 	}
+
+	const channel = debug && vscode.window.createOutputChannel('Folding') || null
 
 	const config = vscode.workspace.getConfiguration('folding');
 	const subscriptions: vscode.Disposable[] = [];
 
 	let provider, disposable;
 	for(let language of Object.keys(config).filter(name => typeof config[name] === 'object')) {
-		provider = new FoldingProvider(config[language]);
+		provider = new FoldingProvider(config[language], channel);
 
 		for(const scheme of SCHEMES) {
 			subscriptions.push(disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider));
@@ -86,17 +88,19 @@ export async function activate(context: vscode.ExtensionContext) { // {{{
 		}
 	}
 
+	const debug = config.get<boolean>('debug') || false;
+
 	const delay = config.get<number>('startupDelay');
 	if(delay && delay > 0) {
-		setTimeout(() => setup(context), delay);
+		setTimeout(() => setup(context, debug), delay);
 	}
 	else {
-		setup(context);
+		setup(context, debug);
 	}
 
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if(event.affectsConfiguration('folding')) {
-			setup(context);
+			setup(context, debug);
 		}
 	});
 } // }}}
