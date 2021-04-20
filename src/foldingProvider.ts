@@ -15,6 +15,7 @@ type FoldingConfig = {
 	indentation?: boolean,
 	offSide?: boolean;
 	foldLastLine?: boolean | boolean[],
+	foldEOF?: boolean,
 	nested?: boolean,
 	kind?: 'comment' | 'region'
 }
@@ -26,6 +27,7 @@ type FoldingRegex = {
 	unnested?: RegExp,
 	continuation?: RegExp,
 	foldLastLine: (...args: string[]) => boolean,
+	foldEOF: boolean,
 	nested: boolean,
 	kind: FoldingRangeKind,
 	endMatcher?: (...args: string[]) => string
@@ -206,6 +208,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						middle,
 						end,
 						foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+						foldEOF: configuration.foldEOF || false,
 						nested,
 						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
 						endMatcher
@@ -278,6 +281,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						middle,
 						end,
 						foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+						foldEOF: configuration.foldEOF || false,
 						nested,
 						kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 					};
@@ -349,6 +353,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			begin,
 			continuation,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldEOF: configuration.foldEOF || false,
 			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
 			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 		};
@@ -368,6 +373,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		const regex = {
 			begin,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldEOF: configuration.foldEOF || false,
 			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
 			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 		};
@@ -387,6 +393,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		const regex = {
 			begin: separator,
 			foldLastLine: id(false),
+			foldEOF: true,
 			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
 			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 		};
@@ -468,7 +475,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			line = this.resolveExplicitRange(document, foldingRanges, stack, line, 0);
 		}
 
-		if (stack[0] && stack[0].separator) {
+		while(stack[0] && stack[0].regex.foldEOF) {
 			const begin = stack[0].line;
 			const end = document.lineCount;
 
