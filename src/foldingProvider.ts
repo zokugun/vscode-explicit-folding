@@ -565,16 +565,13 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 
 							return position.line + 1
-						}
-						else if (regex.continuation) {
+						} else if (regex.continuation) {
 							if (regex.continuation.test(document.lineAt(line).text)) {
 								stack.unshift({ regex, line });
-							}
-							else {
+							} else {
 								return line + 1;
 							}
-						}
-						else {
+						} else {
 							stack.unshift({ regex, line, expectedEnd });
 						}
 					}
@@ -642,8 +639,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 
 							stack.unshift({ regex, line, separator: true });
-						}
-						else if (!regex.parents || !regex.parents.length) {
+						} else if (!regex.parents || !regex.parents.length) {
 							stack.unshift({ regex, line, separator: true });
 						}
 					} else {
@@ -668,8 +664,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						} else if (stack[0].regex.nested) {
 							if (!regex.parents || !regex.parents.length) {
 								stack.unshift({ regex, line, separator: true });
-							}
-							else {
+							} else {
 								const parent = regex.parents![regex.parents!.length - 1];
 
 								if(stack.some(({ regex: { index } }) => parent === index)) {
