@@ -19,6 +19,7 @@ type FoldingConfig = {
 	foldEOF?: boolean,
 	nested?: boolean,
 	descendants?: FoldingConfig[],
+	strict?: boolean,
 	kind?: 'comment' | 'region'
 }
 
@@ -35,7 +36,8 @@ type FoldingRegex = {
 	nested: boolean,
 	kind: FoldingRangeKind,
 	endMatcher?: (...args: string[]) => string,
-	parents?: number[]
+	parents?: number[],
+	strict?: boolean
 }
 
 type StackItem = {
@@ -410,11 +412,12 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			index: regexIndex,
 			begin: separator,
 			foldLastLine: id(false),
-			foldBOF: configuration.foldBOF || true,
-			foldEOF: configuration.foldEOF || true,
+			foldBOF: typeof configuration.foldBOF === 'boolean' ? configuration.foldBOF : true,
+			foldEOF: typeof configuration.foldEOF === 'boolean' ? configuration.foldEOF : true,
 			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
 			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
-			parents
+			parents,
+			strict: typeof configuration.strict === 'boolean' ? configuration.strict : true,
 		};
 
 		this.regexes.push(regex);
@@ -678,7 +681,11 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							} else {
 								const parent = regex.parents![regex.parents!.length - 1];
 
-								if(stack.some(({ regex: { index } }) => parent === index)) {
+								if(this.regexes[parent].strict) {
+									if(stack.some(({ regex: { index } }) => parent === index)) {
+										stack.unshift({ regex, line, separator: true });
+									}
+								} else if(stack.some(({ regex: { index } }) => regex.parents!.includes(index))) {
 									stack.unshift({ regex, line, separator: true });
 								}
 							}
