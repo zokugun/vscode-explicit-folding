@@ -147,7 +147,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		if (source.length === 0) {
 			this.masterRegex = new RegExp('a^');
 		} else {
-			this.masterRegex = new RegExp(source);
+			this.masterRegex = new RegExp(source, 'g');
 		}
 	} // }}}
 
@@ -250,10 +250,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					}
 					else {
 						if (regex.middle) {
-							regex.unnested = new RegExp(`(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`);
+							regex.unnested = new RegExp(`(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`, 'g');
 						}
 						else {
-							regex.unnested = new RegExp(`(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`);
+							regex.unnested = new RegExp(`(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`, 'g');
 						}
 					}
 
@@ -314,10 +314,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					}
 					else {
 						if (regex.middle) {
-							regex.unnested = new RegExp(`(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`);
+							regex.unnested = new RegExp(`(?<_${Marker.MIDDLE}_${regexIndex}>${regex.middle.source})|(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`, 'g');
 						}
 						else {
-							regex.unnested = new RegExp(`(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`);
+							regex.unnested = new RegExp(`(?<_${Marker.END}_${regexIndex}>${regex.end!.source})`, 'g');
 						}
 					}
 
@@ -430,8 +430,13 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	private *findOfRegexp(regex: RegExp, line: string, offset: number) { // {{{
+		// reset regex
+		regex.lastIndex = 0;
+		// apply offset
+		line = line.substring(offset);
+
 		while (true) {
-			const match = regex.exec(line.substring(offset)) as { groups?: { [key: string]: string }, index?: number, [key: number]: string };
+			const match = regex.exec(line) as { groups?: { [key: string]: string }, index?: number, [key: number]: string };
 
 			if (match && match.groups) {
 				if (match[0].length === 0) {
@@ -455,8 +460,6 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						break;
 					}
 				}
-
-				offset = nextOffset;
 			} else {
 				break;
 			}

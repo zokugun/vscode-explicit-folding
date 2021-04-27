@@ -3,13 +3,13 @@ config:
   - separatorRegex: "^.{6}\\/"
     descendants:
       # Division
-      - separatorRegex: "^.{6}\\s{1,4}\\S+\\s+DIVISION.*"
+      - separatorRegex: "^.{6}\\s{1,4}\\S+\\s+DIVISION"
         descendants:
           # Section
-          - separatorRegex: "^.{6}\\s{1,4}\\S+\\s+SECTION.*"
+          - separatorRegex: "^.{6}\\s{1,4}\\S+\\s+SECTION"
             descendants:
               # Paragraph
-              - separatorRegex: "^.{6}\\s{1,4}\\S+(?!\\s+(?:SECTION|DIVISION)).*"
+              - separatorRegex: "^.{6}\\s{1,4}\\S+(?!\\s+(?:SECTION|DIVISION))"
 foldings:
   - start: 0
     end: 2
