@@ -523,6 +523,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			this.resolveIndentationRange(document, foldingRanges);
 		}
 
+		if (this.debugChannel) {
+			this.debugChannel.appendLine(`foldings: ${JSON.stringify(foldingRanges)}`);
+		}
+
 		return foldingRanges;
 	} // }}}
 
@@ -643,7 +647,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							stack.unshift({ regex, line, separator: true });
 						}
 					} else {
-						while (stack[0].regex.parents && stack[0].regex.parents!.includes(index)) {
+						while (stack.length && stack[0].regex.parents && stack[0].regex.parents!.includes(index)) {
 							const begin = stack.shift()!.line;
 							const end = line;
 
@@ -652,7 +656,11 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 						}
 
-						if (stack[0].regex === regex) {
+						if(!stack.length) {
+							if (!regex.parents || !regex.parents.length) {
+								stack.unshift({ regex, line, separator: true });
+							}
+						} else if (stack[0].regex === regex) {
 							const begin = stack[0].line;
 							const end = line;
 
@@ -742,7 +750,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				let endLineNumber = previous.end - 1;
 				if (endLineNumber - line >= 1) { // needs at east size 1
 					if (!existingRanges[line]) {
-						foldingRanges.push(new FoldingRange(line, endLineNumber));
+						foldingRanges.push(new FoldingRange(line, endLineNumber, FoldingRangeKind.Region));
 					}
 				}
 			}

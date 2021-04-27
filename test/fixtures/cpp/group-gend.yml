@@ -1,0 +1,9 @@
+config:
+  - beginRegex: "#begin ([\\w]+)"
+    endRegex: "#end \\1"
+  - beginRegex: "#start ([\\w]+)"
+    endRegex: "#stop \\1"
+foldings:
+  - start: 0
+    end: 5
+    kind: Region

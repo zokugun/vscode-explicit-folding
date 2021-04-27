@@ -1,0 +1,35 @@
+config:
+  - separatorRegex: "\\S+\\s+DIVISION"
+    descendants:
+      - separatorRegex: "\\S+\\s+SECTION"
+foldings:
+  - start: 0
+    end: 2
+    kind: Region
+  - start: 4
+    end: 6
+    kind: Region
+  - start: 7
+    end: 9
+    kind: Region
+  - start: 3
+    end: 9
+    kind: Region
+  - start: 11
+    end: 15
+    kind: Region
+  - start: 16
+    end: 17
+    kind: Region
+  - start: 18
+    end: 19
+    kind: Region
+  - start: 10
+    end: 19
+    kind: Region
+  - start: 21
+    end: 27
+    kind: Region
+  - start: 20
+    end: 27
+    kind: Region

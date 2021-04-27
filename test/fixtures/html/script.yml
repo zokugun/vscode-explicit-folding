@@ -1,0 +1,13 @@
+config:
+  - beginRegex: "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z]+)[^>\\/]*>"
+    endRegex: "<\\/\\1>"
+foldings:
+  - start: 1
+    end: 6
+    kind: Region
+  - start: 10
+    end: 15
+    kind: Region
+  - start: 17
+    end: 20
+    kind: Region

@@ -1,0 +1,11 @@
+config:
+  - begin: "\/*"
+    end: "*\/"
+    nested: false
+  - begin: "//"
+    continuation: "\\"
+    nested: false
+foldings:
+  - start: 0
+    end: 2
+    kind: Region

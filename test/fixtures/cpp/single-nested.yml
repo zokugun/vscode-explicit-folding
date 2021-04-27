@@ -1,0 +1,27 @@
+config:
+  - begin: "\/*"
+    end: "*\/"
+    nested: false
+  - begin: "//"
+    continuation: "\\"
+    nested: false
+  # escape strings
+  - beginRegex: "\"(?:[^\"\\\\]|\\.)*(?=\")"
+    endRegex: "\""
+    nested: false
+  # "..." (not actually folded, but forces contents to be ignored)
+  - beginRegex: "(?!)"
+    endRegex: "\"(?:[^\"\\\\]|\\\\.)*\""
+  # '...' (not actually folded, but forces contents to be ignored)
+  - beginRegex: "(?!)"
+    endRegex: "'(?:[^'\\\\]|\\\\.)*'"
+  - begin: "("
+    end: ")"
+    foldLastLine: false
+  - begin: "{"
+    end: "}"
+foldings:
+  - start: 0
+    end: 4
+    kind: Region
+

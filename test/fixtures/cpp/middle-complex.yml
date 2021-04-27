@@ -1,0 +1,17 @@
+config:
+  - beginRegex: "#if(?:n?def)?"
+    middleRegex: "#el(?:se|if)"
+    endRegex: "#endif"
+foldings:
+  - start: 0
+    end: 1
+    kind: Region
+  - start: 2
+    end: 3
+    kind: Region
+  - start: 4
+    end: 5
+    kind: Region
+  - start: 6
+    end: 8
+    kind: Region

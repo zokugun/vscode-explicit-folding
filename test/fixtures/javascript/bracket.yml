@@ -1,0 +1,10 @@
+config:
+  - begin: "{"
+    end: "}"
+foldings:
+  - start: 0
+    end: 2
+    kind: Region
+  - start: 4
+    end: 6
+    kind: Region

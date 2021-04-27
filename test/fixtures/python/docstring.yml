@@ -1,0 +1,13 @@
+config:
+  - beginRegex: "\"\"\""
+    endRegex: "\"\"\""
+foldings:
+  - start: 1
+    end: 7
+    kind: Region
+  - start: 10
+    end: 16
+    kind: Region
+  - start: 19
+    end: 27
+    kind: Region

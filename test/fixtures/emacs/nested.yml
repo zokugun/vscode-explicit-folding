@@ -1,0 +1,10 @@
+config:
+  - begin: "{{{"
+    end: "}}}"
+foldings:
+  - start: 1
+    end: 3
+    kind: Region
+  - start: 0
+    end: 4
+    kind: Region

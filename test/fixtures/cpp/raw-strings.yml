@@ -1,0 +1,50 @@
+config:
+  - beginRegex: "#if(?:n?def)?"
+    middleRegex: "#el(?:se|if)"
+    endRegex: "#endif"
+  - begin: "\/*"
+    end: "*\/"
+    nested: false
+  - begin: "//"
+    continuation: "\\"
+    nested: false
+  - beginRegex: "#begin ([\\w]+)"
+    endRegex: "#end \\1"
+  - beginRegex: "#start ([\\w]+)"
+    endRegex: "#stop \\1"
+  # zero-length regex
+  - beginRegex: "\\/\\/"
+    endRegex: "(?<!\\\\)$"
+  # raw strings
+  - beginRegex: "(?:L|u8|u|U|)R\"([^\\s\\(\\)\\\\]{0,16})\\("
+    endRegex: "\\)\\1\""
+    nested: false
+    foldLastLine: false
+  # escape strings
+  - beginRegex: "\"(?:[^\"\\\\]|\\.)*(?=\")"
+    endRegex: "\""
+    nested: false
+  # "..." (not actually folded, but forces contents to be ignored)
+  - beginRegex: "(?!)"
+    endRegex: "\"(?:[^\"\\\\]|\\\\.)*\""
+  # '...' (not actually folded, but forces contents to be ignored)
+  - beginRegex: "(?!)"
+    endRegex: "'(?:[^'\\\\]|\\\\.)*'"
+  - begin: "("
+    end: ")"
+    foldLastLine: false
+  - begin: "{"
+    end: "}"
+foldings:
+  - start: 1
+    end: 2
+    kind: Region
+  - start: 11
+    end: 14
+    kind: Region
+  - start: 19
+    end: 22
+    kind: Region
+  - start: 26
+    end: 30
+    kind: Region
