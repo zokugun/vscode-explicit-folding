@@ -1,4 +1,4 @@
-import { parse, Quantified, Token, types as TokenType } from 'regexp2/lib'
+import { escape, parse, stringify, translate, visit, Token, TokenType, TranslationTarget } from '@daiyam/regexp'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode'
 
 type FoldingConfig = {
@@ -63,8 +63,6 @@ interface PreviousRegion {
 	indent: number;
 }
 
-const matchOperatorRegex = /[-|\\{}()[\]^$+*?.]/g;
-
 const Tab = 9
 const Space = 32
 
@@ -92,10 +90,6 @@ function computeIndentLevel(line: string, tabSize: number): number { // {{{
 	}
 
 	return indent;
-} // }}}
-
-function escapeRegex(str: string) { // {{{
-	return str.replace(matchOperatorRegex, '\\$&');
 } // }}}
 
 function id<T>(value: T): () => T { // {{{
@@ -159,27 +153,32 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		try {
 			if (configuration.beginRegex && configuration.endRegex) {
 				if (configuration.beginRegex === configuration.endRegex) {
-					const begin = new RegExp(configuration.beginRegex);
+					const begin = new RegExp(translate(configuration.beginRegex, TranslationTarget.ES2018));
 
 					return this.addDocstringRegex(configuration, regexIndex, begin);
 				} else {
-					let begin = new RegExp(configuration.beginRegex);
-					let end = new RegExp(configuration.endRegex);
+					let beginRegex = translate(configuration.beginRegex, TranslationTarget.ES2018);
+					let endRegex = translate(configuration.endRegex, TranslationTarget.ES2018);
+
+					let begin = new RegExp(beginRegex);
+					let end = new RegExp(endRegex);
 
 					if (begin.test('') || end.test('')) {
 						return '';
 					}
 
-					let middle
+					let middleRegex: string | undefined;
+					let middle: RegExp | undefined;
 					if (configuration.middleRegex) {
-						middle = new RegExp(configuration.middleRegex);
+						middleRegex = translate(configuration.middleRegex, TranslationTarget.ES2018);
+						middle = new RegExp(middleRegex);
 
 						if (middle.test('')) {
 							return '';
 						}
 					}
 
-					const groups = parse(configuration.beginRegex).body.filter(token => token.type == TokenType.CAPTURE_GROUP);
+					const groups = this.listCaptureGroups(beginRegex)
 
 					let index = this.groupIndex + 1;
 					let endMatcher;
@@ -204,7 +203,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 							endMatcher = eval('(function(){return function(...args) { return ' + src + ';};})()') as (...args: string[]) => string;
 
-							end = new RegExp(configuration.endRegex.replace(/\\(\d+)/g, (_, group) => groups[Number(group) - 1].text));
+							end = new RegExp(endRegex.replace(/\\(\d+)/g, (_, group) => stringify(groups[Number(group) - 1].body)));
 						}
 					}
 
@@ -227,10 +226,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 					let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`;
 
-					this.groupIndex += 1 + this.getCaptureGroupCount(configuration.beginRegex);
+					this.groupIndex += 1 + this.getCaptureGroupCount(beginRegex);
 
-					const middleGroupCount = regex.middle ? 1 + this.getCaptureGroupCount(configuration.middleRegex!) : 0;
-					const endGroupCount = 1 + this.getCaptureGroupCount(configuration.endRegex);
+					const middleGroupCount = regex.middle ? 1 + this.getCaptureGroupCount(middleRegex!) : 0;
+					const endGroupCount = 1 + this.getCaptureGroupCount(endRegex);
 
 					if (Array.isArray(configuration.foldLastLine) && configuration.foldLastLine.length === endGroupCount) {
 						const foldLastLine = configuration.foldLastLine;
@@ -263,12 +262,12 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				}
 			} else if (configuration.begin && configuration.end) {
 				if (configuration.begin === configuration.end) {
-					const begin = new RegExp(escapeRegex(configuration.begin));
+					const begin = new RegExp(escape(configuration.begin));
 
 					return this.addDocstringRegex(configuration, regexIndex, begin);
 				} else {
-					const begin = new RegExp(escapeRegex(configuration.begin));
-					const end = new RegExp(escapeRegex(configuration.end));
+					const begin = new RegExp(escape(configuration.begin));
+					const end = new RegExp(escape(configuration.end));
 
 					if (begin.test('') || end.test('')) {
 						return '';
@@ -276,7 +275,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 					let middle;
 					if (configuration.middle) {
-						middle = new RegExp(escapeRegex(configuration.middle));
+						middle = new RegExp(escape(configuration.middle));
 
 						if (middle.test('')) {
 							return '';
@@ -326,21 +325,21 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					return src;
 				}
 			} else if (configuration.beginRegex && configuration.continuationRegex) {
-				const begin = new RegExp(configuration.beginRegex);
-				const continuation = new RegExp(`${configuration.continuationRegex}$`);
+				const begin = new RegExp(translate(configuration.beginRegex, TranslationTarget.ES2018));
+				const continuation = new RegExp(`${translate(configuration.continuationRegex, TranslationTarget.ES2018)}$`);
 
 				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
 			} else if (configuration.begin && configuration.continuation) {
-				const begin = new RegExp(escapeRegex(configuration.begin));
-				const continuation = new RegExp(`${escapeRegex(configuration.continuation)}$`);
+				const begin = new RegExp(escape(configuration.begin));
+				const continuation = new RegExp(`${escape(configuration.continuation)}$`);
 
 				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
 			} else if (configuration.separatorRegex) {
-				const separator = new RegExp(configuration.separatorRegex);
+				const separator = new RegExp(translate(configuration.separatorRegex, TranslationTarget.ES2018));
 
 				return this.addSeparatorRegex(configuration, regexIndex, separator, parents);
 			} else if (configuration.separator) {
-				const separator = new RegExp(escapeRegex(configuration.separator));
+				const separator = new RegExp(escape(configuration.separator));
 
 				return this.addSeparatorRegex(configuration, regexIndex, separator, parents);
 			} else if (configuration.indentation) {
@@ -470,31 +469,31 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	private getCaptureGroupCount(regex: string): number { // {{{
-		function count(tokens: Token[]): number {
-			if (!tokens || tokens.length === 0) {
-				return 0;
+		const ast = parse(regex);
+
+		let count = 0;
+
+		visit(ast.body, {
+			[TokenType.CAPTURE_GROUP]() {
+				++count;
 			}
+		});
 
-			return tokens
-				.map((token): number => {
-					if (token.type == TokenType.CAPTURE_GROUP || (token.type == TokenType.QUANTIFIED && (token as Quantified).body.type == TokenType.CAPTURE_GROUP)) {
-						return 1;
-					} else {
-						return 0;
-					}
-				})
-				.reduce((a: number, b: number): number => a + b, 0);
-		}
+		return count;
+	} // }}}
 
-		const ast = parse(regex) as any;
+	private listCaptureGroups(regex: string): Token[] { // {{{
+		const ast = parse(regex);
 
-		if (ast.body) {
-			return count(ast.body);
-		} else if (ast.left && ast.right) {
-			return count(ast.left.body) + count(ast.right.body);
-		} else {
-			return 0;
-		}
+		const groups: Token[] = [];
+
+		visit(ast.body, {
+			[TokenType.CAPTURE_GROUP](token) {
+				groups.push(token);
+			}
+		});
+
+		return groups;
 	} // }}}
 
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> { // {{{

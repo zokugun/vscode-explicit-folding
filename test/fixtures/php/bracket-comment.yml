@@ -1,0 +1,38 @@
+config:
+  - begin: "/*"
+    end: "*/"
+    nested: false
+  - begin: "\""
+    end: "\""
+    nested: false
+  - beginRegex: "(?<!\\w)'"
+    endRegex: "'"
+    nested: false
+  - beginRegex: "(?:case|default)[^:]*:"
+    endRegex: "break;|(.)(?=case|default|\\})"
+    foldLastLine: [true, false]
+  - beginRegex: "{"
+    middleRegex: "}[^}]+{"
+    endRegex: "}\\s*(else|if)?"
+    foldLastLine: [true, false]
+  - beginRegex: "if\\s*\\(.+\\)\\s*[^\\{]?"
+    middleRegex: "else(?:\\s*if\\s*\\(.+\\)\\s*[^\\{]?)?"
+    endRegex: ";"
+  - beginRegex: "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z]+)[^>]*[^>\\/]*>"
+    endRegex: "<\\/\\1>"
+  - beginRegex: "<\\?(?:\\=|php)"
+    endRegex: "\\?>"
+  - begin: "["
+    end: "]"
+  - begin: "("
+    end: ")"
+foldings:
+  - start: 2
+    end: 4
+    kind: 3
+  - start: 2
+    end: 5
+    kind: 3
+  - start: 1
+    end: 7
+    kind: 3

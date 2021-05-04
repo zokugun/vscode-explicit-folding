@@ -4,8 +4,8 @@ import { FoldingRangeKind } from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as klaw from 'klaw-sync';
-import * as YAML from 'yaml'
-import { expect } from 'chai'
+import * as YAML from 'yaml';
+import { expect } from 'chai';
 
 function dehumanize(foldings: any[]) {
 	for(const folding of foldings) {
