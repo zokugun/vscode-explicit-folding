@@ -71,7 +71,7 @@
 		"watch": "tsc -watch -p ./"
 	},
 	"dependencies": {
-		"@daiyam/regexp": "^0.1.2"
+		"@daiyam/regexp": "^0.1.3"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.2.17",
