@@ -1,4 +1,4 @@
-import { escape, parse, stringify, translate, visit, Token, TokenType, TranslationTarget } from '@daiyam/regexp'
+import { escape, parse, stringify, translate, visit, Flavor, Token, TokenType } from '@daiyam/regexp'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode'
 
 type FoldingConfig = {
@@ -153,12 +153,12 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		try {
 			if (configuration.beginRegex && configuration.endRegex) {
 				if (configuration.beginRegex === configuration.endRegex) {
-					const begin = new RegExp(translate(configuration.beginRegex, TranslationTarget.ES2018));
+					const begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018) as string);
 
 					return this.addDocstringRegex(configuration, regexIndex, begin);
 				} else {
-					let beginRegex = translate(configuration.beginRegex, TranslationTarget.ES2018);
-					let endRegex = translate(configuration.endRegex, TranslationTarget.ES2018);
+					let beginRegex: string = translate(configuration.beginRegex, Flavor.ES2018) as string;
+					let endRegex: string = translate(configuration.endRegex, Flavor.ES2018) as string;
 
 					let begin = new RegExp(beginRegex);
 					let end = new RegExp(endRegex);
@@ -170,7 +170,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					let middleRegex: string | undefined;
 					let middle: RegExp | undefined;
 					if (configuration.middleRegex) {
-						middleRegex = translate(configuration.middleRegex, TranslationTarget.ES2018);
+						middleRegex = translate(configuration.middleRegex, Flavor.ES2018) as string;
 						middle = new RegExp(middleRegex);
 
 						if (middle.test('')) {
@@ -325,8 +325,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					return src;
 				}
 			} else if (configuration.beginRegex && configuration.continuationRegex) {
-				const begin = new RegExp(translate(configuration.beginRegex, TranslationTarget.ES2018));
-				const continuation = new RegExp(`${translate(configuration.continuationRegex, TranslationTarget.ES2018)}$`);
+				const begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018) as string);
+				const continuation = new RegExp(`${translate(configuration.continuationRegex, Flavor.ES2018)}$`);
 
 				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
 			} else if (configuration.begin && configuration.continuation) {
@@ -335,7 +335,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
 			} else if (configuration.separatorRegex) {
-				const separator = new RegExp(translate(configuration.separatorRegex, TranslationTarget.ES2018));
+				const separator = new RegExp(translate(configuration.separatorRegex, Flavor.ES2018) as string);
 
 				return this.addSeparatorRegex(configuration, regexIndex, separator, parents);
 			} else if (configuration.separator) {
