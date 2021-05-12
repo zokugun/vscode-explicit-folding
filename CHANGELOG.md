@@ -1,3 +1,6 @@
+## 0.12.1
+- fix need to reload VSCode when changing `explicitFolding.debug`
+
 ## 0.12.0
 - add the configuration `explicitFolding.debug` to print out debug informations into the channel `Folding` of the panel `Output`
 - add `foldEOF` property which will close the folding at the end of the file
