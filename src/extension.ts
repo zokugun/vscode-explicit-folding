@@ -99,7 +99,10 @@ export async function activate(context: vscode.ExtensionContext) { // {{{
 	}
 
 	vscode.workspace.onDidChangeConfiguration(event => {
-		if(event.affectsConfiguration('folding')) {
+		if(event.affectsConfiguration('folding') || event.affectsConfiguration('explicitFolding.debug')) {
+			const config = vscode.workspace.getConfiguration('explicitFolding');
+			const debug = config.get<boolean>('debug') || false;
+
 			setup(context, debug);
 		}
 	});
