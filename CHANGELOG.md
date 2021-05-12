@@ -1,3 +1,13 @@
+## 0.12.0
+- add the configuration `explicitFolding.debug` to print out debug informations into the channel `Folding` of the panel `Output`
+- add `foldEOF` property which will close the folding at the end of the file
+- add `foldBOF` property, only for separators
+- add `descendants` property, only for separators
+- add `strict` property, only for separators
+- `^` is correctly matching the beginning of a line
+- use new regex parser to support `(?<=y)x`, `(?<!y)x`, `(?i)x` and `(?i:x)`
+- add unit tests
+
 ## 0.11.0
 - add `indentation` property
 - add flag indicating that the extension is managing how to fold the last line (only for [MrCode](https://github.com/zokugun/MrCode))

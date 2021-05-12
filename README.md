@@ -54,6 +54,12 @@ or with **regex**:
 }
 ```
 
+### `foldEOF` property
+
+The `foldEOF` property is a boolean (`false` by default).
+
+If it's `true`, when the end of file is reached, the folding range will be closed on the last line.
+
 ### `foldLastLine` property
 
 The `foldLastLine` property is a boolean (`true` by default).
@@ -134,6 +140,36 @@ In this mode, the `foldLastLine` property and capturing groups are not supported
 }
 ```
 
+By default, the `foldEOF` property is `true`.
+
+### `foldBOF` property
+
+The `foldBOF` property is a boolean (`true` by default).
+
+If it's `true`, the first separator will create a folding range from the beginning of the file to its first line.
+
+### `descendants` property
+
+```
+"folding": {
+    "cobol": {
+        "separatorRegex": "\\S+\\s+(?i:DIVISION)",
+        "descendants": [
+            {
+                "separatorRegex": "\\S+\\s+(?i:SECTION)"
+            }
+        ]
+    }
+}
+```
+
+### `strict` property
+
+The `strict` property is a boolean (`true` by default).
+
+If it's `true`, the descendants can only be inside a parent.
+If `false`, the descendants can be inside a parent or a great-parent.
+
 ## Dynamic foldLastLine
 
 When used with `endRegex`, `foldLastLine` can be an array of boolean.
@@ -155,16 +191,16 @@ The builtin indentation provider is only used when there no other folding provid
 
 ```
 "folding": {
-	"python": [
-		{
-			"beginRegex": "\"\"\"",
-			"endRegex": "\"\"\""
-		},
-		{
-			"indentation": true,
-			"offSide": true
-		}
-	]
+    "python": [
+        {
+            "beginRegex": "\"\"\"",
+            "endRegex": "\"\"\""
+        },
+        {
+            "indentation": true,
+            "offSide": true
+        }
+    ]
 }
 ```
 
@@ -177,6 +213,20 @@ Another quirk is that the default indentation provider use the tab size given gi
 So the extension use the tab size of the active document (most likely the document that is being parsed).
 
 Even if it's a little outside the scope of the extension, I believe it will be helpfull to some users.
+
+## Regex Syntax
+
+Via Visual Studio Code's editor, the extension supports [ES2018 regexes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
+
+In addition, with the help of the [regex parser/translator](https://www.npmjs.com/package/@daiyam/regexp), the following PCRE2 syntax is also supported:
+
+- `(?i)x`: `x` becomes case insensitive
+- `(?i:x)y`: only `x` is case insensitive
+
+## Debugging
+
+You can get some debug informations with the configuration `explicitFolding.debug`.
+When `true`, the extension will print out the debug informations into the channel `Folding` of the panel `Output` (menu: `View` / `Output`).
 
 ## Usages
 
