@@ -209,14 +209,14 @@ With the previous config, a python file can be folded by its indentation **and**
 `offSide` (default: false) decide whether empty lines belong to the previous or the next block.
 Used by the default indentation provider and defined by language's configuration (not accessible by an extension).
 
-Another quirk is that the default indentation provider use the tab size given given with the document, but an extension doesn't have access to that info.
+Another quirk is that the default indentation provider use the tab size given given with the document, but an extension doesn't have access to that info.<br/>
 So the extension use the tab size of the active document (most likely the document that is being parsed).
 
 Even if it's a little outside the scope of the extension, I believe it will be helpfull to some users.
 
 ## Regex Syntax
 
-Via Visual Studio Code's editor, the extension supports [ES2018 regexes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
+Via VSCode's editor, the extension supports [ES2018 regexes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
 
 In addition, with the help of the [regex parser/translator](https://www.npmjs.com/package/@daiyam/regexp), the following PCRE2 syntax is also supported:
 
@@ -227,6 +227,16 @@ In addition, with the help of the [regex parser/translator](https://www.npmjs.co
 
 You can get some debug informations with the configuration `explicitFolding.debug`.
 When `true`, the extension will print out the debug informations into the channel `Folding` of the panel `Output` (menu: `View` / `Output`).
+
+## Priority/Delay
+
+VSCode is scoring each folding providers based on the scheme and language. When the scores are identicals, the providers which have been registered the latest have an higher priority.<br/>
+When starting up, VSCode loads the extensions (including this one). When reading a file, VSCode will load the folding provider of the file's language (only once per language).
+
+Before `v0.13.0`, in VSCode, the foldings from the language's providers had an ***higher priority*** and ***overwrote*** the foldings from the extension (if there was a conflict).
+
+Since `v0.13.0`, the extension is using a deferred provider so that the real folding provider is loaded after the language's folding provider. By doing so, the foldings from the language's providers have a ***lower priority*** and ***are overwritten*** by the foldings from the extension (if there is a conflict).<br/>
+The deferred provider is using the configuration `explicitFolding.startupDelay` (1000ms by default) as the delay to load the real folding provider.
 
 ## Usages
 

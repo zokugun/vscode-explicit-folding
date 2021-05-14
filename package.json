@@ -2,7 +2,7 @@
 	"name": "explicit-folding",
 	"displayName": "Explicit Folding",
 	"description": "Manually controls how and where to fold your code",
-	"version": "0.12.1",
+	"version": "0.13.0",
 	"publisher": "zokugun",
 	"homepage": "https://github.com/zokugun/vscode-explicit-folding",
 	"repository": {
@@ -59,7 +59,7 @@
 				"explicitFolding.startupDelay": {
 					"type": "number",
 					"default": 1000,
-					"description": "Adds delay to extension startup so that the registry can correctly select the folding providers."
+					"description": "Delay used to defer the registration of the folding providers."
 				}
 			}
 		}

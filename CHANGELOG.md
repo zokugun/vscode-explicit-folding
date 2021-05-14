@@ -1,3 +1,6 @@
+## 0.13.0
+- using deferred provider so that the real folding provider is loaded after the language's folding provider. By doing so, the folding ranges provided by the extension are given an higher importance, so VSCode is using them instead of the ones from the language's folding provider (if there is a conflict).
+
 ## 0.12.1
 - fix need to reload VSCode when changing `explicitFolding.debug`
 
