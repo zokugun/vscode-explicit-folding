@@ -45,7 +45,7 @@ class DeferredProvider implements vscode.FoldingRangeProvider { // {{{
 		const provider = new FoldingProvider(config, channel);
 
 		for (const scheme of SCHEMES) {
-			const disposable = vscode.languages.registerFoldingRangeProvider({ language: this.language, scheme }, provider)
+			const disposable = vscode.languages.registerFoldingRangeProvider({ language: this.language, scheme }, provider);
 
 			this.subscriptions.push(disposable);
 		}
