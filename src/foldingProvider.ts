@@ -434,8 +434,6 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private *findOfRegexp(regex: RegExp, line: string, offset: number) { // {{{
 		// reset regex
 		regex.lastIndex = 0;
-		// apply offset
-		line = line.substring(offset);
 
 		while (true) {
 			const match = regex.exec(line) as { groups?: { [key: string]: string }, index?: number, [key: number]: string };
@@ -445,7 +443,12 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					break;
 				}
 
-				const nextOffset = offset + (match.index || 0) + match[0].length;
+				const index = match.index || 0;
+				if (index < offset) {
+					continue;
+				}
+
+				const nextOffset = offset + index + match[0].length;
 
 				for (const key in match.groups) {
 					if (match.groups[key]) {
@@ -776,7 +779,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private resolveUnnestedExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[], regex: FoldingRegex, begin: number, expectedEnd: string | null, position: { line: number, offset: number }): boolean { // {{{
 		for (const { type, match, offset } of this.findOfRegexp(regex.unnested!, document.lineAt(position.line).text, position.offset)) {
 			if (this.debugChannel) {
-				this.debugChannel.appendLine(`unnesting -- line: ${position.line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}`);
+				this.debugChannel.appendLine(`[nested] line: ${position.line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}`);
 			}
 
 			switch (type) {
