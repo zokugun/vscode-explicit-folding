@@ -1,3 +1,4 @@
+import { basename } from 'path'
 import { escape, parse, stringify, translate, visit, Flavor, Token, TokenType } from '@daiyam/regexp'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode'
 
@@ -503,7 +504,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		if (this.debugChannel) {
 			this.debugChannel.show(true);
 
-			this.debugChannel.appendLine(`lang: ${document.languageId}, regex: ${this.masterRegex.toString()}`);
+			this.debugChannel.appendLine(`[document] lang: ${document.languageId}, fileName: ${basename(document.fileName)}`);
+			this.debugChannel.appendLine(`[main] regex: ${this.masterRegex.toString()}`);
 		}
 
 		const foldingRanges: FoldingRange[] = [];
@@ -532,7 +534,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		}
 
 		if (this.debugChannel) {
-			this.debugChannel.appendLine(`foldings: ${JSON.stringify(foldingRanges)}`);
+			this.debugChannel.appendLine(`[document] foldings: ${JSON.stringify(foldingRanges)}`);
 		}
 
 		return foldingRanges;
@@ -545,7 +547,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			const regex = this.regexes[index];
 
 			if (this.debugChannel) {
-				this.debugChannel.appendLine(`line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
+				this.debugChannel.appendLine(`[main] line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
 			}
 
 			switch (type) {
@@ -563,6 +565,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 								line,
 								offset: nextOffset
 							};
+
+							if (this.debugChannel) {
+								this.debugChannel.appendLine(`[nested=0] regex: ${regex.unnested!.toString()}`);
+							}
 
 							if (this.resolveUnnestedExplicitRange(document, foldingRanges, stack, regex, begin, expectedEnd, position)) {
 								return position.line;
@@ -779,7 +785,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	private resolveUnnestedExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[], regex: FoldingRegex, begin: number, expectedEnd: string | null, position: { line: number, offset: number }): boolean { // {{{
 		for (const { type, match, offset } of this.findOfRegexp(regex.unnested!, document.lineAt(position.line).text, position.offset)) {
 			if (this.debugChannel) {
-				this.debugChannel.appendLine(`[nested] line: ${position.line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}`);
+				this.debugChannel.appendLine(`[nested=0] line: ${position.line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}`);
 			}
 
 			switch (type) {
