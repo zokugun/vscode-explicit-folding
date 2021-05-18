@@ -1,3 +1,7 @@
+## 0.13.1
+- fix `^` in the alternative loop for non-nested blocks
+- improve debug messages
+
 ## 0.13.0
 - using deferred provider so that the real folding provider is loaded after the language's folding provider. By doing so, the folding ranges provided by the extension are given an higher importance, so VSCode is using them instead of the ones from the language's folding provider (if there is a conflict).
 
