@@ -1,28 +1,7 @@
 import { basename } from 'path'
 import { escape, parse, stringify, translate, visit, Flavor, Token, TokenType } from '@daiyam/regexp'
 import { FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode'
-
-type FoldingConfig = {
-	begin?: string,
-	middle?: string,
-	end?: string,
-	continuation?: string,
-	beginRegex?: string,
-	middleRegex?: string,
-	endRegex?: string,
-	continuationRegex?: string,
-	separator?: string,
-	separatorRegex?: string,
-	indentation?: boolean,
-	offSide?: boolean;
-	foldLastLine?: boolean | boolean[],
-	foldBOF?: boolean,
-	foldEOF?: boolean,
-	nested?: boolean,
-	descendants?: FoldingConfig[],
-	strict?: boolean,
-	kind?: 'comment' | 'region'
-}
+import { FoldingConfig } from './config'
 
 type FoldingRegex = {
 	index: number,
@@ -422,12 +401,13 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 		this.regexes.push(regex);
 
-		if (configuration.descendants) {
-			const regexes = configuration.descendants.map((config) => this.addRegex(config, [...parents, regexIndex])).filter((regex) => regex.length !== 0);
+		const nested = configuration.descendants || (Array.isArray(configuration.nested) ? configuration.nested : null)
+
+		if (nested) {
+			const regexes = nested.map((config) => this.addRegex(config, [...parents, regexIndex])).filter((regex) => regex.length !== 0);
 
 			return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})|${regexes.join('|')}`;
-		}
-		else {
+		} else {
 			return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
 		}
 	} // }}}
@@ -651,7 +631,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					break;
 				case Marker.SEPARATOR:
 					if (!stack[0]) {
-						if(regex.foldBOF) {
+						if (regex.foldBOF) {
 							if (line > 1) {
 								foldingRanges.push(new FoldingRange(0, line - 1, regex.kind));
 							}
@@ -670,7 +650,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 						}
 
-						if(!stack.length) {
+						if (!stack.length) {
 							if (!regex.parents || !regex.parents.length) {
 								stack.unshift({ regex, line, separator: true });
 							}
@@ -689,11 +669,11 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							} else {
 								const parent = regex.parents![regex.parents!.length - 1];
 
-								if(this.regexes[parent].strict) {
-									if(stack.some(({ regex: { index } }) => parent === index)) {
+								if (this.regexes[parent].strict) {
+									if (stack.some(({ regex: { index } }) => parent === index)) {
 										stack.unshift({ regex, line, separator: true });
 									}
-								} else if(stack.some(({ regex: { index } }) => regex.parents!.includes(index))) {
+								} else if (stack.some(({ regex: { index } }) => regex.parents!.includes(index))) {
 									stack.unshift({ regex, line, separator: true });
 								}
 							}
@@ -722,8 +702,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 					stack.shift();
 				}
-			}
-			else if (stack[0].line !== line) {
+			} else if (stack[0].line !== line) {
 				stack.shift();
 			}
 		}

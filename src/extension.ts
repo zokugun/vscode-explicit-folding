@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 const pkg = require('../package.json')
 
+import { FoldingConfig } from './config'
 import FoldingProvider from './foldingProvider'
 
 const DEPRECATED_KEY = 'explicitFoldingDeprecated'
@@ -54,29 +55,58 @@ class DeferredProvider implements vscode.FoldingRangeProvider { // {{{
 	}
 } // }}}
 
-function getRules(config: vscode.WorkspaceConfiguration, context: vscode.ExtensionContext): vscode.WorkspaceConfiguration {
+function checkDeprecatedRule(rule: FoldingConfig | Array<FoldingConfig>, deprecateds: string[]) { // {{{
+	if (rule instanceof Array) {
+		for (const r of rule) {
+			checkDeprecatedRule(r, deprecateds);
+		}
+	} else {
+		if (rule.descendants) {
+			if (!deprecateds.includes('descendants')) {
+				deprecateds.push('descendants')
+			}
+		} else if (Array.isArray(rule.nested)) {
+			for (const r of rule.nested) {
+				checkDeprecatedRule(r, deprecateds);
+			}
+		}
+	}
+} // }}}
+
+function checkDeprecatedRules(rules: vscode.WorkspaceConfiguration) { // {{{
+	const deprecateds: string[] = [];
+
+	for (const language of Object.keys(rules).filter(name => typeof rules[name] === 'object')) {
+		checkDeprecatedRule(rules[language], deprecateds);
+	}
+
+	if (deprecateds.includes('descendants')) {
+		vscode.window.showWarningMessage('Please update your config. The property `descendants` has been deprecated and replaced with the property `nested`. It will be removed in the next version.');
+	}
+} // }}}
+
+function getRules(config: vscode.WorkspaceConfiguration, context: vscode.ExtensionContext): vscode.WorkspaceConfiguration { // {{{
 	let rules = vscode.workspace.getConfiguration('folding');
-	if(rules) {
+	if (rules) {
 		const value = context.globalState.get<Date>(DEPRECATED_KEY);
 		const lastWarning = value ? new Date(value) : null;
 		const currentWarning = new Date();
 
-		if(currentWarning > new Date(2022, 6, 1)) {
+		if (currentWarning > new Date(2022, 6, 1)) {
 			vscode.window.showErrorMessage('Please update your config. The property `folding` is not supported since July 1, 2022. It has been replaced with the property `explicitFolding.rules`.');
 
 			return config.rules;
-		} else if(!lastWarning || lastWarning.getFullYear() !== currentWarning.getFullYear() || lastWarning.getMonth() !== currentWarning.getMonth() || currentWarning > new Date(2022, 5, 1)) {
+		} else if (!lastWarning || lastWarning.getFullYear() !== currentWarning.getFullYear() || lastWarning.getMonth() !== currentWarning.getMonth() || currentWarning > new Date(2022, 5, 1)) {
 			context.globalState.update(DEPRECATED_KEY, currentWarning);
 
 			vscode.window.showWarningMessage('Please update your config. The property `folding` has been deprecated and replaced with the property `explicitFolding.rules`. Its support will stop on July 1, 2022.');
 		}
 
 		return rules;
-	}
-	else {
+	} else {
 		return config.rules;
 	}
-}
+} // }}}
 
 function getDebugChannel(debug: boolean): vscode.OutputChannel | null { // {{{
 	if (debug) {
@@ -98,6 +128,8 @@ function setup(context: vscode.ExtensionContext) { // {{{
 	const delay = config.get<number>('startupDelay') || 0;
 	const subscriptions: vscode.Disposable[] = [];
 
+	checkDeprecatedRules(rules);
+
 	if (delay > 0) {
 		for (const language of Object.keys(rules).filter(name => typeof rules[name] === 'object')) {
 			const provider = new DeferredProvider(language, delay);
@@ -114,7 +146,7 @@ function setup(context: vscode.ExtensionContext) { // {{{
 		const debug = config.get<boolean>('debug') || false;
 		const channel = getDebugChannel(debug);
 
-		for (let language of Object.keys(rules).filter(name => typeof rules[name] === 'object')) {
+		for (const language of Object.keys(rules).filter(name => typeof rules[name] === 'object')) {
 			const provider = new FoldingProvider(rules[language], channel);
 
 			for (const scheme of SCHEMES) {

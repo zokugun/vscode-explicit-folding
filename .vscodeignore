@@ -5,6 +5,7 @@
 !package.json
 !LICENSE
 !README.md
+!out/config.js
 !out/extension.js
 !out/foldingProvider.js
 !node_modules/**
