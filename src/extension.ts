@@ -10,48 +10,72 @@ const VERSION_KEY = 'explicitFoldingVersion'
 const SCHEMES = ['file', 'untitled', 'vscode-userdata']
 
 let $channel: vscode.OutputChannel | null = null;
-let $disposable: vscode.Disposable = vscode.Disposable.from();
+let $context: vscode.ExtensionContext | null = null;
+const $disposable: vscode.Disposable = new vscode.Disposable(dispose)
+const $subscriptions: vscode.Disposable[] = []
 
-class DeferredProvider implements vscode.FoldingRangeProvider { // {{{
-	private loaded: boolean = false;
-	private subscriptions: vscode.Disposable[] = [];
+class MainProvider implements vscode.FoldingRangeProvider {
+	private providers: { [key: string]: boolean } = {}
 
-	constructor(private language: string, private delay: number) {
-	}
+	public id: string = 'explicit';
 
-	dispose() {
-		vscode.Disposable.from(...this.subscriptions).dispose();
-		this.subscriptions.length = 0;
-	}
+	provideFoldingRanges(document: vscode.TextDocument): vscode.ProviderResult<vscode.FoldingRange[]> { // {{{
+		if (!this.providers[document.languageId]) {
+			this.providers[document.languageId] = true
 
-	provideFoldingRanges(document: vscode.TextDocument, context: vscode.FoldingContext, token: vscode.CancellationToken): vscode.ProviderResult<vscode.FoldingRange[]> {
-		if (!this.loaded) {
-			this.loaded = true;
+			const config = vscode.workspace.getConfiguration('explicitFolding', document);
+			const delay = getDelay(config);
 
-			setTimeout(() => this.setup(), this.delay);
+			if (delay > 0) {
+				setTimeout(() => this.setup(document), delay);
+			} else {
+				this.setup(document);
+			}
 		}
 
 		return [];
-	}
+	} // }}}
 
-	push(disposable: vscode.Disposable) {
-		this.subscriptions.push(disposable);
-	}
+	setup(document: vscode.TextDocument) { // {{{
+		const language = document.languageId;
 
-	setup() {
-		this.dispose();
+		const perLanguage = getRules(vscode.workspace.getConfiguration('explicitFolding'));
+		const config = vscode.workspace.getConfiguration('explicitFolding', document);
 
-		const config = vscode.workspace.getConfiguration('folding')[this.language];
-		const debug = vscode.workspace.getConfiguration('explicitFolding').get<boolean>('debug') || false;
+		const rules: FoldingConfig[] = [];
+
+		if(!applyRules(config.get<FoldingConfig | FoldingConfig[]>('rules'), rules)) {
+			applyRules(perLanguage[language], rules);
+		}
+
+		applyRules(perLanguage['*'], rules);
+
+		checkDeprecatedRules(rules);
+
+		const debug = config.get<boolean>('debug') || false;
 		const channel = getDebugChannel(debug);
 
-		const provider = new FoldingProvider(config, channel);
+		const provider = new FoldingProvider(rules, channel);
 
 		for (const scheme of SCHEMES) {
-			const disposable = vscode.languages.registerFoldingRangeProvider({ language: this.language, scheme }, provider);
+			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
-			this.subscriptions.push(disposable);
+			$subscriptions.push(disposable);
 		}
+	} // }}}
+}
+
+function applyRules(data: FoldingConfig | FoldingConfig[] | undefined, rules: FoldingConfig[]): boolean { // {{{
+	if(data) {
+		if(Array.isArray(data)) {
+			rules.push(...data);
+		} else {
+			rules.push(data);
+		}
+
+		return true
+	} else {
+		return false
 	}
 } // }}}
 
@@ -73,22 +97,35 @@ function checkDeprecatedRule(rule: FoldingConfig | Array<FoldingConfig>, depreca
 	}
 } // }}}
 
-function checkDeprecatedRules(rules: vscode.WorkspaceConfiguration) { // {{{
+function checkDeprecatedRules(rules: Array<FoldingConfig>) { // {{{
 	const deprecateds: string[] = [];
 
-	for (const language of Object.keys(rules).filter(name => typeof rules[name] === 'object')) {
-		checkDeprecatedRule(rules[language], deprecateds);
-	}
+	checkDeprecatedRule(rules, deprecateds);
 
 	if (deprecateds.includes('descendants')) {
 		vscode.window.showWarningMessage('Please update your config. The property `descendants` has been deprecated and replaced with the property `nested`. It will be removed in the next version.');
 	}
 } // }}}
 
-function getRules(config: vscode.WorkspaceConfiguration, context: vscode.ExtensionContext): vscode.WorkspaceConfiguration { // {{{
+function dispose() { // {{{
+	vscode.Disposable.from(...$subscriptions).dispose();
+	$subscriptions.length = 0;
+} // }}}
+
+function getDelay(config: vscode.WorkspaceConfiguration): number { // {{{
+	if (config.has('startupDelay')) {
+		vscode.window.showWarningMessage('Please update your config. The property `startupDelay` has been deprecated and replaced with the property `delay`. It will be removed in the next version.');
+
+		return config.get<number>('startupDelay') || 0;
+	} else {
+		return config.get<number>('delay') || 0;
+	}
+} // }}}
+
+function getRules(config: vscode.WorkspaceConfiguration): vscode.WorkspaceConfiguration { // {{{
 	let rules = vscode.workspace.getConfiguration('folding');
 	if (rules) {
-		const value = context.globalState.get<Date>(DEPRECATED_KEY);
+		const value = $context!.globalState.get<Date>(DEPRECATED_KEY);
 		const lastWarning = value ? new Date(value) : null;
 		const currentWarning = new Date();
 
@@ -97,7 +134,7 @@ function getRules(config: vscode.WorkspaceConfiguration, context: vscode.Extensi
 
 			return config.rules;
 		} else if (!lastWarning || lastWarning.getFullYear() !== currentWarning.getFullYear() || lastWarning.getMonth() !== currentWarning.getMonth() || currentWarning > new Date(2022, 5, 1)) {
-			context.globalState.update(DEPRECATED_KEY, currentWarning);
+			$context!.globalState.update(DEPRECATED_KEY, currentWarning);
 
 			vscode.window.showWarningMessage('Please update your config. The property `folding` has been deprecated and replaced with the property `explicitFolding.rules`. Its support will stop on July 1, 2022.');
 		}
@@ -120,46 +157,18 @@ function getDebugChannel(debug: boolean): vscode.OutputChannel | null { // {{{
 	}
 } // }}}
 
-function setup(context: vscode.ExtensionContext) { // {{{
+function setup() { // {{{
 	$disposable.dispose();
 
-	const config = vscode.workspace.getConfiguration('explicitFolding');
-	const rules = getRules(config, context);
-	const delay = config.get<number>('startupDelay') || 0;
-	const subscriptions: vscode.Disposable[] = [];
+	const provider = new MainProvider();
 
-	checkDeprecatedRules(rules);
+	for (const scheme of SCHEMES) {
+		const disposable = vscode.languages.registerFoldingRangeProvider({ language: '*', scheme }, provider);
 
-	if (delay > 0) {
-		for (const language of Object.keys(rules).filter(name => typeof rules[name] === 'object')) {
-			const provider = new DeferredProvider(language, delay);
-
-			for (const scheme of SCHEMES) {
-				const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
-
-				provider.push(disposable);
-			}
-
-			subscriptions.push(provider);
-		}
-	} else {
-		const debug = config.get<boolean>('debug') || false;
-		const channel = getDebugChannel(debug);
-
-		for (const language of Object.keys(rules).filter(name => typeof rules[name] === 'object')) {
-			const provider = new FoldingProvider(rules[language], channel);
-
-			for (const scheme of SCHEMES) {
-				const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
-
-				subscriptions.push(disposable);
-			}
-		}
+		$subscriptions.push(disposable);
 	}
 
-	$disposable = vscode.Disposable.from(...subscriptions);
-
-	context.subscriptions.push($disposable);
+	$context!.subscriptions.push($disposable);
 } // }}}
 
 async function showWhatsNewMessage(version: string) { // {{{
@@ -190,6 +199,8 @@ async function showWhatsNewMessage(version: string) { // {{{
 } // }}}
 
 export async function activate(context: vscode.ExtensionContext) { // {{{
+	$context = context
+
 	const previousVersion = context.globalState.get<string>(VERSION_KEY);
 	const currentVersion = pkg.version;
 
@@ -215,11 +226,11 @@ export async function activate(context: vscode.ExtensionContext) { // {{{
 		}
 	}
 
-	setup(context);
+	setup();
 
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if (event.affectsConfiguration('folding') || event.affectsConfiguration('explicitFolding')) {
-			setup(context);
+			setup();
 		}
 	});
 } // }}}

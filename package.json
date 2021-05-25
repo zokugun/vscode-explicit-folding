@@ -31,14 +31,15 @@
 			"type": "object",
 			"title": "Explicit Folding configuration",
 			"properties": {
-				"folding": {
-					"type": "object",
-					"description": "Markers that will determine the folding ranges."
+				"explicitFolding.rules": {
+					"description": "Markers that will determine the folding ranges.",
+					"scope": "language-overridable"
 				},
 				"explicitFolding.debug": {
 					"type": "boolean",
 					"default": false,
-					"description": "Output debug logs."
+					"description": "Output debug logs.",
+					"scope": "language-overridable"
 				},
 				"explicitFolding.notification": {
 					"type": "string",
@@ -56,10 +57,11 @@
 						"The new version notification will always be shown"
 					]
 				},
-				"explicitFolding.startupDelay": {
+				"explicitFolding.delay": {
 					"type": "number",
 					"default": 1000,
-					"description": "Delay used to defer the registration of the folding providers."
+					"description": "Delay used to defer the registration of the folding providers.",
+					"scope": "language-overridable"
 				}
 			}
 		}
