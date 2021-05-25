@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 const pkg = require('../package.json')
 
 import { FoldingConfig } from './config'
+import { Disposable } from './disposable'
 import FoldingProvider from './foldingProvider'
 
 const DEPRECATED_KEY = 'explicitFoldingDeprecated'
@@ -11,8 +12,7 @@ const SCHEMES = ['file', 'untitled', 'vscode-userdata']
 
 let $channel: vscode.OutputChannel | null = null;
 let $context: vscode.ExtensionContext | null = null;
-const $disposable: vscode.Disposable = new vscode.Disposable(dispose)
-const $subscriptions: vscode.Disposable[] = []
+const $disposable: Disposable = new Disposable();
 
 class MainProvider implements vscode.FoldingRangeProvider {
 	private providers: { [key: string]: boolean } = {}
@@ -60,7 +60,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 		for (const scheme of SCHEMES) {
 			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
-			$subscriptions.push(disposable);
+			$disposable.push(disposable);
 		}
 	} // }}}
 }
@@ -105,11 +105,6 @@ function checkDeprecatedRules(rules: Array<FoldingConfig>) { // {{{
 	if (deprecateds.includes('descendants')) {
 		vscode.window.showWarningMessage('Please update your config. The property `descendants` has been deprecated and replaced with the property `nested`. It will be removed in the next version.');
 	}
-} // }}}
-
-function dispose() { // {{{
-	vscode.Disposable.from(...$subscriptions).dispose();
-	$subscriptions.length = 0;
 } // }}}
 
 function getDelay(config: vscode.WorkspaceConfiguration): number { // {{{
@@ -165,7 +160,7 @@ function setup() { // {{{
 	for (const scheme of SCHEMES) {
 		const disposable = vscode.languages.registerFoldingRangeProvider({ language: '*', scheme }, provider);
 
-		$subscriptions.push(disposable);
+		$disposable.push(disposable);
 	}
 
 	$context!.subscriptions.push($disposable);
