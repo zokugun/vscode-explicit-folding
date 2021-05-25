@@ -1,0 +1,10 @@
+config:
+  - beginRegex: "(?<=^.{6})\\*"
+    endRegex: "(?<=^.{6})[^*]"
+    nested: false
+    foldLastLine: false
+    kind: comment
+foldings:
+  - start: 21
+    end: 32
+    kind: Comment
