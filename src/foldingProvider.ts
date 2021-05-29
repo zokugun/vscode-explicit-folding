@@ -5,11 +5,12 @@ import { FoldingConfig } from './config'
 
 type FoldingRegex = {
 	index: number,
-	begin: RegExp,
+	begin?: RegExp,
 	middle?: RegExp,
 	end?: RegExp,
 	loopRegex?: RegExp,
-	continuation?: RegExp,
+	while?: RegExp,
+	continuation?: boolean,
 	foldLastLine: (...args: string[]) => boolean,
 	foldBOF: boolean,
 	foldEOF: boolean,
@@ -33,9 +34,9 @@ enum Marker {
 	BEGIN,
 	MIDDLE,
 	END,
-	CONTINUATION,
 	DOCSTRING,
-	SEPARATOR
+	SEPARATOR,
+	WHILE
 }
 
 interface PreviousRegion {
@@ -160,6 +161,24 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				const continuation = new RegExp(`${escape(configuration.continuation)}$`);
 
 				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
+			} else if (configuration.beginRegex && configuration.whileRegex) {
+				const begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018) as string);
+				const whileRegex = new RegExp(translate(configuration.whileRegex, Flavor.ES2018) as string);
+
+				return this.addBeginWhileRegex(configuration, regexIndex, begin, whileRegex);
+			} else if (configuration.begin && configuration.while) {
+				const begin = new RegExp(escape(configuration.begin));
+				const whileRegex = new RegExp(escape(configuration.while));
+
+				return this.addBeginWhileRegex(configuration, regexIndex, begin, whileRegex);
+			} else if (configuration.whileRegex) {
+				const whileRegex = new RegExp(translate(configuration.whileRegex, Flavor.ES2018) as string);
+
+				return this.addWhileRegex(configuration, regexIndex, whileRegex);
+			} else if (configuration.while) {
+				const whileRegex = new RegExp(escape(configuration.while));
+
+				return this.addWhileRegex(configuration, regexIndex, whileRegex);
 			} else if (configuration.separatorRegex) {
 				const separator = new RegExp(translate(configuration.separatorRegex, Flavor.ES2018) as string);
 
@@ -182,7 +201,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return '';
 	} // }}}
 
-	private addBeginEndRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, middle: RegExp|undefined, end: RegExp, strict: boolean, parents: number[]): string { // {{{
+	private addBeginEndRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, middle: RegExp | undefined, end: RegExp, strict: boolean, parents: number[]): string { // {{{
 		if (begin.test('') || end.test('')) {
 			return '';
 		}
@@ -238,7 +257,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 		this.regexes.push(regex);
 
-		let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`;
+		let src = `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin!.source})`;
 
 		this.groupIndex += 1 + this.getCaptureGroupCount(begin.source);
 
@@ -293,27 +312,51 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return src;
 	} // }}}
 
-	private addContinuationRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, continuation: RegExp): string { // {{{
-		if (begin.test('') || continuation.test('')) {
+	private addBeginWhileRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, whileRegex: RegExp): string { // {{{
+		if (begin.test('') || whileRegex.test('')) {
 			return '';
 		}
 
-		this.groupIndex += 2 + this.getCaptureGroupCount(begin.source) + this.getCaptureGroupCount(continuation.source);
+		this.groupIndex += 1 + this.getCaptureGroupCount(begin.source);
 
 		const regex = {
 			index: regexIndex,
 			begin,
-			continuation,
+			while: whileRegex,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
 			foldBOF: false,
 			foldEOF: configuration.foldEOF || false,
-			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
+			nested: false,
 			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
 		};
 
 		this.regexes.push(regex);
 
-		return `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})|(?<_${Marker.CONTINUATION}_${regexIndex}>${regex.continuation.source})`;
+		return `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`;
+	} // }}}
+
+	private addContinuationRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, whileRegex: RegExp): string { // {{{
+		if (begin.test('') || whileRegex.test('')) {
+			return '';
+		}
+
+		this.groupIndex += 1 + this.getCaptureGroupCount(begin.source);
+
+		const regex = {
+			index: regexIndex,
+			begin,
+			while: whileRegex,
+			continuation: true,
+			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBOF: false,
+			foldEOF: configuration.foldEOF || false,
+			nested: false,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+		};
+
+		this.regexes.push(regex);
+
+		return `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})`;
 	} // }}}
 
 	private addDocstringRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp): string { // {{{
@@ -368,6 +411,83 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		} else {
 			return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
 		}
+	} // }}}
+
+	private addWhileRegex(configuration: FoldingConfig, regexIndex: number, whileRegex: RegExp): string { // {{{
+		if (whileRegex.test('')) {
+			return '';
+		}
+
+		this.groupIndex += 1 + this.getCaptureGroupCount(whileRegex.source);
+
+		const regex = {
+			index: regexIndex,
+			while: whileRegex,
+			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBOF: false,
+			foldEOF: configuration.foldEOF || false,
+			nested: false,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+		};
+
+		this.regexes.push(regex);
+
+		return `(?<_${Marker.WHILE}_${regexIndex}>${regex.while.source})`;
+	} // }}}
+
+	private doEOF(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[]): void { // {{{
+		const end = document.lineCount;
+		while (stack[0]) {
+			if (stack[0].regex.foldEOF) {
+				const begin = stack[0].line;
+
+				if (end > begin + 1) {
+					foldingRanges.push(new FoldingRange(begin, end - 1, stack[0].regex.kind));
+				}
+			}
+
+			stack.shift();
+		}
+	} // }}}
+
+	private doWhile(document: TextDocument, foldingRanges: FoldingRange[], regex: FoldingRegex, line: number, continuation: boolean): number { // {{{
+		const begin = line;
+
+		while (++line < document.lineCount) {
+			const text = document.lineAt(line).text;
+
+			if (!regex.while!.test(text)) {
+				const end = line - (continuation ? 0 : 1);
+
+				if (regex.foldLastLine()) {
+					if (end > begin) {
+						foldingRanges.push(new FoldingRange(begin, end, regex.kind));
+					}
+
+					return end + 1;
+				} else {
+					if (end > begin + 1) {
+						foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
+					}
+
+					return end;
+				}
+			}
+		}
+
+		const end = line;
+
+		if (regex.foldLastLine()) {
+			if (end > begin) {
+				foldingRanges.push(new FoldingRange(begin, end, regex.kind));
+			}
+		} else {
+			if (end > begin + 1) {
+				foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
+			}
+		}
+
+		return line;
 	} // }}}
 
 	private *findOfRegexp(regex: RegExp, line: string, offset: number) { // {{{
@@ -456,18 +576,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			line = this.resolveExplicitRange(document, foldingRanges, 'main', this.mainRegex, stack, false, line, 0);
 		}
 
-		const end = document.lineCount;
-		while (stack[0]) {
-			if (stack[0].regex.foldEOF) {
-				const begin = stack[0].line;
-
-				if (end > begin + 1) {
-					foldingRanges.push(new FoldingRange(begin, end - 1, stack[0].regex.kind));
-				}
-			}
-
-			stack.shift();
-		}
+		this.doEOF(document, foldingRanges, stack);
 
 		if (this.useIndentation) {
 			this.resolveIndentationRange(document, foldingRanges);
@@ -480,7 +589,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return foldingRanges;
 	} // }}}
 
-	private resolveExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], name: String, regexp: RegExp, stack: StackItem[], secondaryLoop: boolean, line: number, lineOffset: number) { // {{{
+	private resolveExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], name: String, regexp: RegExp, stack: StackItem[], secondaryLoop: boolean, line: number, lineOffset: number): number { // {{{
 		const text = document.lineAt(line).text;
 
 		for (const { type, index, match, offset, nextOffset } of this.findOfRegexp(regexp, text, lineOffset)) {
@@ -515,27 +624,18 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 
 							if (stack.length != 0 && line >= document.lineCount) {
-								const end = document.lineCount;
-								while (stack[0]) {
-									if (stack[0].regex.foldEOF) {
-										const begin = stack[0].line;
-
-										if (end > begin + 1) {
-											foldingRanges.push(new FoldingRange(begin, end - 1, stack[0].regex.kind));
-										}
-									}
-
-									stack.shift();
-								}
+								this.doEOF(document, foldingRanges, stack);
 							}
 
 							return line;
 						} else if (regex.continuation) {
-							if (regex.continuation.test(document.lineAt(line).text)) {
-								stack.unshift({ regex, line });
-							} else {
+							if (!regex.while!.test(text)) {
 								return line + 1;
 							}
+
+							return this.doWhile(document, foldingRanges, regex, line, true);
+						} else if (regex.while) {
+							return this.doWhile(document, foldingRanges, regex, line, false);
 						} else {
 							stack.unshift({ regex, line, expectedEnd });
 						}
@@ -601,11 +701,6 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						}
 
 						stack.shift();
-					}
-					break;
-				case Marker.CONTINUATION:
-					if (stack[0] && stack[0].regex === regex) {
-						stack[0].continuation = line;
 					}
 					break;
 				case Marker.DOCSTRING:
@@ -679,30 +774,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						}
 					}
 					break;
-			}
-		}
-
-		if (stack[0] && stack[0].regex.continuation) {
-			if (stack[0].continuation) {
-				if (stack[0].continuation != line) {
-					const regex = stack[0].regex;
-					const begin = stack[0].line;
-					const end = line;
-
-					if (regex.foldLastLine()) {
-						if (end > begin) {
-							foldingRanges.push(new FoldingRange(begin, end, regex.kind));
-						}
-					} else {
-						if (end > begin + 1) {
-							foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
-						}
-					}
-
-					stack.shift();
-				}
-			} else if (stack[0].line !== line) {
-				stack.shift();
+				case Marker.WHILE:
+					return this.doWhile(document, foldingRanges, regex, line, false);
 			}
 		}
 

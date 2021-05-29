@@ -9,6 +9,8 @@ export type FoldingConfig = {
 	continuationRegex?: string,
 	separator?: string,
 	separatorRegex?: string,
+	while?: string,
+	whileRegex?: string,
 	indentation?: boolean,
 	offSide?: boolean;
 	foldLastLine?: boolean | boolean[],
