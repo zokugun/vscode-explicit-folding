@@ -16,6 +16,7 @@ export type FoldingConfig = {
 	foldEOF?: boolean,
 	nested?: boolean | FoldingConfig[],
 	descendants?: FoldingConfig[],
-	strict?: boolean,
+	strict?: boolean | string,
+	name?: string,
 	kind?: 'comment' | 'region'
 }
