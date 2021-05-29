@@ -1,0 +1,36 @@
+config:
+  - name: comment
+    kind: comment
+    beginRegex: "^\\/\\/\\*"
+    endRegex: "^\\/\\/[^*]"
+    foldLastLine: false
+    nested: false
+  - separatorRegex: "^\\/\\/[^*]\\S* +JOB "
+    strict: never
+    nested:
+    - name: proc
+      beginRegex: "^\\/\\/[^*]\\S* +PROC(?: |$)"
+      endRegex: "^\\/\\/[^*]\\S* +PEND(?: |$)"
+      nested:
+      - separatorRegex: "^\\/\\/[^*]\\S* +EXEC "
+        nested:
+        - separatorRegex: "^\\/\\/[^*]\\S* +DD "
+foldings:
+  - start: 1
+    end: 3
+    kind: Comment
+  - start: 9
+    end: 11
+    kind: Region
+  - start: 6
+    end: 11
+    kind: Region
+  - start: 4
+    end: 12
+    kind: Region
+  - start: 14
+    end: 18
+    kind: Region
+  - start: 0
+    end: 18
+    kind: Region
