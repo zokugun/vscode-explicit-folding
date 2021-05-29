@@ -182,83 +182,6 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return '';
 	} // }}}
 
-	private addContinuationRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, continuation: RegExp): string { // {{{
-		if (begin.test('') || continuation.test('')) {
-			return '';
-		}
-
-		this.groupIndex += 2 + this.getCaptureGroupCount(begin.source) + this.getCaptureGroupCount(continuation.source);
-
-		const regex = {
-			index: regexIndex,
-			begin,
-			continuation,
-			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
-			foldBOF: false,
-			foldEOF: configuration.foldEOF || false,
-			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
-			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
-		};
-
-		this.regexes.push(regex);
-
-		return `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})|(?<_${Marker.CONTINUATION}_${regexIndex}>${regex.continuation.source})`;
-	} // }}}
-
-	private addDocstringRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp): string { // {{{
-		if (begin.test('')) {
-			return '';
-		}
-
-		this.groupIndex += 1 + this.getCaptureGroupCount(begin.source);
-
-		const regex = {
-			index: regexIndex,
-			begin,
-			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
-			foldBOF: false,
-			foldEOF: configuration.foldEOF || false,
-			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
-			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
-		};
-
-		this.regexes.push(regex);
-
-		return `(?<_${Marker.DOCSTRING}_${regexIndex}>${regex.begin.source})`;
-	} // }}}
-
-	private addSeparatorRegex(configuration: FoldingConfig, regexIndex: number, separator: RegExp, strict: boolean, parents: number[]): string { // {{{
-		if (separator.test('')) {
-			return '';
-		}
-
-		this.groupIndex += 1 + this.getCaptureGroupCount(separator.source);
-
-		const regex = {
-			index: regexIndex,
-			begin: separator,
-			foldLastLine: id(false),
-			foldBOF: typeof configuration.foldBOF === 'boolean' ? configuration.foldBOF : true,
-			foldEOF: typeof configuration.foldEOF === 'boolean' ? configuration.foldEOF : true,
-			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
-			strict: typeof configuration.strict === 'boolean' ? configuration.strict : configuration.strict === 'never' ? false : strict,
-			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
-			parents,
-		};
-
-		this.regexes.push(regex);
-
-		const nested = configuration.descendants || (Array.isArray(configuration.nested) ? configuration.nested : null)
-
-		if (nested) {
-			const regexes = nested.map((config) => this.addRegex(config, configuration.strict === 'never' ? false : strict, [...parents, regexIndex])).filter((regex) => regex.length !== 0);
-
-			return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})|${regexes.join('|')}`;
-		} else {
-			return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
-		}
-	} // }}}
-
 	private addBeginEndRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, middle: RegExp|undefined, end: RegExp, strict: boolean, parents: number[]): string { // {{{
 		if (begin.test('') || end.test('')) {
 			return '';
@@ -368,6 +291,83 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		}
 
 		return src;
+	} // }}}
+
+	private addContinuationRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp, continuation: RegExp): string { // {{{
+		if (begin.test('') || continuation.test('')) {
+			return '';
+		}
+
+		this.groupIndex += 2 + this.getCaptureGroupCount(begin.source) + this.getCaptureGroupCount(continuation.source);
+
+		const regex = {
+			index: regexIndex,
+			begin,
+			continuation,
+			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBOF: false,
+			foldEOF: configuration.foldEOF || false,
+			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+		};
+
+		this.regexes.push(regex);
+
+		return `(?<_${Marker.BEGIN}_${regexIndex}>${regex.begin.source})|(?<_${Marker.CONTINUATION}_${regexIndex}>${regex.continuation.source})`;
+	} // }}}
+
+	private addDocstringRegex(configuration: FoldingConfig, regexIndex: number, begin: RegExp): string { // {{{
+		if (begin.test('')) {
+			return '';
+		}
+
+		this.groupIndex += 1 + this.getCaptureGroupCount(begin.source);
+
+		const regex = {
+			index: regexIndex,
+			begin,
+			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBOF: false,
+			foldEOF: configuration.foldEOF || false,
+			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region
+		};
+
+		this.regexes.push(regex);
+
+		return `(?<_${Marker.DOCSTRING}_${regexIndex}>${regex.begin.source})`;
+	} // }}}
+
+	private addSeparatorRegex(configuration: FoldingConfig, regexIndex: number, separator: RegExp, strict: boolean, parents: number[]): string { // {{{
+		if (separator.test('')) {
+			return '';
+		}
+
+		this.groupIndex += 1 + this.getCaptureGroupCount(separator.source);
+
+		const regex = {
+			index: regexIndex,
+			begin: separator,
+			foldLastLine: id(false),
+			foldBOF: typeof configuration.foldBOF === 'boolean' ? configuration.foldBOF : true,
+			foldEOF: typeof configuration.foldEOF === 'boolean' ? configuration.foldEOF : true,
+			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
+			strict: typeof configuration.strict === 'boolean' ? configuration.strict : configuration.strict === 'never' ? false : strict,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
+			parents,
+		};
+
+		this.regexes.push(regex);
+
+		const nested = configuration.descendants || (Array.isArray(configuration.nested) ? configuration.nested : null)
+
+		if (nested) {
+			const regexes = nested.map((config) => this.addRegex(config, configuration.strict === 'never' ? false : strict, [...parents, regexIndex])).filter((regex) => regex.length !== 0);
+
+			return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})|${regexes.join('|')}`;
+		} else {
+			return `(?<_${Marker.SEPARATOR}_${regexIndex}>${regex.begin.source})`;
+		}
 	} // }}}
 
 	private *findOfRegexp(regex: RegExp, line: string, offset: number) { // {{{
