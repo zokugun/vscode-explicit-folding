@@ -39,16 +39,19 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	setup(document: vscode.TextDocument) { // {{{
 		const language = document.languageId;
 
-		const perLanguage = getRules();
+		const perLanguages = getRules();
 		const config = vscode.workspace.getConfiguration('explicitFolding', document);
 
 		const rules: FoldingConfig[] = [];
+		const langRules: any = config.get('rules')
 
-		if(!applyRules(config.get<FoldingConfig | FoldingConfig[]>('rules'), rules)) {
-			applyRules(perLanguage[language], rules);
+		if (!langRules || langRules[language]) {
+			applyRules(perLanguages[language], rules);
+		} else {
+			applyRules(langRules, rules);
 		}
 
-		applyRules(perLanguage['*'], rules);
+		applyRules(perLanguages['*'], rules);
 
 		checkDeprecatedRules(rules);
 
@@ -65,17 +68,11 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	} // }}}
 }
 
-function applyRules(data: FoldingConfig | FoldingConfig[] | undefined, rules: FoldingConfig[]): boolean { // {{{
-	if(data) {
-		if(Array.isArray(data)) {
-			rules.push(...data);
-		} else {
-			rules.push(data);
-		}
-
-		return true
-	} else {
-		return false
+function applyRules(data: any, rules: FoldingConfig[]): void { // {{{
+	if (Array.isArray(data)) {
+		rules.push(...data);
+	} else if (data) {
+		rules.push(data);
 	}
 } // }}}
 
