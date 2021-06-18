@@ -129,48 +129,53 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		const regexIndex = this.regexes.length;
 
 		try {
-			if (configuration.beginRegex && configuration.endRegex) {
-				const begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018) as string);
+			let begin
+			if (configuration.beginRegex) {
+				begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018) as string);
 
 				if (configuration.beginRegex === configuration.endRegex) {
 					return this.addDocstringRegex(configuration, regexIndex, begin);
-				} else {
-					const middle = configuration.middleRegex && new RegExp(translate(configuration.middleRegex, Flavor.ES2018) as string) || undefined;
-					const end = new RegExp(translate(configuration.endRegex, Flavor.ES2018) as string);
-
-					return this.addBeginEndRegex(configuration, regexIndex, begin, middle, end, strict, parents);
 				}
-			} else if (configuration.begin && configuration.end) {
-				const begin = new RegExp(escape(configuration.begin));
+			} else if (configuration.begin) {
+				begin = new RegExp(escape(configuration.begin));
 
 				if (configuration.begin === configuration.end) {
 					return this.addDocstringRegex(configuration, regexIndex, begin);
-				} else {
-					const middle = configuration.middle && new RegExp(escape(configuration.middle)) || undefined;
-					const end = new RegExp(escape(configuration.end));
+				}
+			}
+
+			if (begin) {
+				let end, continuation, whileRegex
+
+				if (configuration.endRegex) {
+					end = new RegExp(translate(configuration.endRegex, Flavor.ES2018) as string);
+				} else if (configuration.end) {
+					end = new RegExp(escape(configuration.end));
+				} else if (configuration.continuationRegex) {
+					continuation = new RegExp(`${translate(configuration.continuationRegex, Flavor.ES2018)}$`);
+				} else if (configuration.continuation) {
+					continuation = new RegExp(`${escape(configuration.continuation)}$`);
+				} else if (configuration.whileRegex) {
+					whileRegex = new RegExp(translate(configuration.whileRegex, Flavor.ES2018) as string);
+				} else if (configuration.while) {
+					whileRegex = new RegExp(escape(configuration.while));
+				}
+
+				if (end) {
+					let middle
+
+					if (configuration.middleRegex) {
+						middle = new RegExp(translate(configuration.middleRegex, Flavor.ES2018) as string)
+					} else if (configuration.middle) {
+						middle = new RegExp(escape(configuration.middle))
+					}
 
 					return this.addBeginEndRegex(configuration, regexIndex, begin, middle, end, strict, parents);
+				} else if (continuation) {
+					return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
+				} else if (whileRegex) {
+					return this.addBeginWhileRegex(configuration, regexIndex, begin, whileRegex);
 				}
-			} else if (configuration.beginRegex && configuration.continuationRegex) {
-				const begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018) as string);
-				const continuation = new RegExp(`${translate(configuration.continuationRegex, Flavor.ES2018)}$`);
-
-				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
-			} else if (configuration.begin && configuration.continuation) {
-				const begin = new RegExp(escape(configuration.begin));
-				const continuation = new RegExp(`${escape(configuration.continuation)}$`);
-
-				return this.addContinuationRegex(configuration, regexIndex, begin, continuation);
-			} else if (configuration.beginRegex && configuration.whileRegex) {
-				const begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018) as string);
-				const whileRegex = new RegExp(translate(configuration.whileRegex, Flavor.ES2018) as string);
-
-				return this.addBeginWhileRegex(configuration, regexIndex, begin, whileRegex);
-			} else if (configuration.begin && configuration.while) {
-				const begin = new RegExp(escape(configuration.begin));
-				const whileRegex = new RegExp(escape(configuration.while));
-
-				return this.addBeginWhileRegex(configuration, regexIndex, begin, whileRegex);
 			} else if (configuration.whileRegex) {
 				const whileRegex = new RegExp(translate(configuration.whileRegex, Flavor.ES2018) as string);
 
