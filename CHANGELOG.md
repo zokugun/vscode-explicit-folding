@@ -1,3 +1,6 @@
+## 0.14.2
+- fix global `explicitFolding.rules`
+
 ## 0.14.1
 - fix how to determine that the configuration `folding` isn't used
 
