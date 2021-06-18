@@ -1,3 +1,13 @@
+## 0.14.0
+- rename the configuration `folding` to `explicitFolding.rules` (`folding` is supported until July 1, 2022)
+- rename the configuration `startupDelay` to `explicitFolding.delay`
+- the configurations `explicitFolding.rules`, `explicitFolding.debug` or `explicitFolding.delay` can be placed in a language section.
+- the property `descendants` is regrouped with the property `nested`
+- the `begin/end` rule is fully supporting the property `nested` as an array of rules
+- add `begin/while` rule
+- add `while` rule
+- add documentation for each rules and their applicable properties
+
 ## 0.13.1
 - fix `^` in the alternative loop for non-nested blocks
 - improve debug messages
