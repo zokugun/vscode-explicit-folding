@@ -1,3 +1,6 @@
+## 0.14.1
+- fix how to determine that the configuration `folding` isn't used
+
 ## 0.14.0
 - rename the configuration `folding` to `explicitFolding.rules` (`folding` is supported until July 1, 2022)
 - rename the configuration `startupDelay` to `explicitFolding.delay`
