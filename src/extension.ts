@@ -39,7 +39,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	setup(document: vscode.TextDocument) { // {{{
 		const language = document.languageId;
 
-		const perLanguage = getRules(vscode.workspace.getConfiguration('explicitFolding'));
+		const perLanguage = getRules();
 		const config = vscode.workspace.getConfiguration('explicitFolding', document);
 
 		const rules: FoldingConfig[] = [];
@@ -117,9 +117,9 @@ function getDelay(config: vscode.WorkspaceConfiguration): number { // {{{
 	}
 } // }}}
 
-function getRules(config: vscode.WorkspaceConfiguration): vscode.WorkspaceConfiguration { // {{{
-	let rules = vscode.workspace.getConfiguration('folding');
-	if (rules) {
+function getRules(): vscode.WorkspaceConfiguration { // {{{
+	const rules = vscode.workspace.getConfiguration('folding');
+	if (Object.keys(rules).length > 4) {
 		const value = $context!.globalState.get<Date>(DEPRECATED_KEY);
 		const lastWarning = value ? new Date(value) : null;
 		const currentWarning = new Date();
@@ -127,7 +127,7 @@ function getRules(config: vscode.WorkspaceConfiguration): vscode.WorkspaceConfig
 		if (currentWarning > new Date(2022, 6, 1)) {
 			vscode.window.showErrorMessage('Please update your config. The property `folding` is not supported since July 1, 2022. It has been replaced with the property `explicitFolding.rules`.');
 
-			return config.rules;
+			return vscode.workspace.getConfiguration('explicitFolding.rules');
 		} else if (!lastWarning || lastWarning.getFullYear() !== currentWarning.getFullYear() || lastWarning.getMonth() !== currentWarning.getMonth() || currentWarning > new Date(2022, 5, 1)) {
 			$context!.globalState.update(DEPRECATED_KEY, currentWarning);
 
@@ -136,7 +136,7 @@ function getRules(config: vscode.WorkspaceConfiguration): vscode.WorkspaceConfig
 
 		return rules;
 	} else {
-		return config.rules;
+		return vscode.workspace.getConfiguration('explicitFolding.rules');
 	}
 } // }}}
 
