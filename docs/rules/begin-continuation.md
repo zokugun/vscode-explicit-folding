@@ -6,7 +6,10 @@ The properties `begin` and `beginRegex` are indicating the beginning of a foldin
 
 ## `continuation`/`continuationRegex`
 
-The properties `continuation` and `continuationRegex` are allowing single-line comments to contain line-continuation character. One of them is required.
+Starting the first line of the folding region, each line must match the properties `continuation` or `continuationRegex`. One of the properties is required.
+The last line of the folding region may not match the properties `continuation` or `continuationRegex`.
+
+It's allowing single-line comments to contain line-continuation character.
 
 ```
 "cpp": {

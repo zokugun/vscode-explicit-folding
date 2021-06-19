@@ -6,7 +6,7 @@ The properties `begin` and `beginRegex` are indicating the beginning of a foldin
 
 ## `while`/`whileRegex`
 
-Following the first line of the folding regiom, each line must match the properties `while` or `whileRegex`. One of the properties is required.
+Starting the second line of the folding region, each line must match the properties `while` or `whileRegex`. One of the properties is required.
 
 ## `foldEOF`
 
