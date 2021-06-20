@@ -1,3 +1,6 @@
+## 0.14.3
+- fix infinity loop with single-line and not-nested region
+
 ## 0.14.2
 - fix global `explicitFolding.rules`
 
