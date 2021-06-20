@@ -45,6 +45,11 @@ interface PreviousRegion {
 	indent: number;
 }
 
+interface Position {
+	line: number;
+	offset: number;
+}
+
 const Tab = 9
 const Space = 32
 
@@ -455,7 +460,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		}
 	} // }}}
 
-	private doWhile(document: TextDocument, foldingRanges: FoldingRange[], regex: FoldingRegex, line: number, continuation: boolean): number { // {{{
+	private doWhile(document: TextDocument, foldingRanges: FoldingRange[], regex: FoldingRegex, line: number, continuation: boolean): Position { // {{{
 		const begin = line;
 
 		while (++line < document.lineCount) {
@@ -469,13 +474,13 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 						foldingRanges.push(new FoldingRange(begin, end, regex.kind));
 					}
 
-					return end + 1;
+					return { line: end + 1, offset: 0 };
 				} else {
 					if (end > begin + 1) {
 						foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
 					}
 
-					return end;
+					return { line: end, offset: 0 };
 				}
 			}
 		}
@@ -492,7 +497,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			}
 		}
 
-		return line;
+		return { line: line, offset: 0 };
 	} // }}}
 
 	private *findOfRegexp(regex: RegExp, line: string, offset: number) { // {{{
@@ -522,7 +527,6 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							type: keys[1],
 							index: keys[2],
 							match: (match as string[]),
-							offset,
 							nextOffset
 						};
 
@@ -575,10 +579,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 		const stack: StackItem[] = [];
 
-		let line = 0;
+		let position: Position = { line: 0, offset: 0 };
 
-		while (line < document.lineCount) {
-			line = this.resolveExplicitRange(document, foldingRanges, 'main', this.mainRegex, stack, false, line, 0);
+		while (position.line < document.lineCount) {
+			position = this.resolveExplicitRange(document, foldingRanges, 'main', this.mainRegex, stack, false, position.line, position.offset);
 		}
 
 		this.doEOF(document, foldingRanges, stack);
@@ -594,10 +598,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return foldingRanges;
 	} // }}}
 
-	private resolveExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], name: String, regexp: RegExp, stack: StackItem[], secondaryLoop: boolean, line: number, lineOffset: number): number { // {{{
+	private resolveExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], name: String, regexp: RegExp, stack: StackItem[], secondaryLoop: boolean, line: number, offset: number): Position { // {{{
 		const text = document.lineAt(line).text;
 
-		for (const { type, index, match, offset, nextOffset } of this.findOfRegexp(regexp, text, lineOffset)) {
+		for (const { type, index, match, nextOffset } of this.findOfRegexp(regexp, text, offset)) {
 			const regex = this.regexes[index];
 
 			if (this.debugChannel) {
@@ -622,20 +626,20 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 							const stack: StackItem[] = [{ regex, line, expectedEnd }];
 
-							line = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, stack, true, line, nextOffset);
+							let position = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, stack, true, line, nextOffset);
 
-							while (stack.length != 0 && line < document.lineCount) {
-								line = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, stack, true, line, 0);
+							while (stack.length != 0 && position.line < document.lineCount) {
+								position = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, stack, true, position.line, position.offset);
 							}
 
-							if (stack.length != 0 && line >= document.lineCount) {
+							if (stack.length != 0 && position.line >= document.lineCount) {
 								this.doEOF(document, foldingRanges, stack);
 							}
 
-							return line;
+							return position;
 						} else if (regex.continuation) {
 							if (!regex.while!.test(text)) {
-								return line + 1;
+								return { line: line + 1, offset: 0 };
 							}
 
 							return this.doWhile(document, foldingRanges, regex, line, true);
@@ -682,13 +686,18 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 								foldingRanges.push(new FoldingRange(begin, end, regex.kind));
 							}
 
-							return line + 1;
+							return { line: line + 1, offset: 0 };
 						} else {
 							if (end > begin + 1) {
 								foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
 							}
 
-							return line;
+							if (end > begin) {
+								return { line, offset: 0 };
+							}
+							else {
+								return { line, offset: nextOffset };
+							}
 						}
 					} else if (stack[0] && stack[0].regex === regex && (!stack[0].expectedEnd || match[0] === stack[0].expectedEnd)) {
 						const end = line;
@@ -784,7 +793,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			}
 		}
 
-		return line + 1;
+		return { line: line + 1, offset: 0 };
 	} // }}}
 
 	private resolveIndentationRange(document: TextDocument, foldingRanges: FoldingRange[]): void { // {{{

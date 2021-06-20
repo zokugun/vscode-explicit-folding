@@ -1,0 +1,6 @@
+config:
+  - beginRegex: X
+    endRegex: Y
+    nested: false
+    foldLastLine: false
+foldings: []
