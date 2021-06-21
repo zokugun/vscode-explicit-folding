@@ -117,3 +117,22 @@ If `true`, the rule can contain only folding regions directly defined in its pro
 If `false`, the rule can contain folding regions defined in its property `nested` or in the property `nested` of its children.
 
 If `never`, the default value of `strict` becomes `false` for itself and all its descendants.
+
+## `consumeEnd`
+
+The property `consumeEnd` indicates if the line match by `end`/`endRegex` should be the last line of the region. It's mostly relevant in rule like:
+
+```
+"jcl": [
+    {
+        "name": "comment",
+        "kind": "comment",
+        "beginRegex": "^\\/\\/\\*",
+        "endRegex": "^\\/\\/[^*]",
+        "consumeEnd": false,
+        "nested": false
+    }
+]
+```
+
+It's a boolean or an array of boolean (`true` by default) like the property `foldLastLine`.

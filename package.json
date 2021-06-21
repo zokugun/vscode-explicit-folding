@@ -93,6 +93,11 @@
 	"keywords": [
 		"folding"
 	],
+	"icon": "icon.png",
+	"galleryBanner": {
+		"color": "#1c1e20",
+		"theme": "dark"
+	},
 	"__metadata": {
 		"id": "6ccb8d60-0e25-4a00-8f74-e8b9ef6133ce",
 		"publisherDisplayName": "zokugun",
