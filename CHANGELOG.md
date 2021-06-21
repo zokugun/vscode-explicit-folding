@@ -1,3 +1,7 @@
+## 0.14.4
+- fix conflict between rules when `foldLastLine` and `nested` are `false`
+- add icon
+
 ## 0.14.3
 - fix infinity loop with single-line and not-nested region
 
