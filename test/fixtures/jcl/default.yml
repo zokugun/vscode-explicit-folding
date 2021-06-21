@@ -3,7 +3,7 @@ config:
     kind: comment
     beginRegex: "^\\/\\/\\*"
     endRegex: "^\\/\\/[^*]"
-    foldLastLine: false
+    consumeEnd: false
     nested: false
   - separatorRegex: "^\\/\\/[^*]\\S* +JOB "
     strict: never

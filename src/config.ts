@@ -13,6 +13,7 @@ export type FoldingConfig = {
 	whileRegex?: string,
 	indentation?: boolean,
 	offSide?: boolean;
+	consumeEnd?: boolean | boolean[],
 	foldLastLine?: boolean | boolean[],
 	foldBOF?: boolean,
 	foldEOF?: boolean,
