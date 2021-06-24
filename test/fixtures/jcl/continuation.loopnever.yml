@@ -1,0 +1,48 @@
+config:
+  - name: job
+    separatorRegex: "^\\/\\/[^*]\\S* +JOB(?: |$)"
+    strict: never
+    nested:
+    - name: proc
+      beginRegex: "^\\/\\/[^*]\\S* +PROC(?: |$)"
+      endRegex: "^\\/\\/[^*]\\S* +PEND(?: |$)"
+      strict: never
+      nested:
+      - name: exec
+        separatorRegex: "^\\/\\/[^*]\\S* +EXEC "
+        strict: never
+        nested:
+        - name: dd
+          beginRegex: "^\\/\\/[^*]\\S* +DD .*,$"
+          endRegex: "^\\/\\/(?!(?:\\*|\\S* +DD \\S+,(?: |$)| +\\S+,(?: |$)))"
+        - whileRegex: "^\\/\\/\\*"
+          kind: comment
+
+foldings:
+  - start: 1
+    end: 3
+    kind: Comment
+  - start: 6
+    end: 8
+    kind: Comment
+  - start: 12
+    end: 14
+    kind: Region
+  - start: 18
+    end: 19
+    kind: Comment
+  - start: 16
+    end: 20
+    kind: Region
+  - start: 9
+    end: 21
+    kind: Region
+  - start: 4
+    end: 22
+    kind: Region
+  - start: 24
+    end: 28
+    kind: Region
+  - start: 0
+    end: 28
+    kind: Region

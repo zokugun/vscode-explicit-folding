@@ -305,9 +305,10 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 			regex.name = configuration.name ?? `loop=${regexIndex}`;
 
 			if (Array.isArray(configuration.nested)) {
-				const regexes = configuration.nested.map((config) => this.addRegex(config, configuration.strict === 'never' ? false : strict, [...parents, regexIndex])).filter((regex) => regex.length !== 0);
+				const strictParent = configuration.strict === 'never' ? false : strict;
+				const regexes = configuration.nested.map((config) => this.addRegex(config, strictParent, [...parents, regexIndex])).filter((regex) => regex.length !== 0);
 
-				if (!configuration.strict) {
+				if (!strictParent) {
 					src += `|${regexes.join('|')}`
 				}
 
