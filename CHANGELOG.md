@@ -1,3 +1,7 @@
+## 0.14.5
+- fix issue with repeated `"strict": "never"`
+- change icon
+
 ## 0.14.4
 - fix conflict between rules when `foldLastLine` and `nested` are `false`
 - add icon
