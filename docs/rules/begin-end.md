@@ -120,7 +120,13 @@ If `never`, the default value of `strict` becomes `false` for itself and all its
 
 ## `consumeEnd`
 
-The property `consumeEnd` indicates if the line match by `end`/`endRegex` should be the last line of the region. It's mostly relevant in rule like:
+The property `consumeEnd` is a boolean or an array of boolean (`true` by default) like the property `foldLastLine`.
+
+It's indicating at which position the testing for the next possible matching rule will begin.
+
+If `true`, the position will be moved after the matched `end`/`endRegex`.
+
+If `false`, the position will stay the same as when testing for `end`/`endRegex`.
 
 ```
 "jcl": [
@@ -134,5 +140,3 @@ The property `consumeEnd` indicates if the line match by `end`/`endRegex` should
     }
 ]
 ```
-
-It's a boolean or an array of boolean (`true` by default) like the property `foldLastLine`.
