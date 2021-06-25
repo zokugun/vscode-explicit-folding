@@ -1,0 +1,15 @@
+config:
+  - begin: "/*"
+    end: "*/"
+    nested: false
+  - begin: "("
+    end: ")"
+    foldLastLine: false
+
+foldings:
+  - start: 2
+    end: 4
+    kind: 3
+  - start: 0
+    end: 3
+    kind: 3

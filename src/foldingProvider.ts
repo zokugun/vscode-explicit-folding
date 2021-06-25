@@ -527,7 +527,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 					continue;
 				}
 
-				const nextOffset = offset + index + match[0].length;
+				const nextOffset = index + match[0].length;
 
 				for (const key in match.groups) {
 					if (match.groups[key]) {
@@ -675,7 +675,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 				case Marker.END:
 					const last = stack.length && stack[stack.length - 1];
 					if (secondaryLoop && last && last.regex === regex && (!last.expectedEnd || match[0] === last.expectedEnd)) {
-						const end = regex.consumeEnd!() ? line : line - 1;
+						const begin = last.line;
+						const end = regex.consumeEnd!() ? line : Math.max(line - 1, begin);
 
 						while (stack.length > 1) {
 							const begin = stack[0].line;
@@ -689,14 +690,12 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 
 						stack.shift();
 
-						const begin = last.line;
-
 						if (regex.foldLastLine()) {
 							if (end > begin) {
 								foldingRanges.push(new FoldingRange(begin, end, regex.kind));
 							}
 
-							return { line: end + 1, offset: 0 };
+							return { line: end, offset: nextOffset };
 						} else {
 							if (end > begin + 1) {
 								foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
@@ -710,9 +709,8 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							}
 						}
 					} else if (stack[0] && stack[0].regex === regex && (!stack[0].expectedEnd || match[0] === stack[0].expectedEnd)) {
-						const end = regex.consumeEnd!() ? line : line - 1;
-
 						const begin = stack[0].line;
+						const end = regex.consumeEnd!() ? line : Math.max(line - 1, begin);
 
 						if (regex.foldLastLine(...match)) {
 							if (end > begin) {
