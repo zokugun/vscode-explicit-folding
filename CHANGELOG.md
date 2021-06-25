@@ -1,3 +1,7 @@
+## 0.14.8
+- fix new conflict between rules when `foldLastLine` and `nested` are `false`
+- better explanation of `consumeEnd` in the doc
+
 ## 0.14.7
 - fix how to calculate next offset
 - fix consumeEnd with begin and end on same line
