@@ -1,3 +1,6 @@
+## 0.14.6
+- manually published on Visual Studio Marketplace
+
 ## 0.14.5
 - fix issue with repeated `"strict": "never"`
 - change icon
