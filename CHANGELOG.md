@@ -1,3 +1,8 @@
+## 0.14.7
+- fix how to calculate next offset
+- fix consumeEnd with begin and end on same line
+- exit secondary loop at the end of the match, not at the next line
+
 ## 0.14.6
 - manually published on Visual Studio Marketplace
 
