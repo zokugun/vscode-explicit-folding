@@ -694,20 +694,13 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 							if (end > begin) {
 								foldingRanges.push(new FoldingRange(begin, end, regex.kind));
 							}
-
-							return { line: end, offset: nextOffset };
 						} else {
 							if (end > begin + 1) {
 								foldingRanges.push(new FoldingRange(begin, end - 1, regex.kind));
 							}
-
-							if (end > begin) {
-								return { line: end + 1, offset: 0 };
-							}
-							else {
-								return { line: end, offset: nextOffset };
-							}
 						}
+
+						return { line: end, offset: nextOffset };
 					} else if (stack[0] && stack[0].regex === regex && (!stack[0].expectedEnd || match[0] === stack[0].expectedEnd)) {
 						const begin = stack[0].line;
 						const end = regex.consumeEnd!() ? line : Math.max(line - 1, begin);
