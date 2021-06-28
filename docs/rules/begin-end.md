@@ -4,17 +4,6 @@
 
 The properties `begin` and `beginRegex` are indicating the beginning of a folding region. One of them is required.
 
-### capturing groups
-
-The property `beginRegex` supports capturing groups which can be matched to the property `endRegex`.
-
-```
-{
-    "beginRegex": "#begin ([\\w]+)",
-    "endRegex": "#end \\1"
-}
-```
-
 ## `end`/`endRegex`
 
 The properties `end` and `endRegex` are indicating the ending of a folding region. One of them is required.
@@ -29,6 +18,30 @@ When `begin`/`beginRegex` and `end`/`endRegex` are identicals, the `middle` prop
     "endRegex": "\"\"\"",
 }
 ```
+
+### capturing groups
+
+The property `beginRegex` supports capturing groups which can be matched to the property `endRegex`.
+
+```
+{
+    "beginRegex": "#begin ([\\w]+)",
+    "endRegex": "#end \\1"
+}
+```
+
+Internally, the reference `\1` is replaced by its source from `beginRegex`, so `endRegex` becomes `#end [\\w]+`.
+
+You have to make sure that the replacement don't generate a conflict in the `endRegex`, like this example:
+
+```
+{
+    "beginRegex": "\"([^\\(]{0,16})\\(",
+    "endRegex": "\\)\\1\""
+}
+```
+
+- `"` also needs to be excluded in `[^\\(]`.
 
 ## `middle`/`middleRegex`
 
