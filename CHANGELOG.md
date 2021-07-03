@@ -1,3 +1,6 @@
+## 0.15.0
+- add the configuration `explicitFolding.autoFold` to automatically fold ranges when opening a file
+
 ## 0.14.8
 - fix new conflict between rules when `foldLastLine` and `nested` are `false`
 - better explanation of `consumeEnd` in the doc
