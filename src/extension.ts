@@ -114,11 +114,9 @@ function foldDocument(document: vscode.TextDocument) { // {{{
 
 	if (autoFold === 'all') {
 		vscode.commands.executeCommand('editor.foldAll');
-	}
-	else if (autoFold === 'comments') {
+	} else if (autoFold === 'comments') {
 		vscode.commands.executeCommand('editor.foldAllBlockComments');
-	}
-	else if (autoFold !== 'none') {
+	} else if (autoFold !== 'none') {
 		try {
 			const level = parseInt(autoFold);
 
@@ -127,8 +125,7 @@ function foldDocument(document: vscode.TextDocument) { // {{{
 			for (let i = 7; i >= level; --i) {
 				vscode.commands.executeCommand(`editor.foldLevel${i}`);
 			}
-		}
-		catch (ex) {
+		} catch (ex) {
 		}
 	}
 
@@ -187,10 +184,44 @@ function setupFoldingRangeProvider() { // {{{
 
 	const provider = new MainProvider();
 
-	for (const scheme of SCHEMES) {
-		const disposable = vscode.languages.registerFoldingRangeProvider({ language: '*', scheme }, provider);
+	const globalConfig = getRules();
 
-		$disposable.push(disposable);
+	if(globalConfig['*']) {
+		const config = vscode.workspace.getConfiguration(`explicitFolding`);
+
+		if(Array.isArray(config.wilcardExclusions) && config.wilcardExclusions.length > 0) {
+			vscode.languages.getLanguages().then((languages) => {
+				for(const language of languages) {
+					if(!config.wilcardExclusions.includes(language)) {
+						for (const scheme of SCHEMES) {
+							const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
+
+							$disposable.push(disposable);
+						}
+					}
+				}
+			});
+		} else {
+			for (const scheme of SCHEMES) {
+				const disposable = vscode.languages.registerFoldingRangeProvider({ language: '*', scheme }, provider);
+
+				$disposable.push(disposable);
+			}
+		}
+	} else {
+		vscode.languages.getLanguages().then((languages) => {
+			for(const language of languages) {
+				const langConfig = vscode.workspace.getConfiguration(`[${language}]`)
+
+				if(globalConfig[language] || langConfig['explicitFolding.rules']) {
+					for (const scheme of SCHEMES) {
+						const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
+
+						$disposable.push(disposable);
+					}
+				}
+			}
+		});
 	}
 
 	$context!.subscriptions.push($disposable);

@@ -84,6 +84,25 @@ In addition, the following PCRE2 syntaxes are supported:
 - `(?i)x`: `x` becomes case insensitive
 - `(?i:x)y`: only `x` is case insensitive
 
+## Wilcard Exclusions
+
+By default, the wilcard rule, like the following, are applied to all languages.
+```
+"explicitFolding.rules": {
+    "*": {
+        "begin": "{{{",
+        "end": "}}}"
+    }
+}
+```
+
+But, for languages which are using the indentation to provider the foldings (like Python), the wilcard rule will prevent the use of the indentation provider.<br />
+To avoid that, you need to add an exclusion:
+
+```
+"explicitFolding.wilcardExclusions": ["python"]
+```
+
 ## Auto Fold
 
 You can define the automatic folding of the ranges with the property `explicitFolding.autoFold` (an enum, `none` by default).<br/>

@@ -91,6 +91,11 @@
 				"explicitFolding.rules": {
 					"description": "Markers that will determine the folding ranges.",
 					"scope": "language-overridable"
+				},
+				"explicitFolding.wilcardExclusions": {
+					"type": "array",
+					"default": [],
+					"description": "List of languages on which to not apply the wilcard rule (*)"
 				}
 			}
 		}
