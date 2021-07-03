@@ -1,3 +1,7 @@
+## 0.16.0
+- fix indented languages by avoiding to define the folding provider
+- add the configuration `explicitFolding.wilcardExclusions`
+
 ## 0.15.0
 - add the configuration `explicitFolding.autoFold` to automatically fold ranges when opening a file
 
