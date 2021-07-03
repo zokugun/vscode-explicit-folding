@@ -88,6 +88,12 @@ Each capture groups (`1...n`) in `endRegex` will require a boolean in `foldLastL
 
 The `kind` property indicates if the folding range is a `comment` or a `region` (`region` by default).
 
+## `autoFold`
+
+The property `autoFold` is a boolean (`false` by default).
+
+If `true`, the folding range will be automatically folded.
+
 ## `name`
 
 The `name` property is only used by the debug. It's used to increase the readability of the debug logs.

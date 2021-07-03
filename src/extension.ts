@@ -14,6 +14,8 @@ let $channel: vscode.OutputChannel | null = null;
 let $context: vscode.ExtensionContext | null = null;
 const $disposable: Disposable = new Disposable();
 
+const $documents: vscode.TextDocument[] = []
+
 class MainProvider implements vscode.FoldingRangeProvider {
 	private providers: { [key: string]: boolean } = {}
 
@@ -58,13 +60,15 @@ class MainProvider implements vscode.FoldingRangeProvider {
 		const debug = config.get<boolean>('debug') || false;
 		const channel = getDebugChannel(debug);
 
-		const provider = new FoldingProvider(rules, channel);
+		const provider = new FoldingProvider(rules, channel, $documents);
 
 		for (const scheme of SCHEMES) {
 			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
 			$disposable.push(disposable);
 		}
+
+		foldDocument(document);
 	} // }}}
 }
 
@@ -101,6 +105,35 @@ function checkDeprecatedRules(rules: Array<FoldingConfig>) { // {{{
 
 	if (deprecateds.includes('descendants')) {
 		vscode.window.showWarningMessage('Please update your config. The property `descendants` has been deprecated and replaced with the property `nested`. It will be removed in the next version.');
+	}
+} // }}}
+
+function foldDocument(document: vscode.TextDocument) { // {{{
+	const config = vscode.workspace.getConfiguration('explicitFolding', document);
+	const autoFold = config.get<string>('autoFold') || 'none';
+
+	if (autoFold === 'all') {
+		vscode.commands.executeCommand('editor.foldAll');
+	}
+	else if (autoFold === 'comments') {
+		vscode.commands.executeCommand('editor.foldAllBlockComments');
+	}
+	else if (autoFold !== 'none') {
+		try {
+			const level = parseInt(autoFold);
+
+			vscode.commands.executeCommand('editor.unfoldAll');
+
+			for (let i = 7; i >= level; --i) {
+				vscode.commands.executeCommand(`editor.foldLevel${i}`);
+			}
+		}
+		catch (ex) {
+		}
+	}
+
+	if (!$documents.includes(document)) {
+		$documents.push(document);
 	}
 } // }}}
 
@@ -149,7 +182,7 @@ function getDebugChannel(debug: boolean): vscode.OutputChannel | null { // {{{
 	}
 } // }}}
 
-function setup() { // {{{
+function setupFoldingRangeProvider() { // {{{
 	$disposable.dispose();
 
 	const provider = new MainProvider();
@@ -161,6 +194,26 @@ function setup() { // {{{
 	}
 
 	$context!.subscriptions.push($disposable);
+} // }}}
+
+function setupAutoFold() { // {{{
+	let documents: readonly vscode.TextDocument[] = [];
+
+	const disposable = vscode.window.onDidChangeVisibleTextEditors((editors) => {
+		const activeEditor = vscode.window.activeTextEditor;
+
+		if (editors.length !== 0 && activeEditor) {
+			const activeDocument = activeEditor.document;
+
+			if (!documents.includes(activeDocument)) {
+				foldDocument(activeDocument);
+			}
+
+			documents = vscode.workspace.textDocuments;
+		}
+	});
+
+	$context!.subscriptions.push(disposable);
 } // }}}
 
 async function showWhatsNewMessage(version: string) { // {{{
@@ -218,11 +271,13 @@ export async function activate(context: vscode.ExtensionContext) { // {{{
 		}
 	}
 
-	setup();
+	setupFoldingRangeProvider();
+	setupAutoFold();
 
 	vscode.workspace.onDidChangeConfiguration(event => {
 		if (event.affectsConfiguration('folding') || event.affectsConfiguration('explicitFolding')) {
-			setup();
+			setupFoldingRangeProvider();
+			setupAutoFold();
 		}
 	});
 } // }}}

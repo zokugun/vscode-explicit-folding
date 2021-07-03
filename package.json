@@ -31,14 +31,45 @@
 			"type": "object",
 			"title": "Explicit Folding configuration",
 			"properties": {
-				"explicitFolding.rules": {
-					"description": "Markers that will determine the folding ranges.",
+				"explicitFolding.autoFold": {
+					"type": "string",
+					"default": "none",
+					"enum": [
+						"1",
+						"2",
+						"3",
+						"4",
+						"5",
+						"6",
+						"7",
+						"all",
+						"comments",
+						"none"
+					],
+					"enumDescriptions": [
+						"Folding ranges of level 1 or under",
+						"Folding ranges of level 2 or under",
+						"Folding ranges of level 3 or under",
+						"Folding ranges of level 4 or under",
+						"Folding ranges of level 5 or under",
+						"Folding ranges of level 6 or under",
+						"Folding ranges of level 7 or under",
+						"All folding ranges",
+						"Comments",
+						"No folding ranges"
+					],
 					"scope": "language-overridable"
 				},
 				"explicitFolding.debug": {
 					"type": "boolean",
 					"default": false,
 					"description": "Output debug logs.",
+					"scope": "language-overridable"
+				},
+				"explicitFolding.delay": {
+					"type": "number",
+					"default": 1000,
+					"description": "Delay used to defer the registration of the folding providers.",
 					"scope": "language-overridable"
 				},
 				"explicitFolding.notification": {
@@ -57,10 +88,8 @@
 						"The new version notification will always be shown"
 					]
 				},
-				"explicitFolding.delay": {
-					"type": "number",
-					"default": 1000,
-					"description": "Delay used to defer the registration of the folding providers.",
+				"explicitFolding.rules": {
+					"description": "Markers that will determine the folding ranges.",
 					"scope": "language-overridable"
 				}
 			}

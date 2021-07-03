@@ -30,6 +30,12 @@ If `true`, when the end of file is reached, the folding range will be closed on 
 
 The `kind` property indicates if the folding range is a `comment` or a `region` (`region` by default).
 
+## `autoFold`
+
+The property `autoFold` is a boolean (`false` by default).
+
+If `true`, the folding range will be automatically folded.
+
 ## `nested`
 
 The property `nested` is a boolean or an array of rules (`true` by default).

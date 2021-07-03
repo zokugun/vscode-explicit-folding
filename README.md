@@ -84,13 +84,34 @@ In addition, the following PCRE2 syntaxes are supported:
 - `(?i)x`: `x` becomes case insensitive
 - `(?i:x)y`: only `x` is case insensitive
 
+## Auto Fold
+
+You can define the automatic folding of the ranges with the property `explicitFolding.autoFold` (an enum, `none` by default).<br/>
+Each rule can overwrite that property with its own property `autoFold` (a boolean, `false` by default).
+
+So you can auto fold only the imports with:
+```
+"[javascript]": {
+    "explicitFolding.rules": [
+        {
+            "beginRegex": "^import\\b",
+            "whileRegex": "^(?:import\\b|\\/\\/)",
+            "autoFold": true
+        }
+    ],
+    "explicitFolding.autoFold": "none"
+}
+```
+
+[enum values](https://github.com/zokugun/vscode-explicit-folding/blob/master/docs/properties/auto-fold.md)
+
 ## Debugging
 
 If the property `explicitFolding.debug` (`false` by default) is `true`, the extension will print out debug informations into the channel `Folding` of the panel `Output` (menu: `View` / `Output`).
 
 ## Priority/Delay
 
-VSCode is scoring each folding providers based on the scheme and language. When the scores are identicals, the providers which have been registered the latest have an higher priority.
+VSCode is scoring each folding providers based on the scheme and language. When the scores are identicals, the providers which have been registered the latest have an higher priority.<br/>
 When starting up, VSCode loads the extensions. When reading a file, VSCode will load the folding provider of the file's language (only once per language).
 
 The property `explicitFolding.delay` (in ms, `1000` by default) is used so that this extension's folding provider has a higher priority than the one of the language provider.
