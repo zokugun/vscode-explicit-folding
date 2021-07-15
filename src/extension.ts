@@ -1,14 +1,14 @@
-import * as vscode from 'vscode'
-const pkg = require('../package.json')
+import * as vscode from 'vscode';
+const pkg = require('../package.json');
 
-import { FoldingConfig } from './config'
-import { Disposable } from './disposable'
-import FoldingProvider from './foldingProvider'
+import { FoldingConfig } from './config';
+import { Disposable } from './disposable';
+import FoldingProvider from './foldingProvider';
 
-const DEPRECATED_KEY = 'explicitFoldingDeprecated'
-const VERSION_KEY = 'explicitFoldingVersion'
+const DEPRECATED_KEY = 'explicitFoldingDeprecated';
+const VERSION_KEY = 'explicitFoldingVersion';
 
-const SCHEMES = ['file', 'untitled', 'vscode-userdata']
+const SCHEMES = ['file', 'untitled', 'vscode-userdata'];
 
 let $channel: vscode.OutputChannel | null = null;
 let $context: vscode.ExtensionContext | null = null;

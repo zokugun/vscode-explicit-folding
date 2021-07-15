@@ -1,7 +1,7 @@
-import { basename } from 'path'
-import { escape, parse, stringify, translate, visit, Flavor, Token, TokenType } from '@daiyam/regexp'
-import { commands, FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode'
-import { FoldingConfig } from './config'
+import { basename } from 'path';
+import { escape, parse, stringify, translate, visit, Flavor, Token, TokenType } from '@daiyam/regexp';
+import { commands, FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode';
+import { FoldingConfig } from './config';
 
 type Rule = {
 	index: number,
@@ -52,8 +52,8 @@ interface Position {
 	offset: number;
 }
 
-const Tab = 9
-const Space = 32
+const Tab = 9;
+const Space = 32;
 
 function computeIndentLevel(line: string, tabSize: number): number { // {{{
 	let indent = 0;

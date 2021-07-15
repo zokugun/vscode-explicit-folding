@@ -1,4 +1,4 @@
-import * as vscode from 'vscode'
+import * as vscode from 'vscode';
 
 export class Disposable extends vscode.Disposable {
 	private subscriptions: vscode.Disposable[] = [];
