@@ -1,7 +1,7 @@
 import { basename } from 'path';
 import { escape, parse, stringify, translate, visit, Flavor, Token, TokenType } from '@daiyam/regexp';
 import { commands, FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode';
-import { FoldingConfig } from './config';
+import { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
 
 type Rule = {
 	index: number,
@@ -97,7 +97,7 @@ function shouldFoldLastLine(foldLastLine: boolean[], groupIndex: number, endGrou
 	}
 } // }}}
 
-export default class ExplicitFoldingProvider implements FoldingRangeProvider {
+export class FoldingProvider implements FoldingRangeProvider {
 	private autoFoldDocuments: TextDocument[];
 	private debugChannel: OutputChannel | null = null;
 	private groupIndex: number = 0;
@@ -109,7 +109,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 	public id: string = 'explicit';
 	public isManagingLastLine: boolean = true;
 
-	constructor(configuration: Array<FoldingConfig>, debugChannel: OutputChannel | null, documents: TextDocument[]) { // {{{
+	constructor(configuration: Array<ExplicitFoldingConfig>, debugChannel: OutputChannel | null, documents: TextDocument[]) { // {{{
 		this.debugChannel = debugChannel;
 		this.autoFoldDocuments = documents;
 
@@ -134,7 +134,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		}
 	} // }}}
 
-	private addRegex(configuration: FoldingConfig, strict: boolean, parents: number[]): string { // {{{
+	private addRegex(configuration: ExplicitFoldingConfig, strict: boolean, parents: number[]): string { // {{{
 		const ruleIndex = this.rules.length;
 
 		try {
@@ -215,7 +215,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return '';
 	} // }}}
 
-	private addBeginEndRegex(configuration: FoldingConfig, ruleIndex: number, begin: RegExp, middle: RegExp | undefined, end: RegExp, strict: boolean, parents: number[]): string { // {{{
+	private addBeginEndRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, middle: RegExp | undefined, end: RegExp, strict: boolean, parents: number[]): string { // {{{
 		if (begin.test('') || end.test('')) {
 			return '';
 		}
@@ -336,7 +336,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return src;
 	} // }}}
 
-	private addBeginWhileRegex(configuration: FoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp): string { // {{{
+	private addBeginWhileRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp): string { // {{{
 		if (begin.test('') || whileRegex.test('')) {
 			return '';
 		}
@@ -360,7 +360,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return `(?<_${Marker.BEGIN}_${ruleIndex}>${rule.begin.source})`;
 	} // }}}
 
-	private addContinuationRegex(configuration: FoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp): string { // {{{
+	private addContinuationRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp): string { // {{{
 		if (begin.test('') || whileRegex.test('')) {
 			return '';
 		}
@@ -385,7 +385,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return `(?<_${Marker.BEGIN}_${ruleIndex}>${rule.begin.source})`;
 	} // }}}
 
-	private addDocstringRegex(configuration: FoldingConfig, ruleIndex: number, begin: RegExp): string { // {{{
+	private addDocstringRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp): string { // {{{
 		if (begin.test('')) {
 			return '';
 		}
@@ -408,7 +408,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		return `(?<_${Marker.DOCSTRING}_${ruleIndex}>${rule.begin.source})`;
 	} // }}}
 
-	private addSeparatorRegex(configuration: FoldingConfig, ruleIndex: number, separator: RegExp, strict: boolean, parents: number[]): string { // {{{
+	private addSeparatorRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, separator: RegExp, strict: boolean, parents: number[]): string { // {{{
 		if (separator.test('')) {
 			return '';
 		}
@@ -441,7 +441,7 @@ export default class ExplicitFoldingProvider implements FoldingRangeProvider {
 		}
 	} // }}}
 
-	private addWhileRegex(configuration: FoldingConfig, ruleIndex: number, whileRegex: RegExp): string { // {{{
+	private addWhileRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, whileRegex: RegExp): string { // {{{
 		if (whileRegex.test('')) {
 			return '';
 		}

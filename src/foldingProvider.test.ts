@@ -1,5 +1,5 @@
-import FoldingProvider from './foldingProvider';
 import { Document } from './test/utils';
+import { FoldingProvider } from './foldingProvider';
 import { FoldingRangeKind } from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';

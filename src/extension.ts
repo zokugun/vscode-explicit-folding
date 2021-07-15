@@ -1,20 +1,22 @@
 import * as vscode from 'vscode';
 const pkg = require('../package.json');
 
-import { FoldingConfig } from './config';
 import { Disposable } from './disposable';
-import FoldingProvider from './foldingProvider';
+import { ExplicitFoldingConfig, ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
+import { FoldingHub } from './foldingHub';
+import { FoldingProvider } from './foldingProvider';
 
 const DEPRECATED_KEY = 'explicitFoldingDeprecated';
 const VERSION_KEY = 'explicitFoldingVersion';
 
 const SCHEMES = ['file', 'untitled', 'vscode-userdata'];
 
+const $disposable: Disposable = new Disposable();
+const $documents: vscode.TextDocument[] = []
+const $hub = new FoldingHub(setupFoldingRangeProvider);
+
 let $channel: vscode.OutputChannel | null = null;
 let $context: vscode.ExtensionContext | null = null;
-const $disposable: Disposable = new Disposable();
-
-const $documents: vscode.TextDocument[] = []
 
 class MainProvider implements vscode.FoldingRangeProvider {
 	private providers: { [key: string]: boolean } = {}
@@ -43,11 +45,21 @@ class MainProvider implements vscode.FoldingRangeProvider {
 
 		const perLanguages = getRules();
 		const config = vscode.workspace.getConfiguration('explicitFolding', document);
+		const debug = config.get<boolean>('debug') || false;
+		const channel = getDebugChannel(debug);
 
-		const rules: FoldingConfig[] = [];
-		const langRules: any = config.get('rules')
+		const rules: ExplicitFoldingConfig[] = [];
 
-		if (!langRules || langRules[language]) {
+		const hubRules: any = $hub.getRules(language);
+		const langRules: any = config.get('rules');
+
+		if (hubRules) {
+			if (channel) {
+				channel.appendLine(`[register] use external rules for language: ${language}`);
+			}
+
+			applyRules(hubRules, rules);
+		} else if (!langRules || langRules[language]) {
 			applyRules(perLanguages[language], rules);
 		} else {
 			applyRules(langRules, rules);
@@ -56,9 +68,6 @@ class MainProvider implements vscode.FoldingRangeProvider {
 		applyRules(perLanguages['*'], rules);
 
 		checkDeprecatedRules(rules);
-
-		const debug = config.get<boolean>('debug') || false;
-		const channel = getDebugChannel(debug);
 
 		const provider = new FoldingProvider(rules, channel, $documents);
 
@@ -72,7 +81,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	} // }}}
 }
 
-function applyRules(data: any, rules: FoldingConfig[]): void { // {{{
+function applyRules(data: any, rules: ExplicitFoldingConfig[]): void { // {{{
 	if (Array.isArray(data)) {
 		rules.push(...data);
 	} else if (data) {
@@ -80,7 +89,7 @@ function applyRules(data: any, rules: FoldingConfig[]): void { // {{{
 	}
 } // }}}
 
-function checkDeprecatedRule(rule: FoldingConfig | Array<FoldingConfig>, deprecateds: string[]) { // {{{
+function checkDeprecatedRule(rule: ExplicitFoldingConfig | Array<ExplicitFoldingConfig>, deprecateds: string[]) { // {{{
 	if (rule instanceof Array) {
 		for (const r of rule) {
 			checkDeprecatedRule(r, deprecateds);
@@ -98,7 +107,7 @@ function checkDeprecatedRule(rule: FoldingConfig | Array<FoldingConfig>, depreca
 	}
 } // }}}
 
-function checkDeprecatedRules(rules: Array<FoldingConfig>) { // {{{
+function checkDeprecatedRules(rules: Array<ExplicitFoldingConfig>) { // {{{
 	const deprecateds: string[] = [];
 
 	checkDeprecatedRule(rules, deprecateds);
@@ -186,13 +195,13 @@ function setupFoldingRangeProvider() { // {{{
 
 	const globalConfig = getRules();
 
-	if(globalConfig['*']) {
+	if (globalConfig['*']) {
 		const config = vscode.workspace.getConfiguration(`explicitFolding`);
 
-		if(Array.isArray(config.wilcardExclusions) && config.wilcardExclusions.length > 0) {
+		if (Array.isArray(config.wilcardExclusions) && config.wilcardExclusions.length > 0) {
 			vscode.languages.getLanguages().then((languages) => {
-				for(const language of languages) {
-					if(!config.wilcardExclusions.includes(language)) {
+				for (const language of languages) {
+					if (!config.wilcardExclusions.includes(language)) {
 						for (const scheme of SCHEMES) {
 							const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
@@ -210,10 +219,10 @@ function setupFoldingRangeProvider() { // {{{
 		}
 	} else {
 		vscode.languages.getLanguages().then((languages) => {
-			for(const language of languages) {
+			for (const language of languages) {
 				const langConfig = vscode.workspace.getConfiguration(`[${language}]`)
 
-				if(globalConfig[language] || langConfig['explicitFolding.rules']) {
+				if (globalConfig[language] || langConfig['explicitFolding.rules']) {
 					for (const scheme of SCHEMES) {
 						const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
@@ -274,7 +283,7 @@ async function showWhatsNewMessage(version: string) { // {{{
 	}
 } // }}}
 
-export async function activate(context: vscode.ExtensionContext) { // {{{
+export function activate(context: vscode.ExtensionContext): ExplicitFoldingHub { // {{{
 	$context = context
 
 	const previousVersion = context.globalState.get<string>(VERSION_KEY);
@@ -311,4 +320,6 @@ export async function activate(context: vscode.ExtensionContext) { // {{{
 			setupAutoFold();
 		}
 	});
+
+	return $hub;
 } // }}}
