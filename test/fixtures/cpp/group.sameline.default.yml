@@ -1,0 +1,11 @@
+config:
+  - beginRegex: "\"([^\\(]{0,16})\\("
+    endRegex: \)\1"
+    foldLastLine: false
+foldings:
+  - start: 0
+    end: 1
+    kind: Region
+  - start: 2
+    end: 3
+    kind: Region

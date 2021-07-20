@@ -30,19 +30,6 @@ The property `beginRegex` supports capturing groups which can be matched to the 
 }
 ```
 
-Internally, the reference `\1` is replaced by its source from `beginRegex`, so `endRegex` becomes `#end [\\w]+`.
-
-You have to make sure that the replacement don't generate a conflict in the `endRegex`, like this example:
-
-```
-{
-    "beginRegex": "\"([^\\(]{0,16})\\(",
-    "endRegex": "\\)\\1\""
-}
-```
-
-- `"` also needs to be excluded in `[^\\(]`.
-
 ## `middle`/`middleRegex`
 
 With the property `middle`/`middleRegex`, the folding region can be splitted into several sections.

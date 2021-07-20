@@ -36,6 +36,12 @@ foldings:
   - start: 12
     end: 14
     kind: Comment
+  - start: 23
+    end: 27
+    kind: Region
+  - start: 29
+    end: 31
+    kind: Region
   - start: 33
     end: 37
     kind: Region
@@ -50,6 +56,9 @@ foldings:
     kind: Region
   - start: 53
     end: 56
+    kind: Region
+  - start: 58
+    end: 59
     kind: Region
   - start: 57
     end: 61
