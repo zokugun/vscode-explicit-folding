@@ -1,0 +1,72 @@
+config:
+  - name: job
+    separatorRegex: "^\\/\\/[^*]\\S* +JOB(?: |$)"
+    strict: never
+    nested:
+    - name: proc
+      beginRegex: "^\\/\\/[^*]\\S* +PROC(?: |$)"
+      endRegex: "^\\/\\/[^*]\\S* +PEND(?: |$)"
+      nested:
+      - name: exec
+        separatorRegex: "^\\/\\/[^*]\\S* +EXEC "
+        nested:
+        - name: comment
+          whileRegex: "^\\/\\/\\*"
+          kind: comment
+        - name: dd-instream1
+          beginRegex: "^\\/\\/[^*]\\S* +DD +\\*"
+          whileRegex: "^[^\\/][^\\*\\/]"
+          foldEOF: true
+        - name: dd2
+          beginRegex: "^\\/\\/[^*]\\S* +DD +DATA,DLM=(.{2,8})(?: |,|$)"
+          endRegex: "\\1"
+          nested: false
+        - name: dd-file
+          beginRegex: "^\\/\\/[^*]\\S* +DD +\\S+,(?: |$)"
+          endRegex: "^\\/\\/ +\\S+[^,](?: |$)"
+foldings:
+  - start: 0
+    end: 9
+    kind: Region
+  - start: 0
+    end: 10
+    kind: Region
+  - start: 12
+    end: 14
+    kind: Comment
+  - start: 17
+    end: 19
+    kind: Comment
+  - start: 25
+    end: 26
+    kind: Comment
+  - start: 23
+    end: 27
+    kind: Region
+  - start: 29
+    end: 31
+    kind: Region
+  - start: 33
+    end: 37
+    kind: Region
+  - start: 40
+    end: 49
+    kind: Region
+  - start: 20
+    end: 50
+    kind: Region
+  - start: 15
+    end: 51
+    kind: Region
+  - start: 53
+    end: 56
+    kind: Region
+  - start: 58
+    end: 59
+    kind: Region
+  - start: 57
+    end: 61
+    kind: Region
+  - start: 11
+    end: 61
+    kind: Region

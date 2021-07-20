@@ -218,7 +218,6 @@ export class FoldingProvider implements FoldingRangeProvider {
 				this.offSideIndentation = configuration.offSide || false;
 			}
 		} catch (err) {
-			console.log(err)
 			if (this.debugChannel) {
 				this.debugChannel.appendLine(err.toString());
 			}
@@ -236,9 +235,30 @@ export class FoldingProvider implements FoldingRangeProvider {
 			return '';
 		}
 
-		const groups = this.listCaptureGroups(begin.source)
+		const rule: Rule = {
+			index: ruleIndex,
+			begin,
+			middle,
+			end,
+			consumeEnd: typeof configuration.consumeEnd === 'boolean' ? id(configuration.consumeEnd) : id(true),
+			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBOF: false,
+			foldEOF: configuration.foldEOF || false,
+			nested: typeof configuration.nested === 'boolean' ? configuration.nested : !Array.isArray(configuration.nested),
+			strict: typeof configuration.strict === 'boolean' ? configuration.strict : configuration.strict === 'never' ? false : strict,
+			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
+			autoFold: configuration.autoFold || false
+		};
 
-		let endMatcher;
+		this.rules.push(rule);
+
+		let src = `(?<_${Marker.BEGIN}_${ruleIndex}>${rule.begin!.source})`;
+
+		const groups = this.listCaptureGroups(begin.source);
+		const beginGroupCount = 1 + groups.length;
+		const middleGroupCount = rule.middle ? 1 + this.getCaptureGroupCount(middle!.source) : 0;
+		const endGroupCount = 1 + this.getCaptureGroupCount(end.source);
+
 		if (groups.length !== 0) {
 			let index = groupContext.index + 1;
 			let captures = configuration.endRegex!.split(/\\(\d+)/g);
@@ -258,59 +278,34 @@ export class FoldingProvider implements FoldingRangeProvider {
 					}
 				}
 
-				endMatcher = eval('(function(){return function(escape, offset, ...args) { return ' + src + ';};})()') as EndMatcher;
+				rule.endMatcher = eval('(function(){return function(escape, offset, ...args) { return ' + src + ';};})()') as EndMatcher;
 			}
 		}
 
-		const nested = typeof configuration.nested === 'boolean' ? configuration.nested : !Array.isArray(configuration.nested);
-
-		const rule: Rule = {
-			index: ruleIndex,
-			begin,
-			middle,
-			end,
-			consumeEnd: typeof configuration.consumeEnd === 'boolean' ? id(configuration.consumeEnd) : id(true),
-			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
-			foldBOF: false,
-			foldEOF: configuration.foldEOF || false,
-			nested,
-			strict: typeof configuration.strict === 'boolean' ? configuration.strict : configuration.strict === 'never' ? false : strict,
-			kind: configuration.kind === 'comment' ? FoldingRangeKind.Comment : FoldingRangeKind.Region,
-			autoFold: configuration.autoFold || false,
-			endMatcher
-		};
-
-		this.rules.push(rule);
-
-		let src = `(?<_${Marker.BEGIN}_${ruleIndex}>${rule.begin!.source})`;
-
-		groupContext.index += 1 + this.getCaptureGroupCount(begin.source);
-
-		const middleGroupCount = rule.middle ? 1 + this.getCaptureGroupCount(middle!.source) : 0;
-		const endGroupCount = 1 + this.getCaptureGroupCount(end.source);
+		groupContext.index += beginGroupCount;
 
 		if (Array.isArray(configuration.consumeEnd) && configuration.consumeEnd.length === endGroupCount) {
 			const consumeEnd = configuration.consumeEnd;
-			const groupIndex = 1 + (nested ? groupContext.index : 0) + middleGroupCount;
+			const groupIndex = 1 + (rule.nested ? groupContext.index : 0) + middleGroupCount;
 
 			rule.consumeEnd = shouldFoldLastLine(consumeEnd, groupIndex, endGroupCount)
 		}
 
 		if (Array.isArray(configuration.foldLastLine) && configuration.foldLastLine.length === endGroupCount) {
 			const foldLastLine = configuration.foldLastLine;
-			const groupIndex = 1 + (nested ? groupContext.index : 0) + middleGroupCount;
+			const groupIndex = 1 + (rule.nested ? groupContext.index : 0) + middleGroupCount;
 
 			rule.foldLastLine = shouldFoldLastLine(foldLastLine, groupIndex, endGroupCount)
 		}
 
-		if (nested) {
+		if (rule.nested) {
 			if (rule.middle) {
 				src += `|(?<_${Marker.MIDDLE}_${ruleIndex}>${rule.middle.source})`;
 
 				groupContext.index += middleGroupCount;
 			}
 
-			if(!endMatcher) {
+			if (!rule.endMatcher) {
 				src += `|(?<_${Marker.END}_${ruleIndex}>${rule.end!.source})`;
 
 				groupContext.index += endGroupCount;
@@ -326,7 +321,8 @@ export class FoldingProvider implements FoldingRangeProvider {
 					src += `|${regexes.join('|')}`;
 				}
 
-				const regexes = configuration.nested.map((config) => this.addRegex(config, { index: 1 }, strictParent, [...parents, ruleIndex])).filter((regex) => regex.length !== 0);
+				const subgroupContext = { index: 1 };
+				const regexes = configuration.nested.map((config) => this.addRegex(config, subgroupContext, strictParent, [...parents, ruleIndex])).filter((regex) => regex.length !== 0);
 
 				let loopSource = '';
 
@@ -334,12 +330,12 @@ export class FoldingProvider implements FoldingRangeProvider {
 					loopSource += `(?<_${Marker.MIDDLE}_${ruleIndex}>${rule.middle.source})`;
 				}
 
-				if(!endMatcher) {
-					if(loopSource) loopSource += '|';
+				if (!rule.endMatcher) {
+					if (loopSource) loopSource += '|';
 					loopSource += `(?<_${Marker.END}_${ruleIndex}>${rule.end!.source})`;
 				}
 
-				if(loopSource) loopSource += '|';
+				if (loopSource) loopSource += '|';
 				loopSource += regexes.join('|');
 
 				rule.loopRegex = new RegExp(loopSource, 'g');
@@ -350,12 +346,14 @@ export class FoldingProvider implements FoldingRangeProvider {
 					loopSource += `(?<_${Marker.MIDDLE}_${ruleIndex}>${rule.middle.source})`;
 				}
 
-				if(!endMatcher) {
-					if(loopSource) loopSource += '|';
+				if (!rule.endMatcher) {
+					if (loopSource) loopSource += '|';
 					loopSource += `(?<_${Marker.END}_${ruleIndex}>${rule.end!.source})`;
 				}
 
-				rule.loopRegex = new RegExp(loopSource || 'a^', 'g');
+				if (loopSource) {
+					rule.loopRegex = new RegExp(loopSource, 'g');
+				}
 			}
 		}
 
@@ -629,7 +627,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		let position: Position = { line: 0, offset: 0 };
 
-		try{
+		try {
 			while (position.line < document.lineCount) {
 				position = this.resolveExplicitRange(document, foldingRanges, 'main', this.mainRegex, stack, endMatches, 0, false, position.line, position.offset, foldLines);
 			}
@@ -639,10 +637,9 @@ export class FoldingProvider implements FoldingRangeProvider {
 			if (this.useIndentation) {
 				this.resolveIndentationRange(document, foldingRanges);
 			}
-		}
-		catch(ex) {
+		} catch (err) {
 			if (this.debugChannel) {
-				this.debugChannel.appendLine(ex);
+				this.debugChannel.appendLine(err.toString());
 			}
 		}
 
@@ -686,57 +683,18 @@ export class FoldingProvider implements FoldingRangeProvider {
 			switch (type) {
 				case Marker.BEGIN:
 					if (!stack[0] || stack[0].rule.nested) {
-						if (rule.endMatcher) {
-							let endMatch;
-							if(endMatches[rule.index]) {
-								endMatch = endMatches[rule.index];
-							}
-							else {
-								endMatch = endMatches[rule.index] = [];
-							}
-
-							const end = rule.endMatcher(escape, matchOffset, ...match);
-
-							let nf = true;
-							let endIndex = endMatch.length + 1;
-							for(const match of endMatch) {
-								if(end === match.regex) {
-									endIndex = match.index;
-									nf = false;
-								}
-							}
-
+						if (!rule.nested && (rule.loopRegex || rule.endMatcher)) {
 							let loopRegex;
-							if(nf) {
-								endMatch.push({
-									regex: end,
-									index: endIndex
-								});
+							if (rule.endMatcher) {
+								let src = rule.loopRegex ? rule.loopRegex.source : '';
+								if (src) src += '|';
+								src += `(?<_${Marker.END}_${index}>${rule.endMatcher(escape, matchOffset, ...match)})`;
 
-								loopRegex = new RegExp(`(?<_${Marker.END}_${index}_${endIndex}>${end})|` + regexp.source, 'g');
-
-								++matchOffset;
-							}
-							else {
-								loopRegex = regexp;
+								loopRegex = new RegExp(src, 'g');
+							} else {
+								loopRegex = rule.loopRegex!;
 							}
 
-							const loopStack: StackItem[] = [{ rule, line, endIndex }];
-
-							let position = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, loopStack, endMatches, matchOffset, true, line, nextOffset, foldLines);
-
-							while (loopStack.length != 0 && position.line < document.lineCount) {
-								position = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, loopStack, endMatches, matchOffset, true, position.line, position.offset, foldLines);
-							}
-
-							if(nf) {
-								const index = endMatch.findIndex(({ index }) => index === endIndex);
-								endMatch.splice(index, 1);
-							}
-
-							return position;
-						} else if (!rule.nested && rule.end) {
-							const loopRegex = rule.loopRegex!;
 							const name = rule.name!;
 
 							if (this.debugChannel) {
@@ -753,6 +711,53 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 							if (stack.length != 0 && position.line >= document.lineCount) {
 								this.doEOF(document, foldingRanges, stack, foldLines);
+							}
+
+							return position;
+						} else if (rule.endMatcher) {
+							let endMatch;
+							if (endMatches[rule.index]) {
+								endMatch = endMatches[rule.index];
+							} else {
+								endMatch = endMatches[rule.index] = [];
+							}
+
+							const end = rule.endMatcher(escape, matchOffset, ...match);
+
+							let nf = true;
+							let endIndex = endMatch.length + 1;
+							for (const match of endMatch) {
+								if (end === match.regex) {
+									endIndex = match.index;
+									nf = false;
+								}
+							}
+
+							let loopRegex;
+							if (nf) {
+								endMatch.push({
+									regex: end,
+									index: endIndex
+								});
+
+								loopRegex = new RegExp(`(?<_${Marker.END}_${index}_${endIndex}>${end})|${regexp.source}`, 'g');
+
+								++matchOffset;
+							} else {
+								loopRegex = regexp;
+							}
+
+							const loopStack: StackItem[] = [{ rule, line, endIndex }];
+
+							let position = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, loopStack, endMatches, matchOffset, true, line, nextOffset, foldLines);
+
+							while (loopStack.length != 0 && position.line < document.lineCount) {
+								position = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, loopStack, endMatches, matchOffset, true, position.line, position.offset, foldLines);
+							}
+
+							if (nf) {
+								const index = endMatch.findIndex(({ index }) => index === endIndex);
+								endMatch.splice(index, 1);
 							}
 
 							return position;
@@ -784,9 +789,9 @@ export class FoldingProvider implements FoldingRangeProvider {
 				case Marker.END:
 					const last = stack.length && stack[stack.length - 1];
 					if (secondaryLoop && last && last.rule === rule) {
-						if(last.endIndex) {
+						if (last.endIndex) {
 							// @ts-ignore
-							if(!match.groups[`_${Marker.END}_${rule.index}_${last.endIndex}`]) {
+							if (!match.groups[`_${Marker.END}_${rule.index}_${last.endIndex}`]) {
 								stack.pop();
 
 								return { line, offset };
