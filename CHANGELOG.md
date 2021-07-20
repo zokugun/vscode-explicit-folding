@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.18.0 | 2021-07-20
+- fix capture groups in nested rules
+- `endRegex` with refs are generated on the run
+- update icon
+
 ## 0.17.0 | 2021-07-15
 - add API to support external rules
 
