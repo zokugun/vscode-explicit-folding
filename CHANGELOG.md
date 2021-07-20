@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.18.1 | 2021-07-21
+- fix capture groups in not-nested rules
+
 ## 0.18.0 | 2021-07-20
 - fix capture groups in nested rules
 - `endRegex` with refs are generated on the run
