@@ -34,33 +34,33 @@ interface Position {
 	offset: number;
 }
 
-type Rule = {
-	index: number,
-	begin?: RegExp,
-	middle?: RegExp,
-	end?: RegExp,
-	loopRegex?: RegExp,
-	while?: RegExp,
-	continuation?: boolean,
-	consumeEnd?: (offset?: number, ...args: string[]) => boolean,
-	foldLastLine: (offset?: number, ...args: string[]) => boolean,
-	foldBOF: boolean,
-	foldEOF: boolean,
-	nested: boolean,
-	kind: FoldingRangeKind,
-	endMatcher?: EndMatcher,
-	parents?: number[],
-	strict?: boolean,
-	name?: string
-	autoFold?: boolean
+interface Rule {
+	index: number;
+	begin?: RegExp;
+	middle?: RegExp;
+	end?: RegExp;
+	loopRegex?: RegExp;
+	while?: RegExp;
+	continuation?: boolean;
+	consumeEnd?: (offset?: number, ...args: string[]) => boolean;
+	foldLastLine: (offset?: number, ...args: string[]) => boolean;
+	foldBOF: boolean;
+	foldEOF: boolean;
+	nested: boolean;
+	kind: FoldingRangeKind;
+	endMatcher?: EndMatcher;
+	parents?: number[];
+	strict?: boolean;
+	name?: string;
+	autoFold?: boolean;
 }
 
-type StackItem = {
-	rule: Rule,
-	line: number,
-	separator?: boolean,
-	continuation?: number
-	endIndex?: number
+interface StackItem {
+	rule: Rule;
+	line: number;
+	continuation?: number;
+	endIndex?: number;
+	separator?: boolean;
 }
 
 const Tab = 9;
@@ -150,6 +150,8 @@ export class FoldingProvider implements FoldingRangeProvider {
 		const ruleIndex = this.rules.length;
 
 		try {
+			const bypassProtection = configuration.bypassProtection || false;
+
 			let begin
 			if (configuration.beginRegex) {
 				begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018) as string);
@@ -191,28 +193,42 @@ export class FoldingProvider implements FoldingRangeProvider {
 						middle = new RegExp(escape(configuration.middle))
 					}
 
-					return this.addBeginEndRegex(configuration, ruleIndex, begin, middle, end, groupContext, strict, parents);
+					if(this.isSupportedRegex(bypassProtection, begin, middle, end)) {
+						return this.addBeginEndRegex(configuration, ruleIndex, begin, middle, end, groupContext, strict, parents);
+					}
 				} else if (continuation) {
-					return this.addContinuationRegex(configuration, ruleIndex, begin, continuation, groupContext);
+					if(this.isSupportedRegex(bypassProtection, begin, continuation)) {
+						return this.addContinuationRegex(configuration, ruleIndex, begin, continuation, groupContext);
+					}
 				} else if (whileRegex) {
-					return this.addBeginWhileRegex(configuration, ruleIndex, begin, whileRegex, groupContext);
+					if(this.isSupportedRegex(bypassProtection, begin, whileRegex)) {
+						return this.addBeginWhileRegex(configuration, ruleIndex, begin, whileRegex, groupContext);
+					}
 				}
 			} else if (configuration.whileRegex) {
 				const whileRegex = new RegExp(translate(configuration.whileRegex, Flavor.ES2018) as string);
 
-				return this.addWhileRegex(configuration, ruleIndex, whileRegex, groupContext);
+				if(this.isSupportedRegex(bypassProtection, whileRegex)) {
+					return this.addWhileRegex(configuration, ruleIndex, whileRegex, groupContext);
+				}
 			} else if (configuration.while) {
 				const whileRegex = new RegExp(escape(configuration.while));
 
-				return this.addWhileRegex(configuration, ruleIndex, whileRegex, groupContext);
+				if(this.isSupportedRegex(bypassProtection, whileRegex)) {
+					return this.addWhileRegex(configuration, ruleIndex, whileRegex, groupContext);
+				}
 			} else if (configuration.separatorRegex) {
 				const separator = new RegExp(translate(configuration.separatorRegex, Flavor.ES2018) as string);
 
-				return this.addSeparatorRegex(configuration, ruleIndex, separator, groupContext, strict, parents);
+				if(this.isSupportedRegex(bypassProtection, separator)) {
+					return this.addSeparatorRegex(configuration, ruleIndex, separator, groupContext, strict, parents);
+				}
 			} else if (configuration.separator) {
 				const separator = new RegExp(escape(configuration.separator));
 
-				return this.addSeparatorRegex(configuration, ruleIndex, separator, groupContext, strict, parents);
+				if(this.isSupportedRegex(bypassProtection, separator)) {
+					return this.addSeparatorRegex(configuration, ruleIndex, separator, groupContext, strict, parents);
+				}
 			} else if (configuration.indentation) {
 				this.useIndentation = configuration.indentation;
 				this.offSideIndentation = configuration.offSide || false;
@@ -227,14 +243,6 @@ export class FoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	private addBeginEndRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, middle: RegExp | undefined, end: RegExp, groupContext: GroupContext, strict: boolean, parents: number[]): string { // {{{
-		if (begin.test('') || end.test('')) {
-			return '';
-		}
-
-		if (middle && middle.test('')) {
-			return '';
-		}
-
 		const rule: Rule = {
 			index: ruleIndex,
 			begin,
@@ -361,10 +369,6 @@ export class FoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	private addBeginWhileRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp, groupContext: GroupContext): string { // {{{
-		if (begin.test('') || whileRegex.test('')) {
-			return '';
-		}
-
 		groupContext.index += 1 + this.getCaptureGroupCount(begin.source);
 
 		const rule = {
@@ -385,10 +389,6 @@ export class FoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	private addContinuationRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp, groupContext: GroupContext): string { // {{{
-		if (begin.test('') || whileRegex.test('')) {
-			return '';
-		}
-
 		groupContext.index += 1 + this.getCaptureGroupCount(begin.source);
 
 		const rule = {
@@ -410,10 +410,6 @@ export class FoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	private addDocstringRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, groupContext: GroupContext): string { // {{{
-		if (begin.test('')) {
-			return '';
-		}
-
 		groupContext.index += 1 + this.getCaptureGroupCount(begin.source);
 
 		const rule = {
@@ -433,10 +429,6 @@ export class FoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	private addSeparatorRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, separator: RegExp, groupContext: GroupContext, strict: boolean, parents: number[]): string { // {{{
-		if (separator.test('')) {
-			return '';
-		}
-
 		groupContext.index += 1 + this.getCaptureGroupCount(separator.source);
 
 		const rule = {
@@ -466,10 +458,6 @@ export class FoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	private addWhileRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, whileRegex: RegExp, groupContext: GroupContext): string { // {{{
-		if (whileRegex.test('')) {
-			return '';
-		}
-
 		groupContext.index += 1 + this.getCaptureGroupCount(whileRegex.source);
 
 		const rule = {
@@ -552,19 +540,15 @@ export class FoldingProvider implements FoldingRangeProvider {
 			const match = regex.exec(line) as { groups?: { [key: string]: string }, index?: number, [key: number]: string };
 
 			if (match && match.groups) {
-				if (match[0].length === 0) {
-					break;
-				}
-
 				const index = match.index || 0;
 				if (index < offset) {
 					continue;
 				}
 
-				const nextOffset = index + match[0].length;
+				const nextOffset = index + (match[0].length || 1);
 
 				for (const key in match.groups) {
-					if (match.groups[key]) {
+					if (match.groups[key] !== undefined) {
 						const keys = key.split('_').map(x => parseInt(x));
 
 						yield {
@@ -577,6 +561,8 @@ export class FoldingProvider implements FoldingRangeProvider {
 						break;
 					}
 				}
+
+				regex.lastIndex = nextOffset;
 			} else {
 				break;
 			}
@@ -595,6 +581,20 @@ export class FoldingProvider implements FoldingRangeProvider {
 		});
 
 		return count;
+	} // }}}
+
+	private isSupportedRegex(bypassProtection: boolean, ...regexes: (RegExp | undefined)[]): boolean { // {{{
+		if(bypassProtection) {
+			return true;
+		}
+
+		for(const regex of regexes) {
+			if(regex && regex.test('')) {
+				return false;
+			}
+		}
+
+		return true;
 	} // }}}
 
 	private listCaptureGroups(regex: string): Token[] { // {{{

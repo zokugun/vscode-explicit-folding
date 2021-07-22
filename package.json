@@ -108,7 +108,7 @@
 	},
 	"dependencies": {
 		"@daiyam/regexp": "^0.1.4",
-		"@zokugun/vscode.explicit-folding-api": "0.1.0"
+		"@zokugun/vscode.explicit-folding-api": "0.1.1"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.2.17",
