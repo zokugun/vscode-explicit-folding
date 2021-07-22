@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.18.2 | 2021-07-22
+- add `bypassProtection` property to be able to match an empty line
+
 ## 0.18.1 | 2021-07-21
 - fix not-nested rules with capture groups
 
