@@ -229,9 +229,13 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 
 ## FAQ
 
-**Q:** Why don't I see the foldings ?
+**Q:** Why don't I see the foldings?
 
 **A:** Firstly, make sure you have the setting `"editor.showFoldingControls": "always"` and that you don't have `"editor.foldingStrategy": "indentation"`. Then, verify your config :wink:
+
+**Q:** Why `\n` doesn't work?
+
+**A:** The document's parser is line based. So to test the end of the line, you need to use `$`.
 
 ## Donations
 

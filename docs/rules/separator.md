@@ -30,6 +30,13 @@ If `true`, when the end of file is reached, the folding range will be closed on 
 
 The `kind` property indicates if the folding range is a `comment` or a `region` (`region` by default).
 
+## `bypassProtection`
+
+The property `bypassProtection` is a boolean.
+
+If `false`, by default, all regexes which are matching an empty string, are discarded. It's to protect against infinite loop.<br/>
+If you want to match an empty line, you will need to disable the protection by setting the property to `true`.
+
 ## `autoFold`
 
 The property `autoFold` is a boolean (`false` by default).

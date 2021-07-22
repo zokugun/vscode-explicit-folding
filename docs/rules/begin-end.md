@@ -75,6 +75,13 @@ Each capture groups (`1...n`) in `endRegex` will require a boolean in `foldLastL
 
 The `kind` property indicates if the folding range is a `comment` or a `region` (`region` by default).
 
+## `bypassProtection`
+
+The property `bypassProtection` is a boolean.
+
+If `false`, by default, all regexes which are matching an empty string, are discarded. It's to protect against infinite loop.<br/>
+If you want to match an empty line, you will need to disable the protection by setting the property to `true`.
+
 ## `autoFold`
 
 The property `autoFold` is a boolean (`false` by default).
