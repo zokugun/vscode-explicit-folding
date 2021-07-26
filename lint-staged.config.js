@@ -1,3 +1,4 @@
 module.exports = {
-  '*.ts': 'xo'
+	'package.json': 'fixpack',
+	'*.ts': 'xo'
 };
