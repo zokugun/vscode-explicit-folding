@@ -4,7 +4,9 @@ export class Disposable extends vscode.Disposable {
 	private subscriptions: vscode.Disposable[] = [];
 
 	constructor() {
-		super(() => {});
+		super(() => {
+			// do nothing
+		});
 	}
 
 	dispose() {

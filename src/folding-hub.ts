@@ -1,15 +1,15 @@
 import { ExplicitFoldingConfig, ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
 
 export class FoldingHub implements ExplicitFoldingHub {
-	private perLanguages: { [language: string]: ExplicitFoldingConfig[] | null } = {};
-	private setup: Function;
+	private perLanguages: Record<string, ExplicitFoldingConfig[] | undefined> = {};
+	private readonly setup: () => void;
 
-	constructor(setup: Function) {
+	constructor(setup: () => void) {
 		this.setup = setup;
 	}
 
-	getRules(language: string): ExplicitFoldingConfig[] | null {
-		return this.perLanguages[language]
+	getRules(language: string): ExplicitFoldingConfig[] | undefined {
+		return this.perLanguages[language];
 	}
 
 	registerFoldingRules(language: string, rules: ExplicitFoldingConfig[]): void {
@@ -19,7 +19,7 @@ export class FoldingHub implements ExplicitFoldingHub {
 	}
 
 	unregisterFoldingRules(language: string): void {
-		this.perLanguages[language] = null;
+		this.perLanguages[language] = undefined;
 
 		this.setup();
 	}

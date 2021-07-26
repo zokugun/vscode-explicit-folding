@@ -1,6 +1,6 @@
+import fs from 'fs';
+import path from 'path';
 import { EndOfLine, Position, Range, TextDocument, TextLine, Uri } from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
 
 export class Line implements TextLine {
 	private readonly _line: number;
@@ -26,9 +26,10 @@ export class Line implements TextLine {
 	}
 
 	public get rangeIncludingLineBreak(): Range {
-		if (this._isLastLine) {
+		if(this._isLastLine) {
 			return this.range;
 		}
+
 		return new Range(this._line, 0, this._line + 1, 0);
 	}
 
@@ -51,7 +52,7 @@ export class Document implements TextDocument {
 	isClosed: boolean;
 	eol: EndOfLine;
 	lineCount: number;
-	private _lines: Line[];
+	private readonly _lines: Line[];
 
 	constructor(file: string) {
 		this.uri = Uri.parse(`file://${file}`);
@@ -69,12 +70,7 @@ export class Document implements TextDocument {
 		this.lineCount = lines.length;
 		this._lines = lines.map((line, index) => new Line(index, line, index + 1 === lines.length));
 	}
-	getText(range?: Range): string {
-		throw new Error('Method not implemented.');
-	}
-	getWordRangeAtPosition(position: Position, regex?: RegExp): Range | undefined {
-		throw new Error('Method not implemented.');
-	}
+
 	lineAt(line: number | Position): TextLine {
 		if(line instanceof Position) {
 			line = line.line;
@@ -82,19 +78,34 @@ export class Document implements TextDocument {
 
 		return this._lines[line];
 	}
+
+	/* eslint-disable @typescript-eslint/no-unused-vars */
+	getText(range?: Range): string {
+		throw new Error('Method not implemented.');
+	}
+
+	getWordRangeAtPosition(position: Position, regex?: RegExp): Range | undefined {
+		throw new Error('Method not implemented.');
+	}
+
 	offsetAt(position: Position): number {
 		throw new Error('Method not implemented.');
 	}
+
 	positionAt(offset: number): Position {
 		throw new Error('Method not implemented.');
 	}
+
 	save(): Thenable<boolean> {
 		throw new Error('Method not implemented.');
 	}
+
 	validateRange(range: Range): Range {
 		throw new Error('Method not implemented.');
 	}
+
 	validatePosition(position: Position): Position {
 		throw new Error('Method not implemented.');
 	}
+	/* eslint-enable @typescript-eslint/no-unused-vars */
 }
