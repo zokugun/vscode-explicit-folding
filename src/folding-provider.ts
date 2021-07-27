@@ -392,13 +392,13 @@ export class FoldingProvider implements FoldingRangeProvider {
 			if(Array.isArray(configuration.nested)) {
 				const strictParent = configuration.strict === 'never' ? false : strict;
 				if(!strictParent) {
-					const regexes = configuration.nested.map(config => this.addRegex(config, groupContext, false, [...parents, ruleIndex])).filter(regex => regex.length > 0);
+					const regexes = configuration.nested.map((config) => this.addRegex(config, groupContext, false, [...parents, ruleIndex])).filter((regex) => regex.length > 0);
 
 					src += `|${regexes.join('|')}`;
 				}
 
 				const subgroupContext = { index: 1 };
-				const regexes = configuration.nested.map(config => this.addRegex(config, subgroupContext, strictParent, [...parents, ruleIndex])).filter(regex => regex.length > 0);
+				const regexes = configuration.nested.map((config) => this.addRegex(config, subgroupContext, strictParent, [...parents, ruleIndex])).filter((regex) => regex.length > 0);
 
 				let loopSource = '';
 
@@ -527,7 +527,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 		const nested = configuration.descendants ?? (Array.isArray(configuration.nested) ? configuration.nested : null);
 
 		if(nested) {
-			const regexes = nested.map(config => this.addRegex(config, groupContext, configuration.strict === 'never' ? false : strict, [...parents, ruleIndex])).filter(regex => regex.length > 0);
+			const regexes = nested.map((config) => this.addRegex(config, groupContext, configuration.strict === 'never' ? false : strict, [...parents, ruleIndex])).filter((regex) => regex.length > 0);
 
 			return `(?<_${Marker.SEPARATOR}_${ruleIndex}>${rule.begin.source})|${regexes.join('|')}`;
 		}
@@ -625,7 +625,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 				for(const key in match.groups) {
 					if(match.groups[key] !== undefined) {
-						const keys = key.split('_').map(x => Number.parseInt(x, 10));
+						const keys = key.split('_').map((x) => Number.parseInt(x, 10));
 
 						yield {
 							type: keys[1],

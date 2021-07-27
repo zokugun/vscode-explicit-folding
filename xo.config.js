@@ -4,6 +4,10 @@ module.exports = {
 		'./test/fixtures'
 	],
 	rules: {
+		'arrow-parens': [
+			'error',
+			'always'
+		],
 		'capitalized-comments': [
 			'error',
 			'always',

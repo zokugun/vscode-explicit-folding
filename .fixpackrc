@@ -15,6 +15,7 @@
 		"scripts",
 		"dependencies",
 		"devDependencies",
+		"optionalDependencies",
 		"activationEvents",
 		"contributes",
 		"icon",

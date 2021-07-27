@@ -209,7 +209,7 @@ function setupFoldingRangeProvider() { // {{{
 		const config = vscode.workspace.getConfiguration('explicitFolding');
 
 		if(Array.isArray(config.wilcardExclusions) && config.wilcardExclusions.length > 0) {
-			void vscode.languages.getLanguages().then(languages => {
+			void vscode.languages.getLanguages().then((languages) => {
 				for(const language of languages) {
 					if(Array.isArray(config.wilcardExclusions) && !config.wilcardExclusions.includes(language)) {
 						for(const scheme of SCHEMES) {
@@ -230,7 +230,7 @@ function setupFoldingRangeProvider() { // {{{
 		}
 	}
 	else {
-		void vscode.languages.getLanguages().then(languages => {
+		void vscode.languages.getLanguages().then((languages) => {
 			for(const language of languages) {
 				const langConfig = vscode.workspace.getConfiguration(`[${language}]`);
 
@@ -251,7 +251,7 @@ function setupFoldingRangeProvider() { // {{{
 function setupAutoFold() { // {{{
 	let documents: readonly vscode.TextDocument[] = [];
 
-	const disposable = vscode.window.onDidChangeVisibleTextEditors(editors => {
+	const disposable = vscode.window.onDidChangeVisibleTextEditors((editors) => {
 		const activeEditor = vscode.window.activeTextEditor;
 
 		if(editors.length > 0 && activeEditor) {
@@ -330,7 +330,7 @@ export function activate(context: vscode.ExtensionContext): ExplicitFoldingHub {
 	setupFoldingRangeProvider();
 	setupAutoFold();
 
-	vscode.workspace.onDidChangeConfiguration(event => {
+	vscode.workspace.onDidChangeConfiguration((event) => {
 		if(event.affectsConfiguration('folding') || event.affectsConfiguration('explicitFolding')) {
 			setupFoldingRangeProvider();
 			setupAutoFold();

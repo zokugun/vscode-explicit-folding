@@ -50,7 +50,7 @@ describe('fold', () => {
 	const files = klaw(path.join(__dirname, '..', 'test', 'fixtures'), {
 		nodir: true,
 		traverseAll: true,
-		filter: item => !item.path.endsWith('.yml'),
+		filter: (item) => !item.path.endsWith('.yml'),
 	});
 
 	for(const file of files) {
