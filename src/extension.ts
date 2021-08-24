@@ -49,6 +49,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 		const config = vscode.workspace.getConfiguration('explicitFolding', document);
 		const debug = config.get<boolean>('debug') ?? false;
 		const channel = getDebugChannel(debug);
+		const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
 
 		const rules: ExplicitFoldingConfig[] = [];
 
@@ -75,7 +76,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 
 		const provider = new FoldingProvider(rules, channel, $documents);
 
-		for(const scheme of SCHEMES) {
+		for(const scheme of [...SCHEMES, ...additionalSchemes]) {
 			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
 			$disposable.push(disposable);

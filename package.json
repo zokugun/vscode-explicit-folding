@@ -58,9 +58,13 @@
 	],
 	"contributes": {
 		"configuration": {
-			"type": "object",
 			"title": "Explicit Folding configuration",
 			"properties": {
+				"explicitFolding.additionalSchemes": {
+					"type": "array",
+					"default": [],
+					"description": "List of additional schemes on which to the rules. For example: `gitlens`."
+				},
 				"explicitFolding.autoFold": {
 					"type": "string",
 					"default": "none",
@@ -125,7 +129,7 @@
 				"explicitFolding.wilcardExclusions": {
 					"type": "array",
 					"default": [],
-					"description": "List of languages on which to not apply the wilcard rule (*)"
+					"description": "List of languages on which to not apply the wilcard rule (*)."
 				}
 			}
 		}
