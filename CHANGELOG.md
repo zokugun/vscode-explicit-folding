@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.19.1 | 2021-08-24
+- fix renamed files after linting the project
+
 ## 0.19.0 | 2021-08-24
 - add `additionalSchemes` property to support schemes created by extensions
 
