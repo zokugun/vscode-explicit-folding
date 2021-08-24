@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.19.0 | 2021-08-24
+- add `additionalSchemes` property to support schemes created by extensions
+
 ## 0.18.2 | 2021-07-22
 - add `bypassProtection` property to be able to match an empty line
 
