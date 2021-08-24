@@ -8,6 +8,6 @@
 !README.md
 !out/disposable.js
 !out/extension.js
-!out/foldingHub.js
-!out/foldingProvider.js
+!out/folding-hub.js
+!out/folding-provider.js
 !node_modules/**
