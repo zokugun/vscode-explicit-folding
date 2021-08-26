@@ -184,7 +184,7 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
             <th>HTML</th>
             <td>
 <pre><code>"html": {
-   "beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z]+)[^>\\/]*>",
+   "beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z0-9]+)[^>\/]*>",
    "endRegex": "<\\/\\1>"
 }</code></pre>
             </td>
