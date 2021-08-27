@@ -58,8 +58,14 @@
 		"yaml": "^1.10.2"
 	},
 	"activationEvents": [
-		"*"
+		"onStartupFinished"
 	],
+	"capabilities": {
+		"virtualWorkspaces": true,
+		"untrustedWorkspaces": {
+			"supported": true
+		}
+	},
 	"contributes": {
 		"configuration": {
 			"title": "Explicit Folding configuration",
