@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.19.2 | 2021-08-27
+- improve activation events
+- add capabilities
+
 ## 0.19.1 | 2021-08-24
 - fix renamed files after linting the project
 
