@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.19.3 | 2021-10-26
+- correctly register language whose settings are defined by another extension
+
 ## v0.19.2 | 2021-08-27
 - improve activation events
 - add capabilities
