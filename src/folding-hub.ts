@@ -12,6 +12,10 @@ export class FoldingHub implements ExplicitFoldingHub {
 		return this.perLanguages[language];
 	}
 
+	hasRules(language: string): boolean {
+		return typeof this.perLanguages[language] !== 'undefined';
+	}
+
 	registerFoldingRules(language: string, rules: ExplicitFoldingConfig[]): void {
 		this.perLanguages[language] = rules;
 

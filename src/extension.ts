@@ -235,7 +235,7 @@ function setupFoldingRangeProvider() { // {{{
 			for(const language of languages) {
 				const langConfig = vscode.workspace.getConfiguration(`[${language}]`);
 
-				if(globalConfig[language] || langConfig['explicitFolding.rules']) {
+				if(globalConfig[language] || $hub.hasRules(language) || langConfig['explicitFolding.rules']) {
 					for(const scheme of SCHEMES) {
 						const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
