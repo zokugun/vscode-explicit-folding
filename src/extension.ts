@@ -1,5 +1,5 @@
-import vscode from 'vscode';
 import { ExplicitFoldingConfig, ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
+import vscode from 'vscode';
 import pkg from '../package.json';
 import { Disposable } from './disposable';
 import { FoldingHub } from './folding-hub';

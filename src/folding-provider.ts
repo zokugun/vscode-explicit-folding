@@ -1,7 +1,7 @@
-import { basename } from 'path';
 import { escape, parse, translate, visit, Flavor, Token, TokenType } from '@daiyam/regexp';
-import { commands, FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode';
 import { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
+import { basename } from 'path';
+import { commands, FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode';
 
 interface EndMatch {
 	index: number;
@@ -219,7 +219,9 @@ export class FoldingProvider implements FoldingRangeProvider {
 			}
 
 			if(begin) {
-				let end, continuation, whileRegex;
+				let continuation;
+				let end;
+				let whileRegex;
 
 				if(configuration.endRegex) {
 					end = new RegExp(translate(configuration.endRegex, Flavor.ES2018));
@@ -706,7 +708,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 				this.debugChannel.appendLine(`[${name}] line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
 			}
 
-			switch (type) {
+			switch(type) {
 				case Marker.BEGIN:
 					if(stack.length === 0 || stack[0].rule.nested) {
 						if(!rule.nested && (rule.loopRegex || rule.endMatcher)) {

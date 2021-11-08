@@ -1,5 +1,5 @@
-const path = require('path')
-const webpack = require('webpack')
+const path = require('path');
+const webpack = require('webpack');
 
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
 /** @type WebpackConfig */
@@ -13,7 +13,7 @@ const webExtensionConfig = {
 		filename: 'index.js',
 		path: path.join(__dirname, './lib'),
 		libraryTarget: 'commonjs',
-		devtoolModuleFilenameTemplate: '../../[resource-path]'
+		devtoolModuleFilenameTemplate: '../../[resource-path]',
 	},
 	resolve: {
 		mainFields: ['browser', 'module', 'main'],
@@ -21,19 +21,19 @@ const webExtensionConfig = {
 		fallback: {
 			assert: require.resolve('assert'),
 			path: require.resolve('path-browserify'),
-		}
+		},
 	},
 	plugins: [
 		new webpack.ProvidePlugin({
-			process: 'process/browser'
-		})
+			process: 'process/browser',
+		}),
 	],
 	externals: {
-		vscode: 'commonjs vscode'
+		vscode: 'commonjs vscode',
 	},
 	performance: {
-		hints: false
+		hints: false,
 	},
-}
+};
 
-module.exports = [webExtensionConfig]
+module.exports = [webExtensionConfig];
