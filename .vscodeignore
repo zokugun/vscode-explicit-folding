@@ -6,8 +6,4 @@
 !package.json
 !LICENSE
 !README.md
-!out/disposable.js
-!out/extension.js
-!out/folding-hub.js
-!out/folding-provider.js
-!node_modules/**
+!lib/**
