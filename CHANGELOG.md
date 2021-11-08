@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.20.0 | 2021-11-8
+- it's a web extension
+
 ## v0.19.3 | 2021-10-26
 - correctly register language whose settings are defined by another extension
 
