@@ -233,9 +233,9 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 
 **A:** Firstly, make sure you have the setting `"editor.showFoldingControls": "always"` and that you don't have `"editor.foldingStrategy": "indentation"`. Then, verify your config :wink:
 
-**Q:** Why `\n` doesn't work?
+**Q:** Why doesn't `\n` work?
 
-**A:** The document's parser is line based. So to test the end of the line, you need to use `$`.
+**A:** The document parser is line-based. So in order to match the end of a line, you need to use `$`.
 
 ## Donations
 
