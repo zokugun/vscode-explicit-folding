@@ -77,7 +77,10 @@ When used in the global scope, the rules must be regrouped by language.
 
 ### Regex Syntax
 
-Via VSCode's editor, the extension supports [ES2018 regexes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
+Via VSCode's editor, the extension supports [ES2018 regexes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) (except `\n`).
+
+The document parser is line-based. So `\n` and  multi-lines regexes aren't supported.<br />
+The end of a line can be matched with `$`.
 
 In addition, the following PCRE2 syntaxes are supported:
 
