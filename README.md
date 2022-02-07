@@ -8,7 +8,7 @@ Explicit Folding
 [![License](https://img.shields.io/badge/donate-liberapay-green)](https://liberapay.com/daiyam/donate)
 [![License](https://img.shields.io/badge/donate-paypal-green)](https://paypal.me/daiyam99)
 
-Manually controls how and where to fold your code
+This extension lets you manually control how and where to fold your code.
 
 ## Configuration
 
@@ -35,7 +35,7 @@ In your settings:
 
 ## Rules
 
-The property `explicitFolding.rules` is defining how to fold the code.
+The property `explicitFolding.rules` defines how to fold the code.
 
 Here the list of possible rules:
 - [begin/end](https://github.com/zokugun/vscode-explicit-folding/blob/master/docs/rules/begin-end.md)
@@ -45,9 +45,9 @@ Here the list of possible rules:
 - [separator](https://github.com/zokugun/vscode-explicit-folding/blob/master/docs/rules/separator.md)
 - [indentation](https://github.com/zokugun/vscode-explicit-folding/blob/master/docs/rules/indentation.md)
 
-### Global scope
+### Global Scope
 
-When used in the global scope, the rules must be regrouped by language.
+When used in the global scope, the rules must be grouped by language.
 
 ```
 "explicitFolding.rules": {
@@ -61,7 +61,7 @@ When used in the global scope, the rules must be regrouped by language.
 }
 ```
 
-### Language scope
+### Language Scope
 
 ```
 "[cpp]": {
@@ -77,16 +77,16 @@ When used in the global scope, the rules must be regrouped by language.
 
 ### Regex Syntax
 
-Via VSCode's editor, the extension supports [ES2018 regexes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
+Via VSCode's editor, the extension supports [ES2018 regex](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
 
-In addition, the following PCRE2 syntaxes are supported:
+Additionally, the following aspects of PCRE2 syntax are supported:
 
 - `(?i)x`: `x` becomes case insensitive
 - `(?i:x)y`: only `x` is case insensitive
 
-## Wilcard Exclusions
+## Wildcard Exclusions
 
-By default, the wilcard rule, like the following, are applied to all languages.
+By default, the wildcard rule, like the following, are applied to all languages.
 ```
 "explicitFolding.rules": {
     "*": {
@@ -96,11 +96,10 @@ By default, the wilcard rule, like the following, are applied to all languages.
 }
 ```
 
-But, for languages which are using the indentation to provider the foldings (like Python), the wilcard rule will prevent the use of the indentation provider.<br />
+But, for languages which are using the indentation to define foldable blocks of code (such as in Python syntax), the wildcard rule will prevent the use of the indentation provider.<br />
 To avoid that, you need to add an exclusion:
-
 ```
-"explicitFolding.wilcardExclusions": ["python"]
+"explicitFolding.wildcardExclusions": ["python"]
 ```
 
 ## Auto Fold
@@ -126,14 +125,14 @@ So you can auto fold only the imports with:
 
 ## Debugging
 
-If the property `explicitFolding.debug` (`false` by default) is `true`, the extension will print out debug informations into the channel `Folding` of the panel `Output` (menu: `View` / `Output`).
+If the property `explicitFolding.debug` (`false` by default) is `true`, the extension will print out debug information into the channel `Folding` of the panel `Output` (menu: `View` / `Output`).
 
 ## Priority/Delay
 
-VSCode is scoring each folding providers based on the scheme and language. When the scores are identicals, the providers which have been registered the latest have an higher priority.<br/>
-When starting up, VSCode loads the extensions. When reading a file, VSCode will load the folding provider of the file's language (only once per language).
+VSCode is scoring each folding providers based on the scheme and language. When the scores are identical, the providers which have been registered the most recently, receive a higher priority.<br/>
+When starting up, VSCode loads the installed extensions. When reading a file, VSCode will load the folding provider of the file's language (only once per language).
 
-The property `explicitFolding.delay` (in ms, `1000` by default) is used so that this extension's folding provider has a higher priority than the one of the language provider.
+The property `explicitFolding.delay` (measured in milliseconds, and set to `1000` by default) is used so that this extension's folding provider has a higher priority than that of the language provider.
 
 ## Notification
 
@@ -148,20 +147,23 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
             <th>Config</th>
         </tr>
     </thead>
-    <tboby>
+    <tbody>
         <tr>
             <th><i>Emacs</i></th>
             <td>
-<pre><code>"*": {
+<pre>
+<code>"*": {
     "begin": "{{{",
     "end": "}}}"
-}</code></pre>
+}</code>
+</pre>
             </td>
         </tr>
         <tr>
             <th>C/C++</th>
             <td>
-<pre><code>"cpp": [
+<pre>
+<code>"cpp": [
     {
         "beginRegex": "#if(?:n?def)?",
         "middleRegex": "#el(?:se|if)",
@@ -177,22 +179,26 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
         "continuation": "\\",
         "nested": false
     }
-]</code></pre>
+]</code>
+</pre>
             </td>
         </tr>
         <tr>
             <th>HTML</th>
             <td>
-<pre><code>"html": {
+<pre>
+<code>"html": {
    "beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z0-9]+)[^>\/]*>",
    "endRegex": "<\\/\\1>"
-}</code></pre>
+}</code>
+</pre>
             </td>
         </tr>
         <tr>
             <th>PHP</th>
             <td>
-<pre><code>"php": [
+<pre>
+<code>"php": [
     {
         "beginRegex": "(?:case|default)[^:]*:",
         "endRegex": "break;|(.)(?=case|default|\\})",
@@ -203,35 +209,40 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
         "middleRegex": "\\}[^}]+\\{",
         "endRegex": "\\}"
     }
-]</code></pre>
+]</code>
+</pre>
             </td>
         </tr>
         <tr>
             <th>Python</th>
             <td>
-<pre><code>"python": {
+<pre>
+<code>"python": {
     "beginRegex": "\"\"\"",
     "endRegex": "\"\"\""
-}</code></pre>
+}</code>
+</pre>
             </td>
         </tr>
         <tr>
             <th>SASS</th>
             <td>
-<pre><code>"scss": {
+<pre>
+<code>"scss": {
     "beginRegex": " \\{\\s*$",
     "endRegex": "^\\s*\\}"
-}</code></pre>
+}</code>
+</pre>
             </td>
         </tr>
-    </tobody>
+    </tbody>
 </table>
 
 ## FAQ
 
-**Q:** Why don't I see the foldings?
+**Q:** Why don't I see the folding controls?
 
-**A:** Firstly, make sure you have the setting `"editor.showFoldingControls": "always"` and that you don't have `"editor.foldingStrategy": "indentation"`. Then, verify your config :wink:
+**A:** Firstly, make sure you have the setting `"editor.showFoldingControls": "always"` defined, and that you don't have `"editor.foldingStrategy": "indentation"` defined. Then, verify your configuration. 😉
 
 **Q:** Why doesn't `\n` work?
 
@@ -239,7 +250,7 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 
 ## Donations
 
-Support this project by becoming a financial contributor.
+Support this project by becoming a financial contributor, using any of the following methods:
 
 <table>
     <tr>
@@ -256,11 +267,11 @@ Support this project by becoming a financial contributor.
     </tr>
 </table>
 
-## Editors support
+## Supported Editors
 
 ### VSCode/VSCodium
 
-VSCode is using the folding ranges provided:
+VSCode uses the folding ranges provided:
 - by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
 - <ins>**and**</ins>, by the folding range provider defined by this extension if `editor.foldingStrategy` is set to **`auto`**
 
