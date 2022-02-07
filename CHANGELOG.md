@@ -1,5 +1,6 @@
-# Changelog
+<title>Changelog</title>
 
+# 2021
 ## 2021-11-08 — v0.20.0
 - it's a web extension
 
@@ -106,6 +107,8 @@
 ## 2021-02-12 — v0.9.2
 - register provider to all applicable schemes
 
+# 2020
+
 ## 2020-12-24 — v0.9.1
 - allows provider on all schemes
 - fix README
@@ -148,6 +151,8 @@
 - add `foldLastLine` property
 - add `kind` property to indicate if the range is a `comment` or a `region`
 
+# 2019
+
 ## 2019-06-08 — v0.3.2
 - show message when the extension is updated
 - update dependencies due to security issue
@@ -158,6 +163,8 @@
 ## 2019-04-03 — v0.3.0
 - change configuration's properties `begin` and `end` as regular string (**not regex**)
 - add configuration's properties `beginRegex` and `endRegex` to be able to use **regex**
+
+# 2018
 
 ## 2018-07-18 — v0.2.1
 - rename repository
