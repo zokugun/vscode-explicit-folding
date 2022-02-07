@@ -77,7 +77,10 @@ When used in the global scope, the rules must be grouped by language.
 
 ### Regex Syntax
 
-Via VSCode's editor, the extension supports [ES2018 regex](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
+Via VSCode's editor, the extension supports [ES2018 regexes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) (except `\n`).
+
+The document parser is line-based. So `\n` and  multi-lines regexes aren't supported.<br />
+The end of a line can be matched with `$`.
 
 Additionally, the following aspects of PCRE2 syntax are supported:
 
@@ -98,6 +101,7 @@ By default, the wildcard rule, like the following, are applied to all languages.
 
 But, for languages which are using the indentation to define foldable blocks of code (such as in Python syntax), the wildcard rule will prevent the use of the indentation provider.<br />
 To avoid that, you need to add an exclusion:
+
 ```
 "explicitFolding.wildcardExclusions": ["python"]
 ```
