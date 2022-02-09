@@ -15,20 +15,20 @@ In your settings:
 
 ```
 "explicitFolding.rules": {
-    "*": {
-        "begin": "{{{",
-        "end": "}}}"
-    },
-    "javascriptreact": [
-        {
-            "begin": "{/*",
-            "end": "*/}"
-        },
-        {
-            "begin": "<",
-            "end": "/>"
-        }
-    ]
+	"*": {
+		"begin": "{{{",
+		"end": "}}}"
+	},
+	"javascriptreact": [
+		{
+			"begin": "{/*",
+			"end": "*/}"
+		},
+		{
+			"begin": "<",
+			"end": "/>"
+		}
+	]
 }
 ```
 
@@ -49,13 +49,13 @@ When used in the global scope, the rules must be grouped by language.
 
 ```
 "explicitFolding.rules": {
-    "cpp": [
-        {
-            "beginRegex": "#if(?:n?def)?",
-            "middleRegex": "#el(?:se|if)",
-            "endRegex": "#endif"
-        }
-    ]
+	"cpp": [
+		{
+			"beginRegex": "#if(?:n?def)?",
+			"middleRegex": "#el(?:se|if)",
+			"endRegex": "#endif"
+		}
+	]
 }
 ```
 
@@ -63,13 +63,13 @@ When used in the global scope, the rules must be grouped by language.
 
 ```
 "[cpp]": {
-    "explicitFolding.rules": [
-        {
-            "beginRegex": "#if(?:n?def)?",
-            "middleRegex": "#el(?:se|if)",
-            "endRegex": "#endif"
-        }
-    ]
+	"explicitFolding.rules": [
+		{
+			"beginRegex": "#if(?:n?def)?",
+			"middleRegex": "#el(?:se|if)",
+			"endRegex": "#endif"
+		}
+	]
 }
 ```
 
@@ -89,10 +89,10 @@ Additionally, the following aspects of PCRE2 syntax are supported:
 By default, the wildcard rule, like the following, are applied to all languages.
 ```
 "explicitFolding.rules": {
-    "*": {
-        "begin": "{{{",
-        "end": "}}}"
-    }
+	"*": {
+		"begin": "{{{",
+		"end": "}}}"
+	}
 }
 ```
 
@@ -110,14 +110,14 @@ Each rule can overwrite that property with its own property `autoFold` (a boolea
 So you can auto fold only the imports with:
 ```
 "[javascript]": {
-    "explicitFolding.rules": [
-        {
-            "beginRegex": "^import\\b",
-            "whileRegex": "^(?:import\\b|\\/\\/)",
-            "autoFold": true
-        }
-    ],
-    "explicitFolding.autoFold": "none"
+	"explicitFolding.rules": [
+		{
+			"beginRegex": "^import\\b",
+			"whileRegex": "^(?:import\\b|\\/\\/)",
+			"autoFold": true
+		}
+	],
+	"explicitFolding.autoFold": "none"
 }
 ```
 
@@ -137,101 +137,101 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 
 ## Usages
 <table>
-    <thead>
-        <tr>
-            <th>Language</th>
-            <th>Config</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <th><i>Emacs</i></th>
-            <td>
+	<thead>
+		<tr>
+			<th>Language</th>
+			<th>Config</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th><i>Emacs</i></th>
+			<td>
 <pre>
 <code>"*": {
-    "begin": "{{{",
-    "end": "}}}"
+	"begin": "{{{",
+	"end": "}}}"
 }</code>
 </pre>
-            </td>
-        </tr>
-        <tr>
-            <th>C/C++</th>
-            <td>
+			</td>
+		</tr>
+		<tr>
+			<th>C/C++</th>
+			<td>
 <pre>
 <code>"cpp": [
-    {
-        "beginRegex": "#if(?:n?def)?",
-        "middleRegex": "#el(?:se|if)",
-        "endRegex": "#endif"
-    },
-    {
-        "begin": "/*",
-        "end": "*/",
-        "nested": false
-    },
-    {
-        "begin": "//",
-        "continuation": "\\",
-        "nested": false
-    }
+	{
+		"beginRegex": "#if(?:n?def)?",
+		"middleRegex": "#el(?:se|if)",
+		"endRegex": "#endif"
+	},
+	{
+		"begin": "/*",
+		"end": "*/",
+		"nested": false
+	},
+	{
+		"begin": "//",
+		"continuation": "\\",
+		"nested": false
+	}
 ]</code>
 </pre>
-            </td>
-        </tr>
-        <tr>
-            <th>HTML</th>
-            <td>
+			</td>
+		</tr>
+		<tr>
+			<th>HTML</th>
+			<td>
 <pre>
 <code>"html": {
-   "beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z0-9]+)[^>\/]*>",
-   "endRegex": "<\\/\\1>"
+	"beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z0-9]+)[^>\/]*>",
+	"endRegex": "<\\/\\1>"
 }</code>
 </pre>
-            </td>
-        </tr>
-        <tr>
-            <th>PHP</th>
-            <td>
+			</td>
+		</tr>
+		<tr>
+			<th>PHP</th>
+			<td>
 <pre>
 <code>"php": [
-    {
-        "beginRegex": "(?:case|default)[^:]*:",
-        "endRegex": "break;|(.)(?=case|default|\\})",
-        "foldLastLine": [true, false]
-    },
-    {
-        "beginRegex": "\\{",
-        "middleRegex": "\\}[^}]+\\{",
-        "endRegex": "\\}"
-    }
+	{
+		"beginRegex": "(?:case|default)[^:]*:",
+		"endRegex": "break;|(.)(?=case|default|\\})",
+		"foldLastLine": [true, false]
+	},
+	{
+		"beginRegex": "\\{",
+		"middleRegex": "\\}[^}]+\\{",
+		"endRegex": "\\}"
+	}
 ]</code>
 </pre>
-            </td>
-        </tr>
-        <tr>
-            <th>Python</th>
-            <td>
+			</td>
+		</tr>
+		<tr>
+			<th>Python</th>
+			<td>
 <pre>
 <code>"python": {
-    "beginRegex": "\"\"\"",
-    "endRegex": "\"\"\""
+	"beginRegex": "\"\"\"",
+	"endRegex": "\"\"\""
 }</code>
 </pre>
-            </td>
-        </tr>
-        <tr>
-            <th>SASS</th>
-            <td>
+			</td>
+		</tr>
+		<tr>
+			<th>SASS</th>
+			<td>
 <pre>
 <code>"scss": {
-    "beginRegex": " \\{\\s*$",
-    "endRegex": "^\\s*\\}"
+	"beginRegex": " \\{\\s*$",
+	"endRegex": "^\\s*\\}"
 }</code>
 </pre>
-            </td>
-        </tr>
-    </tbody>
+			</td>
+		</tr>
+	</tbody>
 </table>
 
 ## FAQ
@@ -247,18 +247,18 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 Support this project by becoming a financial contributor, using any of the following methods:
 
 <table>
-    <tr>
-        <td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_kofi.png" alt="Ko-fi" width="80px" height="80px"></td>
-        <td><a href="https://ko-fi.com/daiyam" target="_blank">ko-fi.com/daiyam</a></td>
-    </tr>
-    <tr>
-        <td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_liberapay.png" alt="Liberapay" width="80px" height="80px"></td>
-        <td><a href="https://liberapay.com/daiyam/donate" target="_blank">liberapay.com/daiyam/donate</a></td>
-    </tr>
-    <tr>
-        <td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_paypal.png" alt="PayPal" width="80px" height="80px"></td>
-        <td><a href="https://paypal.me/daiyam99" target="_blank">paypal.me/daiyam99</a></td>
-    </tr>
+	<tr>
+		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_kofi.png" alt="Ko-fi" width="80px" height="80px"></td>
+		<td><a href="https://ko-fi.com/daiyam" target="_blank">ko-fi.com/daiyam</a></td>
+	</tr>
+	<tr>
+		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_liberapay.png" alt="Liberapay" width="80px" height="80px"></td>
+		<td><a href="https://liberapay.com/daiyam/donate" target="_blank">liberapay.com/daiyam/donate</a></td>
+	</tr>
+	<tr>
+		<td><img src="https://raw.githubusercontent.com/daiyam/assets/master/icons/256/funding_paypal.png" alt="PayPal" width="80px" height="80px"></td>
+		<td><a href="https://paypal.me/daiyam99" target="_blank">paypal.me/daiyam99</a></td>
+	</tr>
 </table>
 
 ## Supported Editors
