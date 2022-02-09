@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.21.0 | 2022-02-09
+- `explicitFolding.wilcardExclusions` has been replaced with `explicitFolding.wildcardExclusions` (with a `d`)
+- improved documentation thanks to @OCRenkist
+
 ## v0.20.0 | 2021-11-08
 - it's a web extension
 
