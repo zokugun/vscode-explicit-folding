@@ -87,7 +87,7 @@
 - fix need to reload VSCode when changing `explicitFolding.debug`
 
 ## v0.12.0 | 2021-05-12
-- add the configuration `explicitFolding.debug` to print out debug informations into the channel `Folding` of the panel `Output`
+- add the configuration `explicitFolding.debug` to print out debug information into the channel `Folding` of the panel `Output`
 - add `foldEOF` property which will close the folding at the end of the file
 - add `foldBOF` property, only for separators
 - add `descendants` property, only for separators
@@ -111,19 +111,19 @@
 - fix README
 
 ## v0.9.0 | 2020-08-20
-- add the configuration `explicitFolding.startupDelay` which will delay the registration of the folding providers when starting up (1000ms by default). It's fixing the issue when the editor wasn't using the correct foldings at startup.
-- add the configuration `explicitFolding.notification` to manage the notifications. By default, the notifications will be shown only for minor revisions
+- add the configuration `explicitFolding.startupDelay` which will delay the registration of the folding providers when starting up (1000 ms by default). This fixes the issue where the editor wasn't using the correct folding providers at startup.
+- add the configuration `explicitFolding.notification` to manage the notifications. By default, the notifications will be shown only for minor revisions.
 
 ## v0.8.2 | 2020-05-27
 - fix `continuation` marker when first match doesn't include the line-continuation character
 - fix looping on configuration
 
 ## v0.8.1 | 2020-05-26
-- improve handling of non-nested rules to test only necessary regexes
+- improve handling of non-nested rules to test only necessary regular expressions
 
 ## v0.8.0 | 2020-05-26
 - add `continuation` marker
-- fix infinity loop due to zero-length regexes
+- fix infinity loop due to zero-length regular expressions
 - fix capturing groups
 
 ## v0.7.1 | 2020-05-22
@@ -153,7 +153,7 @@
 - update dependencies due to security issue
 
 ## v0.3.1 | 2019-04-04
-- catch error due to bad regexes
+- catch error due to bad regex
 
 ## v0.3.0 | 2019-04-03
 - change configuration's properties `begin` and `end` as regular string (**not regex**)
@@ -168,9 +168,9 @@
 - rename configuration's property `start` to `begin`
 
 ## v0.1.1 | 2018-07-16
-- fix error in settings
-- update foldings on configuration changes
+- fix an error in the settings
+- update folding controls upon changes in the configuration
 - fix formatting
 
 ## v0.1.0 | 2018-07-09
-- Initial release
+- initial release
