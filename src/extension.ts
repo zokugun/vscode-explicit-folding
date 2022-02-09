@@ -209,7 +209,26 @@ function setupFoldingRangeProvider() { // {{{
 	if(globalConfig['*']) {
 		const config = vscode.workspace.getConfiguration('explicitFolding');
 
-		if(Array.isArray(config.wilcardExclusions) && config.wilcardExclusions.length > 0) {
+		if(Array.isArray(config.wildcardExclusions) && config.wildcardExclusions.length > 0) {
+			void vscode.languages.getLanguages().then((languages) => {
+				for(const language of languages) {
+					if(Array.isArray(config.wildcardExclusions) && !config.wildcardExclusions.includes(language)) {
+						for(const scheme of SCHEMES) {
+							const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
+
+							$disposable.push(disposable);
+						}
+					}
+				}
+			});
+		}
+		else if(Array.isArray(config.wilcardExclusions) && config.wilcardExclusions.length > 0) {
+			const channel = getDebugChannel(true);
+
+			if(channel) {
+				channel.appendLine('[deprecated] `explicitFolding.wilcardExclusions` has been replaced with `explicitFolding.wildcardExclusions` (with a `d`)');
+			}
+
 			void vscode.languages.getLanguages().then((languages) => {
 				for(const language of languages) {
 					if(Array.isArray(config.wilcardExclusions) && !config.wilcardExclusions.includes(language)) {
