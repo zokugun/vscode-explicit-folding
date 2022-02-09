@@ -44,7 +44,6 @@ Here the list of possible rules:
 - [indentation](https://github.com/zokugun/vscode-explicit-folding/blob/master/docs/rules/indentation.md)
 
 ### Global Scope
-
 When used in the global scope, the rules must be grouped by language.
 
 ```
@@ -60,7 +59,6 @@ When used in the global scope, the rules must be grouped by language.
 ```
 
 ### Language Scope
-
 ```
 "[cpp]": {
 	"explicitFolding.rules": [
@@ -98,7 +96,6 @@ By default, the wildcard rule, like the following, are applied to all languages.
 
 But, for languages which are using the indentation to define foldable blocks of code (such as in Python syntax), the wildcard rule will prevent the use of the indentation provider.<br />
 To avoid that, you need to add an exclusion:
-
 ```
 "explicitFolding.wildcardExclusions": ["python"]
 ```
