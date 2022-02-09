@@ -11,7 +11,6 @@ Explicit Folding
 This extension lets you manually control how and where to fold your code.
 
 ## Configuration
-
 In your settings:
 
 ```
@@ -34,7 +33,6 @@ In your settings:
 ```
 
 ## Rules
-
 The property `explicitFolding.rules` defines how to fold the code.
 
 Here the list of possible rules:
@@ -88,7 +86,6 @@ Additionally, the following aspects of PCRE2 syntax are supported:
 - `(?i:x)y`: only `x` is case insensitive
 
 ## Wildcard Exclusions
-
 By default, the wildcard rule, like the following, are applied to all languages.
 ```
 "explicitFolding.rules": {
@@ -107,7 +104,6 @@ To avoid that, you need to add an exclusion:
 ```
 
 ## Auto Fold
-
 You can define the automatic folding of the ranges with the property `explicitFolding.autoFold` (an enum, `none` by default).<br/>
 Each rule can overwrite that property with its own property `autoFold` (a boolean, `false` by default).
 
@@ -128,22 +124,18 @@ So you can auto fold only the imports with:
 [enum values](https://github.com/zokugun/vscode-explicit-folding/blob/master/docs/properties/auto-fold.md)
 
 ## Debugging
-
 If the property `explicitFolding.debug` (`false` by default) is `true`, the extension will print out debug information into the channel `Folding` of the panel `Output` (menu: `View` / `Output`).
 
 ## Priority/Delay
-
 VSCode is scoring each folding providers based on the scheme and language. When the scores are identical, the providers which have been registered the most recently, receive a higher priority.<br/>
 When starting up, VSCode loads the installed extensions. When reading a file, VSCode will load the folding provider of the file's language (only once per language).
 
 The property `explicitFolding.delay` (measured in milliseconds, and set to `1000` by default) is used so that this extension's folding provider has a higher priority than that of the language provider.
 
 ## Notification
-
 The property `explicitFolding.notification` (`minor` by default) indicates when to show the update notification.
 
 ## Usages
-
 <table>
     <thead>
         <tr>
@@ -243,7 +235,6 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 </table>
 
 ## FAQ
-
 **Q:** Why don't I see the foldings?
 
 **A:** Firstly, make sure you have the setting `"editor.showFoldingControls": "always"` defined, and that you don't have `"editor.foldingStrategy": "indentation"` defined. Then, verify your configuration. 😉
@@ -253,7 +244,6 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 **A:** The document parser is line-based. So in order to match the end of a line, you need to use `$`.
 
 ## Donations
-
 Support this project by becoming a financial contributor, using any of the following methods:
 
 <table>
@@ -274,13 +264,11 @@ Support this project by becoming a financial contributor, using any of the follo
 ## Supported Editors
 
 ### VSCode/VSCodium
-
 VSCode uses the folding ranges provided:
 - by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
 - <ins>**and**</ins>, by the folding range provider defined by this extension if `editor.foldingStrategy` is set to **`auto`**
 
 ### MrCode
-
 [MrCode](https://github.com/zokugun/MrCode) is using the folding ranges provided:
 - by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
 - <ins>**or**</ins> by the folding range provider defined by this extension if `editor.foldingStrategy` is set to **`explicit`**
