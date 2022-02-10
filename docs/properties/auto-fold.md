@@ -1,10 +1,10 @@
 # `autoFold`
 
-The property `explicitFolding.autoFold` is an enum (`none` by default).
+The property `explicitFolding.autoFold` is an **enum** (`none` by default).
 
-It's defining which folding ranges that are going to be folded when a document is opened.
+It’s defining which folding ranges that are going to be folded when a document is opened.
 
-Here is the list of the possible values and their descriptions:
+Here is a list of the possible values and their descriptions:
 
 |  Value   | Description                        |
 |:--------:|:---------------------------------- |
