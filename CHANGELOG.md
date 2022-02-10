@@ -15,7 +15,7 @@
 - Add more capabilities.
 
 ## v0.19.1 — 2021-08-24
-- Fix renamed files after linting the project.
+- Fix renamed files after **linting** the project.
 
 ## v0.19.0 — 2021-08-24
 - Add `additionalSchemes` property to support schemes created by extensions.
@@ -24,10 +24,10 @@
 - Add `bypassProtection` property to be able to match empty lines.
 
 ## v0.18.1 — 2021-07-21
-- Fix not-nested rules with capture groups.
+- Fix non-nested rules with **capture groups**.
 
 ## v0.18.0 — 2021-07-20
-- Fix capture groups in nested rules.
+- Fix **capture groups** in nested rules.
 - Use `endRegex` with refs are generated on the run.
 - Update icon.
 
@@ -35,7 +35,7 @@
 - Add API to support external rules.
 
 ## v0.16.0 — 2021-07-03
-- Fix indented languages by avoiding to define the folding provider.
+- Fix indented languages by avoiding defining the folding provider.
 - Add the `explicitFolding.wilcardExclusions` configuration.
 
 ## v0.15.0 — 2021-07-03
@@ -46,7 +46,7 @@
 - Better explanation of `consumeEnd` in the documentation.
 
 ## v0.14.7 — 2021-06-25
-- Fix how the next offset is calculated.
+- Fix how the **next offset** is calculated.
 - Fix `consumeEnd` with `begin` and `end` on same line.
 - Exit secondary loop at the end of the match, not at the next line.
 
@@ -78,14 +78,14 @@
 - The `begin/end` rule now fully supports the `nested` property as an array of rules.
 - Add `begin/while` rule.
 - Add `while` rule.
-- Add documentation for each rules and their applicable properties.
+- Add documentation for each rule and its applicable properties.
 
 ## v0.13.1 — 2021-05-18
 - Fix `^` in the alternate loop for non-nested blocks.
 - Improve debug messages.
 
 ## v0.13.0 — 2021-05-14
-- Use the **deferred provider** so that the real **folding provider** is loaded after the language’s unmodified folding provider. By doing so, the folding ranges provided by this extension are given a higher priority, such that **VSCode** is using ours instead of those from the language’s folding provider (lest there be any conflict).
+- Use the **deferred provider** so that the real **folding provider** is loaded after the language’s unmodified folding provider. By doing so, the **folding ranges** provided by this extension are given a higher priority, such that **VSCode** is using ours instead of those from the language’s folding provider (lest there be any conflict).
 
 ## v0.12.1 — 2021-05-12
 - Fix need to reload **VSCode** when changing `explicitFolding.debug`.
