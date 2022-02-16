@@ -1,50 +1,37 @@
 # Begin/Continuation Rule
 
 ## `begin`/`beginRegex`
-
-The properties `begin` and `beginRegex` are indicating the beginning of a folding region. One of them is required.
+The `begin` and `beginRegex` properties indicate the beginning of a folding region. One of them is required.
 
 ## `continuation`/`continuationRegex`
+Starting the first line of the folding region, each line must match the properties `continuation` or `continuationRegex`. One of the properties is required.  
+The last line of the folding region may not match the properties `continuation` or `continuationRegex`.  
 
-Starting the first line of the folding region, each line must match the properties `continuation` or `continuationRegex`. One of the properties is required.
-The last line of the folding region may not match the properties `continuation` or `continuationRegex`.
-
-It's allowing single-line comments to contain line-continuation character.
-
+It’s allowing single-line comments to contain line-continuation character.
 ```
 "cpp": {
-    "begin": "//",
-    "continuation": "\\"
+	"begin": "//",
+	"continuation": "\\"
 }
 ```
 
 ## `foldEOF`
-
-The property `foldEOF` is a boolean (`false` by default).
-
-If `true`, when the end of file is reached, the folding range will be closed on the last line.
+The `foldEOF` property is a boolean (set to `false` by default).  
+If the value is `true`, when the end of file is reached, the folding range will be closed on the last line.
 
 ## `foldLastLine`
-
-The property `foldLastLine` is a boolean (`true` by default).
-
-If `true`, the folding range will include the last line.
-
-It `false`, the folding range won't include the last line. So the last line will stay visible when the range is closed.
+The `foldLastLine` property is a **boolean** (set to `true` by default).  
+If the value is `true`, the folding range will include the last line.  
+If the value is `false`, the folding range will exclude the last line. In such case, the last line will remain visible when the range is closed.
 
 ## `kind`
-
-The `kind` property indicates if the folding range is a `comment` or a `region` (`region` by default).
+The `kind` property indicates if the folding range is a `comment` or a `region` (set to `region` by default).
 
 ## `bypassProtection`
-
-The property `bypassProtection` is a boolean.
-
-If `false`, by default, all regexes which are matching an empty string, are discarded. It's to protect against infinite loop.<br/>
-If you want to match an empty line, you will need to disable the protection by setting the property to `true`.
+The `bypassProtection` property is a **boolean**.  
+If the value is `false`, by default, all **regex**es which are matching an empty string, are discarded. This is in order to protect against infinite loops.  
+If you want to match an empty line, you will need to disable the protection by setting this property to `true`.
 
 ## `autoFold`
-
-The property `autoFold` is a boolean (`false` by default).
-
-If `true`, the folding range will be automatically folded.
+The `autoFold` property is a **boolean** (set to `false` by default).  
+If the value is `true`, the folding range will be folded automatically.
