@@ -1,9 +1,9 @@
 artifacts:
   - name: "@daiyam/artifact-base"
-    version: 0.3.0
+    version: 0.5.0
   - name: "@daiyam/artifact-lang-ts"
-    version: 0.2.2
+    version: 0.4.0
   - name: "@daiyam/artifact-vsx-ts"
-    version: 0.3.0
+    version: 0.5.1
   - name: "@daiyam/artifact-vsx-zokugun"
     version: 0.2.0
