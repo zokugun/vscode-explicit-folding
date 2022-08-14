@@ -163,7 +163,7 @@ function getDelay(config: vscode.WorkspaceConfiguration): number { // {{{
 } // }}}
 
 function getRules(): vscode.WorkspaceConfiguration { // {{{
-	const rules = vscode.workspace.getConfiguration('folding');
+	const rules = vscode.workspace.getConfiguration('folding', null);
 	if(Object.keys(rules).length > 4) {
 		const value = $context!.globalState.get<Date>(DEPRECATED_KEY);
 		const lastWarning = value ? new Date(value) : null;
@@ -172,7 +172,7 @@ function getRules(): vscode.WorkspaceConfiguration { // {{{
 		if(currentWarning > new Date(2022, 6, 1)) {
 			void vscode.window.showErrorMessage('Please update your config. The property `folding` is not supported since July 1, 2022. It has been replaced with the property `explicitFolding.rules`.');
 
-			return vscode.workspace.getConfiguration('explicitFolding.rules');
+			return vscode.workspace.getConfiguration('explicitFolding.rules', null);
 		}
 
 		if(!lastWarning || lastWarning.getFullYear() !== currentWarning.getFullYear() || lastWarning.getMonth() !== currentWarning.getMonth() || currentWarning > new Date(2022, 5, 1)) {
@@ -184,7 +184,7 @@ function getRules(): vscode.WorkspaceConfiguration { // {{{
 		return rules;
 	}
 
-	return vscode.workspace.getConfiguration('explicitFolding.rules');
+	return vscode.workspace.getConfiguration('explicitFolding.rules', null);
 } // }}}
 
 function getDebugChannel(debug: boolean): vscode.OutputChannel | undefined { // {{{
@@ -207,7 +207,7 @@ function setupFoldingRangeProvider() { // {{{
 	const globalConfig = getRules();
 
 	if(globalConfig['*']) {
-		const config = vscode.workspace.getConfiguration('explicitFolding');
+		const config = vscode.workspace.getConfiguration('explicitFolding', null);
 
 		if(Array.isArray(config.wildcardExclusions) && config.wildcardExclusions.length > 0) {
 			void vscode.languages.getLanguages().then((languages) => {
@@ -252,7 +252,7 @@ function setupFoldingRangeProvider() { // {{{
 	else {
 		void vscode.languages.getLanguages().then((languages) => {
 			for(const language of languages) {
-				const langConfig = vscode.workspace.getConfiguration(`[${language}]`);
+				const langConfig = vscode.workspace.getConfiguration(`[${language}]`, null);
 
 				if(globalConfig[language] || $hub.hasRules(language) || langConfig['explicitFolding.rules']) {
 					for(const scheme of SCHEMES) {
@@ -322,7 +322,7 @@ export function activate(context: vscode.ExtensionContext): ExplicitFoldingHub {
 	const previousVersion = context.globalState.get<string>(VERSION_KEY);
 	const currentVersion = pkg.version;
 
-	const config = vscode.workspace.getConfiguration('explicitFolding');
+	const config = vscode.workspace.getConfiguration('explicitFolding', null);
 
 	if(previousVersion === undefined || currentVersion !== previousVersion) {
 		void context.globalState.update(VERSION_KEY, currentVersion);

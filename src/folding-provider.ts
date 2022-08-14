@@ -63,8 +63,8 @@ interface StackItem {
 	separator?: boolean;
 }
 
-const Tab = 9;
-const Space = 32;
+const TAB = 9;
+const SPACE = 32;
 
 function computeIndentLevel(line: string, tabSize: number): number { // {{{
 	let indent = 0;
@@ -72,12 +72,12 @@ function computeIndentLevel(line: string, tabSize: number): number { // {{{
 	const length = line.length;
 
 	while(i < length) {
-		const chCode = line.charCodeAt(i);
+		const chCode = line.codePointAt(i);
 
-		if(chCode === Space) {
+		if(chCode === SPACE) {
 			indent++;
 		}
-		else if(chCode === Tab) {
+		else if(chCode === TAB) {
 			indent = indent - (indent % tabSize) + tabSize;
 		}
 		else {
