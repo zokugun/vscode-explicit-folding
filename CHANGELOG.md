@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.21.1 | 2022-07-24
+- can run remotely
+
 ## v0.21.0 | 2022-02-09
 - `explicitFolding.wilcardExclusions` has been replaced with `explicitFolding.wildcardExclusions` (with a `d`)
 - improved documentation thanks to **@OCRenkist**
