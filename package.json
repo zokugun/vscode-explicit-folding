@@ -80,7 +80,8 @@
 				"explicitFolding.additionalSchemes": {
 					"type": "array",
 					"default": [],
-					"description": "List of additional schemes on which to the rules. For example: `gitlens`."
+					"description": "List of additional schemes on which to the rules. For example: `gitlens`.",
+					"scope": "window"
 				},
 				"explicitFolding.autoFold": {
 					"type": "string",
@@ -151,6 +152,10 @@
 			}
 		}
 	},
+	"extensionKind": [
+		"ui",
+		"workspace"
+	],
 	"icon": "icon.png",
 	"galleryBanner": {
 		"color": "#373b41",
