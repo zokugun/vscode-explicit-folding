@@ -1,6 +1,9 @@
 # Changelog
 
-## v0.21.1 | 2022-07-24
+## v0.21.2 | 2022-09-27
+- must run on the remote server
+
+## v0.21.1 | 2022-09-24
 - can run remotely
 
 ## v0.21.0 | 2022-02-09
