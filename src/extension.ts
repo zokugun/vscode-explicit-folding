@@ -5,7 +5,6 @@ import { Disposable } from './disposable';
 import { FoldingHub } from './folding-hub';
 import { FoldingProvider } from './folding-provider';
 
-const DEPRECATED_KEY = 'explicitFoldingDeprecated';
 const VERSION_KEY = 'explicitFoldingVersion';
 
 const SCHEMES = ['file', 'untitled', 'vscode-userdata'];
@@ -96,38 +95,8 @@ function buildProvider(language: string, config: vscode.WorkspaceConfiguration, 
 
 	applyRules(perLanguages['*'], rules);
 
-	checkDeprecatedRules(rules);
-
 	return new FoldingProvider(rules, channel, $documents);
 }
-
-function checkDeprecatedRule(rule: ExplicitFoldingConfig | ExplicitFoldingConfig[], deprecateds: string[]) { // {{{
-	if(Array.isArray(rule)) {
-		for(const r of rule) {
-			checkDeprecatedRule(r, deprecateds);
-		}
-	}
-	else if(rule.descendants) {
-		if(!deprecateds.includes('descendants')) {
-			deprecateds.push('descendants');
-		}
-	}
-	else if(Array.isArray(rule.nested)) {
-		for(const r of rule.nested) {
-			checkDeprecatedRule(r, deprecateds);
-		}
-	}
-} // }}}
-
-function checkDeprecatedRules(rules: ExplicitFoldingConfig[]) { // {{{
-	const deprecateds: string[] = [];
-
-	checkDeprecatedRule(rules, deprecateds);
-
-	if(deprecateds.includes('descendants')) {
-		void vscode.window.showWarningMessage('Please update your config. The property `descendants` has been deprecated and replaced with the property `nested`. It will be removed in the next version.');
-	}
-} // }}}
 
 function foldDocument(document: vscode.TextDocument) { // {{{
 	const config = vscode.workspace.getConfiguration('explicitFolding', document);
@@ -159,37 +128,10 @@ function foldDocument(document: vscode.TextDocument) { // {{{
 } // }}}
 
 function getDelay(config: vscode.WorkspaceConfiguration): number { // {{{
-	if(config.has('startupDelay')) {
-		void vscode.window.showWarningMessage('Please update your config. The property `startupDelay` has been deprecated and replaced with the property `delay`. It will be removed in the next version.');
-
-		return config.get<number>('startupDelay') ?? 0;
-	}
-
 	return config.get<number>('delay') ?? 0;
 } // }}}
 
 function getRules(): vscode.WorkspaceConfiguration { // {{{
-	const rules = vscode.workspace.getConfiguration('folding', null);
-	if(Object.keys(rules).length > 4) {
-		const value = $context!.globalState.get<Date>(DEPRECATED_KEY);
-		const lastWarning = value ? new Date(value) : null;
-		const currentWarning = new Date();
-
-		if(currentWarning > new Date(2022, 6, 1)) {
-			void vscode.window.showErrorMessage('Please update your config. The property `folding` is not supported since July 1, 2022. It has been replaced with the property `explicitFolding.rules`.');
-
-			return vscode.workspace.getConfiguration('explicitFolding.rules', null);
-		}
-
-		if(!lastWarning || lastWarning.getFullYear() !== currentWarning.getFullYear() || lastWarning.getMonth() !== currentWarning.getMonth() || currentWarning > new Date(2022, 5, 1)) {
-			void $context!.globalState.update(DEPRECATED_KEY, currentWarning);
-
-			void vscode.window.showWarningMessage('Please update your config. The property `folding` has been deprecated and replaced with the property `explicitFolding.rules`. Its support will stop on July 1, 2022.');
-		}
-
-		return rules;
-	}
-
 	return vscode.workspace.getConfiguration('explicitFolding.rules', null);
 } // }}}
 
@@ -230,25 +172,6 @@ function setupProvidersWithProxy(): void { // {{{
 			void vscode.languages.getLanguages().then((languages) => {
 				for(const language of languages) {
 					if(Array.isArray(config.wildcardExclusions) && !config.wildcardExclusions.includes(language)) {
-						for(const scheme of SCHEMES) {
-							const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
-
-							$disposable.push(disposable);
-						}
-					}
-				}
-			});
-		}
-		else if(Array.isArray(config.wilcardExclusions) && config.wilcardExclusions.length > 0) {
-			const channel = getDebugChannel(true);
-
-			if(channel) {
-				channel.appendLine('[deprecated] `explicitFolding.wilcardExclusions` has been replaced with `explicitFolding.wildcardExclusions` (with a `d`)');
-			}
-
-			void vscode.languages.getLanguages().then((languages) => {
-				for(const language of languages) {
-					if(Array.isArray(config.wilcardExclusions) && !config.wilcardExclusions.includes(language)) {
 						for(const scheme of SCHEMES) {
 							const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
