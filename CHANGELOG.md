@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.22.0 | 2022-11-05
+- support `editor.defaultFoldingRangeProvider` setting
+- remove deprecated features
+
 ## v0.21.2 | 2022-09-27
 - must run on the remote server
 
