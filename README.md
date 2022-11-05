@@ -15,12 +15,16 @@ This extension lets you manually control how and where to fold your code.
 In your settings:
 
 ```
+"editor.foldingStrategy": "auto",
+"editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",
 "explicitFolding.rules": {
     "*": {
         "begin": "{{{",
         "end": "}}}"
-    },
-    "javascriptreact": [
+    }
+},
+"[javascriptreact]": {
+    "explicitFolding.rules": [
         {
             "begin": "{/*",
             "end": "*/}"
@@ -87,6 +91,15 @@ Additionally, the following aspects of PCRE2 syntax are supported:
 - `(?i)x`: `x` becomes case insensitive
 - `(?i:x)y`: only `x` is case insensitive
 
+## `editor.defaultFoldingRangeProvider`
+
+Since VSCode **[v1.73.0](https://code.visualstudio.com/updates/v1_73#_default-folding-provider)**, it's hightly recommanded to use the following settings:
+
+```
+"editor.foldingStrategy": "auto",
+"editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",
+```
+
 ## Wildcard Exclusions
 
 By default, the wildcard rule, like the following, are applied to all languages.
@@ -132,6 +145,8 @@ So you can auto fold only the imports with:
 If the property `explicitFolding.debug` (`false` by default) is `true`, the extension will print out debug information into the channel `Folding` of the panel `Output` (menu: `View` / `Output`).
 
 ## Priority/Delay
+
+It's <ins>only used</ins> when `editor.defaultFoldingRangeProvider` isn't set to `zokugun.explicit-folding`.
 
 VSCode is scoring each folding providers based on the scheme and language. When the scores are identical, the providers which have been registered the most recently, receive a higher priority.<br/>
 When starting up, VSCode loads the installed extensions. When reading a file, VSCode will load the folding provider of the file's language (only once per language).
@@ -270,21 +285,5 @@ Support this project by becoming a financial contributor, using any of the follo
         <td><a href="https://paypal.me/daiyam99" target="_blank">paypal.me/daiyam99</a></td>
     </tr>
 </table>
-
-## Supported Editors
-
-### VSCode/VSCodium
-
-VSCode uses the folding ranges provided:
-- by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
-- <ins>**and**</ins>, by the folding range provider defined by this extension if `editor.foldingStrategy` is set to **`auto`**
-
-### MrCode
-
-[MrCode](https://github.com/zokugun/MrCode) is using the folding ranges provided:
-- by the folding range provider defined by the setting `editor.foldingStrategy` (`auto` or `indentation`)
-- <ins>**or**</ins> by the folding range provider defined by this extension if `editor.foldingStrategy` is set to **`explicit`**
-
-The long-standing [PR](https://github.com/microsoft/vscode/pull/54200) tries to bring this new behaviour to VSCode.
 
 **Enjoy!**
