@@ -6,5 +6,6 @@
 	},
 	"taskExplorer.exclude": [
 		".husky",
+		"test/*"
 	],
 }

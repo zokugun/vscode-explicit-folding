@@ -12,7 +12,7 @@ const SCHEMES = ['file', 'untitled', 'vscode-userdata'];
 
 const $disposable: Disposable = new Disposable();
 const $documents: vscode.TextDocument[] = [];
-const $hub = new FoldingHub(setupFoldingRangeProvider);
+const $hub = new FoldingHub(setupProviders);
 
 let $channel: vscode.OutputChannel | null = null;
 let $context: vscode.ExtensionContext | null = null;
@@ -45,36 +45,11 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	setup(document: vscode.TextDocument) { // {{{
 		const language = document.languageId;
 
-		const perLanguages = getRules();
 		const config = vscode.workspace.getConfiguration('explicitFolding', document);
-		const debug = config.get<boolean>('debug') ?? false;
-		const channel = getDebugChannel(debug);
 		const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
+		const debug = config.get<boolean>('debug') ?? false;
 
-		const rules: ExplicitFoldingConfig[] = [];
-
-		const hubRules = $hub.getRules(language);
-		const langRules = config.get<Record<string, ExplicitFoldingConfig[]> | undefined>('rules');
-
-		if(hubRules) {
-			if(channel) {
-				channel.appendLine(`[register] use external rules for language: ${language}`);
-			}
-
-			applyRules(hubRules, rules);
-		}
-		else if(!langRules || langRules[language]) {
-			applyRules(perLanguages[language], rules);
-		}
-		else {
-			applyRules(langRules, rules);
-		}
-
-		applyRules(perLanguages['*'], rules);
-
-		checkDeprecatedRules(rules);
-
-		const provider = new FoldingProvider(rules, channel, $documents);
+		const provider = buildProvider(language, config, debug);
 
 		for(const scheme of [...SCHEMES, ...additionalSchemes]) {
 			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
@@ -94,6 +69,37 @@ function applyRules(data: any, rules: ExplicitFoldingConfig[]): void { // {{{
 		rules.push(data);
 	}
 } // }}}
+
+function buildProvider(language: string, config: vscode.WorkspaceConfiguration, debug: boolean): FoldingProvider {
+	const perLanguages = getRules();
+	const channel = getDebugChannel(debug);
+
+	const rules: ExplicitFoldingConfig[] = [];
+
+	const hubRules = $hub.getRules(language);
+
+	const langRules = config.get<Record<string, ExplicitFoldingConfig[]> | undefined>('rules');
+
+	if(hubRules) {
+		if(channel) {
+			channel.appendLine(`[register] use external rules for language: ${language}`);
+		}
+
+		applyRules(hubRules, rules);
+	}
+	else if(!langRules || langRules[language]) {
+		applyRules(perLanguages[language], rules);
+	}
+	else {
+		applyRules(langRules, rules);
+	}
+
+	applyRules(perLanguages['*'], rules);
+
+	checkDeprecatedRules(rules);
+
+	return new FoldingProvider(rules, channel, $documents);
+}
 
 function checkDeprecatedRule(rule: ExplicitFoldingConfig | ExplicitFoldingConfig[], deprecateds: string[]) { // {{{
 	if(Array.isArray(rule)) {
@@ -199,9 +205,20 @@ function getDebugChannel(debug: boolean): vscode.OutputChannel | undefined { // 
 	return undefined;
 } // }}}
 
-function setupFoldingRangeProvider() { // {{{
+function setupProviders() { // {{{
 	$disposable.dispose();
 
+	const defaultProvider = vscode.workspace.getConfiguration('editor').get<string>('defaultFoldingRangeProvider') ?? '';
+
+	if(defaultProvider === 'zokugun.explicit-folding') {
+		setupProvidersWithoutProxy();
+	}
+	else {
+		setupProvidersWithProxy();
+	}
+} // }}}
+
+function setupProvidersWithProxy(): void { // {{{
 	const provider = new MainProvider();
 
 	const globalConfig = getRules();
@@ -264,6 +281,31 @@ function setupFoldingRangeProvider() { // {{{
 			}
 		});
 	}
+
+	$context!.subscriptions.push($disposable);
+} // }}}
+
+function setupProvidersWithoutProxy(): void { // {{{
+	$disposable.dispose();
+
+	const config = vscode.workspace.getConfiguration('explicitFolding', null);
+	const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
+	const debug = config.get<boolean>('debug') ?? false;
+	const wildcardExclusions = Array.isArray(config.wildcardExclusions) ? config.wildcardExclusions : [];
+
+	void vscode.languages.getLanguages().then((languages) => {
+		for(const language of languages) {
+			const provider = buildProvider(language, config, debug);
+
+			if(!wildcardExclusions.includes(language)) {
+				for(const scheme of [...SCHEMES, ...additionalSchemes]) {
+					const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
+
+					$disposable.push(disposable);
+				}
+			}
+		}
+	});
 
 	$context!.subscriptions.push($disposable);
 } // }}}
@@ -347,12 +389,12 @@ export function activate(context: vscode.ExtensionContext): ExplicitFoldingHub {
 		}
 	}
 
-	setupFoldingRangeProvider();
+	setupProviders();
 	setupAutoFold();
 
 	vscode.workspace.onDidChangeConfiguration((event) => {
 		if(event.affectsConfiguration('folding') || event.affectsConfiguration('explicitFolding')) {
-			setupFoldingRangeProvider();
+			setupProviders();
 			setupAutoFold();
 		}
 	});
