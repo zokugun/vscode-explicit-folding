@@ -249,6 +249,7 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 <code>"[nim]": {
     "explicitFolding.rules": {
         "indentation": true,
+        "offSide": true,
         "beginRegex": "^\\s*(?:proc|template)"
     }
 }</code>

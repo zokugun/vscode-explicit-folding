@@ -1017,32 +1017,31 @@ export class FoldingProvider implements FoldingRangeProvider {
 				}
 				while(previous.indent > indent);
 
+				let fold = true;
+
 				if(this.indentation.filter) {
-					const match = this.indentation.filter.test(lineContent);
+					fold = this.indentation.filter.test(lineContent);
 
 					if(this.debugChannel) {
-						this.debugChannel.appendLine(`[indentation] line: ${line + 1}, match(begin): ${match ? 'yes' : 'no'}`);
-					}
-
-					if(!match) {
-						continue;
+						this.debugChannel.appendLine(`[indentation] line: ${line + 1}, match(begin): ${fold ? 'yes' : 'no'}`);
 					}
 				}
 
-				// new folding range
-				const endLineNumber = previous.end - 1;
-				// needs at east size 1
-				const block = endLineNumber - line >= 1;
-				if(block && !existingRanges[line]) {
-					foldingRanges.push(new FoldingRange(line, endLineNumber, FoldingRangeKind.Region));
+				if(fold) {
+					const endLineNumber = previous.end - 1;
+					const block = endLineNumber - line >= 1;
+
+					if(block && !existingRanges[line]) {
+						foldingRanges.push(new FoldingRange(line, endLineNumber, FoldingRangeKind.Region));
+					}
 				}
+
+				previousRegions.push({ indent, begin: line, end: line });
 			}
-
-			if(previous.indent === indent) {
+			else if(previous.indent === indent) {
 				previous.end = line;
 			}
-			else { // previous.indent < indent
-				// new region with a bigger indent
+			else {
 				previousRegions.push({ indent, begin: line, end: line });
 			}
 		}
