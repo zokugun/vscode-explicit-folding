@@ -75,7 +75,7 @@
 	},
 	"contributes": {
 		"configuration": {
-			"title": "Explicit Folding configuration",
+			"title": "Explicit Folding",
 			"properties": {
 				"explicitFolding.additionalSchemes": {
 					"type": "array",
@@ -142,6 +142,7 @@
 				},
 				"explicitFolding.rules": {
 					"description": "Markers that will determine the folding ranges.",
+					"default": [],
 					"scope": "language-overridable"
 				},
 				"explicitFolding.wildcardExclusions": {

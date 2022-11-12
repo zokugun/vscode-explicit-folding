@@ -5,6 +5,7 @@ import { Disposable } from './disposable';
 import { FoldingHub } from './folding-hub';
 import { FoldingProvider } from './folding-provider';
 
+const CONFIG_KEY = 'explicitFolding';
 const VERSION_KEY = 'explicitFoldingVersion';
 
 const SCHEMES = ['file', 'untitled', 'vscode-userdata'];
@@ -25,7 +26,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 		if(!this.providers[document.languageId]) {
 			this.providers[document.languageId] = true;
 
-			const config = vscode.workspace.getConfiguration('explicitFolding', document);
+			const config = vscode.workspace.getConfiguration(CONFIG_KEY, document);
 			const delay = getDelay(config);
 
 			if(delay > 0) {
@@ -44,7 +45,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	setup(document: vscode.TextDocument) { // {{{
 		const language = document.languageId;
 
-		const config = vscode.workspace.getConfiguration('explicitFolding', document);
+		const config = vscode.workspace.getConfiguration(CONFIG_KEY, document);
 		const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
 		const debug = config.get<boolean>('debug') ?? false;
 
@@ -69,7 +70,7 @@ function applyRules(data: any, rules: ExplicitFoldingConfig[]): void { // {{{
 	}
 } // }}}
 
-function buildProvider(language: string, config: vscode.WorkspaceConfiguration, debug: boolean): FoldingProvider {
+function buildProvider(language: string, config: vscode.WorkspaceConfiguration, debug: boolean): FoldingProvider { // {{{
 	const perLanguages = getRules();
 	const channel = getDebugChannel(debug);
 
@@ -96,10 +97,10 @@ function buildProvider(language: string, config: vscode.WorkspaceConfiguration, 
 	applyRules(perLanguages['*'], rules);
 
 	return new FoldingProvider(rules, channel, $documents);
-}
+} // }}}
 
 function foldDocument(document: vscode.TextDocument) { // {{{
-	const config = vscode.workspace.getConfiguration('explicitFolding', document);
+	const config = vscode.workspace.getConfiguration(CONFIG_KEY, document);
 	const autoFold = config.get<string>('autoFold') ?? 'none';
 
 	if(autoFold === 'all') {
@@ -132,7 +133,7 @@ function getDelay(config: vscode.WorkspaceConfiguration): number { // {{{
 } // }}}
 
 function getRules(): vscode.WorkspaceConfiguration { // {{{
-	return vscode.workspace.getConfiguration('explicitFolding.rules', null);
+	return vscode.workspace.getConfiguration(`${CONFIG_KEY}.rules`, null);
 } // }}}
 
 function getDebugChannel(debug: boolean): vscode.OutputChannel | undefined { // {{{
@@ -166,7 +167,7 @@ function setupProvidersWithProxy(): void { // {{{
 	const globalConfig = getRules();
 
 	if(globalConfig['*']) {
-		const config = vscode.workspace.getConfiguration('explicitFolding', null);
+		const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
 
 		if(Array.isArray(config.wildcardExclusions) && config.wildcardExclusions.length > 0) {
 			void vscode.languages.getLanguages().then((languages) => {
@@ -194,7 +195,7 @@ function setupProvidersWithProxy(): void { // {{{
 			for(const language of languages) {
 				const langConfig = vscode.workspace.getConfiguration(`[${language}]`, null);
 
-				if(globalConfig[language] || $hub.hasRules(language) || langConfig['explicitFolding.rules']) {
+				if(globalConfig[language] || $hub.hasRules(language) || langConfig[`${CONFIG_KEY}.rules`]) {
 					for(const scheme of SCHEMES) {
 						const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
@@ -211,7 +212,7 @@ function setupProvidersWithProxy(): void { // {{{
 function setupProvidersWithoutProxy(): void { // {{{
 	$disposable.dispose();
 
-	const config = vscode.workspace.getConfiguration('explicitFolding', null);
+	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
 	const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
 	const debug = config.get<boolean>('debug') ?? false;
 	const wildcardExclusions = Array.isArray(config.wildcardExclusions) ? config.wildcardExclusions : [];
@@ -287,7 +288,7 @@ export function activate(context: vscode.ExtensionContext): ExplicitFoldingHub {
 	const previousVersion = context.globalState.get<string>(VERSION_KEY);
 	const currentVersion = pkg.version;
 
-	const config = vscode.workspace.getConfiguration('explicitFolding', null);
+	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
 
 	if(previousVersion === undefined || currentVersion !== previousVersion) {
 		void context.globalState.update(VERSION_KEY, currentVersion);
@@ -316,7 +317,7 @@ export function activate(context: vscode.ExtensionContext): ExplicitFoldingHub {
 	setupAutoFold();
 
 	vscode.workspace.onDidChangeConfiguration((event) => {
-		if(event.affectsConfiguration('folding') || event.affectsConfiguration('explicitFolding')) {
+		if(event.affectsConfiguration(CONFIG_KEY)) {
 			setupProviders();
 			setupAutoFold();
 		}

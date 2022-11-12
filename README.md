@@ -2,11 +2,11 @@ Explicit Folding
 ================
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/zokugun.explicit-folding.svg)](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
-[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/zokugun.explicit-folding.svg)](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
-[![License](https://img.shields.io/badge/donate-ko--fi-green)](https://ko-fi.com/daiyam)
-[![License](https://img.shields.io/badge/donate-liberapay-green)](https://liberapay.com/daiyam/donate)
-[![License](https://img.shields.io/badge/donate-paypal-green)](https://paypal.me/daiyam99)
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/zokugun.explicit-folding?label=VS%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=zokugun.explicit-folding)
+[![Open VSX Version](https://img.shields.io/open-vsx/v/zokugun/explicit-folding?label=Open%20VSX)](https://open-vsx.org/extension/zokugun/explicit-folding)
+[![Donation](https://img.shields.io/badge/donate-ko--fi-green)](https://ko-fi.com/daiyam)
+[![Donation](https://img.shields.io/badge/donate-liberapay-green)](https://liberapay.com/daiyam/donate)
+[![Donation](https://img.shields.io/badge/donate-paypal-green)](https://paypal.me/daiyam99)
 
 This extension lets you manually control how and where to fold your code.
 
