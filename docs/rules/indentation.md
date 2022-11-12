@@ -25,4 +25,16 @@ Used by the default indentation provider and defined by language’s configurati
 Another quirk is that the default indentation provider use the tab size given given with the document, but an extension doesn’t have access to that info.
 So the extension use the tab size of the active document (most likely the document that is being parsed).
 
-Even if it's a little outside the scope of the extension, I believe it will be helpful to some users.
+### `begin`/`beginRegex`
+
+The `begin` and `beginRegex` properties are indicating the beginning of a folding region.<br />
+When used, the first line of the folding region needs to be matched be the regex.
+
+```
+"[nim]": {
+    "explicitFolding.rules": {
+        "indentation": true,
+        "beginRegex": "^\\s*(?:proc|template)"
+    }
+}
+```

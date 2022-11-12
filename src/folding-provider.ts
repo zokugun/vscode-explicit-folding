@@ -218,7 +218,23 @@ export class FoldingProvider implements FoldingRangeProvider {
 				}
 			}
 
-			if(begin) {
+			if(configuration.indentation) {
+				this.useIndentation = configuration.indentation;
+				this.offSideIndentation = configuration.offSide ?? false;
+
+				if(begin) {
+					this.rules.push({
+						index: ruleIndex,
+						begin,
+						foldLastLine: id(true),
+						foldBOF: false,
+						foldEOF: false,
+						nested: false,
+						kind: FoldingRangeKind.Region,
+					});
+				}
+			}
+			else if(begin) {
 				let continuation;
 				let end;
 				let whileRegex;
@@ -294,10 +310,6 @@ export class FoldingProvider implements FoldingRangeProvider {
 				if(this.isSupportedRegex(bypassProtection, separator)) {
 					return this.addSeparatorRegex(configuration, ruleIndex, separator, groupContext, strict, parents);
 				}
-			}
-			else if(configuration.indentation) {
-				this.useIndentation = configuration.indentation;
-				this.offSideIndentation = configuration.offSide ?? false;
 			}
 		}
 		catch (error: unknown) {
@@ -965,6 +977,12 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 	private resolveIndentationRange(document: TextDocument, foldingRanges: FoldingRange[]): void { // {{{
 		const tabSize = window.activeTextEditor ? Number.parseInt(`${window.activeTextEditor.options.tabSize ?? 4}`, 10) : 4;
+		if(this.debugChannel) {
+			this.debugChannel.appendLine(`[indentation] tabSize: ${tabSize}`);
+		}
+
+		const rule = this.rules[0];
+		const useRule = Boolean(rule);
 
 		const existingRanges: Record<string, boolean> = {};
 		for(const range of foldingRanges) {
@@ -976,6 +994,9 @@ export class FoldingProvider implements FoldingRangeProvider {
 		for(let line = document.lineCount - 1; line >= 0; line--) {
 			const lineContent = document.lineAt(line).text;
 			const indent = computeIndentLevel(lineContent, tabSize);
+			if(this.debugChannel) {
+				this.debugChannel.appendLine(`[indentation] line: ${line + 1}, indent: ${indent}`);
+			}
 
 			let previous = previousRegions[previousRegions.length - 1];
 
@@ -995,12 +1016,26 @@ export class FoldingProvider implements FoldingRangeProvider {
 				do {
 					previousRegions.pop();
 					previous = previousRegions[previousRegions.length - 1];
-				} while(previous.indent > indent);
+				}
+				while(previous.indent > indent);
+
+				if(useRule) {
+					const match = rule.begin!.test(lineContent);
+
+					if(this.debugChannel) {
+						this.debugChannel.appendLine(`[indentation] line: ${line + 1}, match(begin): ${match ? 'yes' : 'no'}`);
+					}
+
+					if(!match) {
+						continue;
+					}
+				}
 
 				// new folding range
 				const endLineNumber = previous.end - 1;
-				if(endLineNumber - line >= 1 // needs at east size 1
-					&& !existingRanges[line]) {
+				// needs at east size 1
+				const block = endLineNumber - line >= 1;
+				if(block && !existingRanges[line]) {
 					foldingRanges.push(new FoldingRange(line, endLineNumber, FoldingRangeKind.Region));
 				}
 			}

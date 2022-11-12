@@ -171,9 +171,11 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
             <th><i>Emacs</i></th>
             <td>
 <pre>
-<code>"*": {
-    "begin": "{{{",
-    "end": "}}}"
+<code>"explicitFolding.rules": {
+    "*": {
+        "begin": "{{{",
+        "end": "}}}"
+    }
 }</code>
 </pre>
             </td>
@@ -182,23 +184,25 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
             <th>C/C++</th>
             <td>
 <pre>
-<code>"cpp": [
-    {
-        "beginRegex": "#if(?:n?def)?",
-        "middleRegex": "#el(?:se|if)",
-        "endRegex": "#endif"
-    },
-    {
-        "begin": "/*",
-        "end": "*/",
-        "nested": false
-    },
-    {
-        "begin": "//",
-        "continuation": "\\",
-        "nested": false
-    }
-]</code>
+<code>"[cpp]": {
+    "explicitFolding.rules": [
+        {
+            "beginRegex": "#if(?:n?def)?",
+            "middleRegex": "#el(?:se|if)",
+            "endRegex": "#endif"
+        },
+        {
+            "begin": "/*",
+            "end": "*/",
+            "nested": false
+        },
+        {
+            "begin": "//",
+            "continuation": "\\",
+            "nested": false
+        }
+    ]
+}</code>
 </pre>
             </td>
         </tr>
@@ -206,9 +210,26 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
             <th>HTML</th>
             <td>
 <pre>
-<code>"html": {
-    "beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z0-9]+)[^>\/]*>",
-    "endRegex": "<\\/\\1>"
+<code>"[html]": {
+    "explicitFolding.rules": [
+        {
+            "beginRegex": "<(?!area|base|br|col|embed|hr|img|input|link|menuitem|meta|param|source|track|wbr)([a-zA-Z0-9]+)[^>\/]*>",
+            "endRegex": "<\\/\\1>"
+        }
+    ]
+}</code>
+</pre>
+            </td>
+        </tr>
+        <tr>
+            <th>Nim</th>
+            <td>
+<pre>
+<code>"[nim]": {
+    "explicitFolding.rules": {
+        "indentation": true,
+        "beginRegex": "^\\s*(?:proc|template)"
+    }
 }</code>
 </pre>
             </td>
@@ -217,18 +238,20 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
             <th>PHP</th>
             <td>
 <pre>
-<code>"php": [
-    {
-        "beginRegex": "(?:case|default)[^:]*:",
-        "endRegex": "break;|(.)(?=case|default|\\})",
-        "foldLastLine": [true, false]
-    },
-    {
-        "beginRegex": "\\{",
-        "middleRegex": "\\}[^}]+\\{",
-        "endRegex": "\\}"
-    }
-]</code>
+<code>"[php]": {
+    "explicitFolding.rules": [
+        {
+            "beginRegex": "(?:case|default)[^:]*:",
+            "endRegex": "break;|(.)(?=case|default|\\})",
+            "foldLastLine": [true, false]
+        },
+        {
+            "beginRegex": "\\{",
+            "middleRegex": "\\}[^}]+\\{",
+            "endRegex": "\\}"
+        }
+    ]
+}</code>
 </pre>
             </td>
         </tr>
@@ -236,9 +259,17 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
             <th>Python</th>
             <td>
 <pre>
-<code>"python": {
-    "beginRegex": "\"\"\"",
-    "endRegex": "\"\"\""
+<code>"[python]": {
+    "explicitFolding.rules": [
+        {
+            "beginRegex": "\"\"\"",
+            "endRegex": "\"\"\""
+        },
+		{
+			"indentation": true,
+			"offSide": true
+		}
+    ]
 }</code>
 </pre>
             </td>
@@ -247,9 +278,13 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
             <th>SASS</th>
             <td>
 <pre>
-<code>"scss": {
-    "beginRegex": " \\{\\s*$",
-    "endRegex": "^\\s*\\}"
+<code>"[scss]": {
+    "explicitFolding.rules": [
+        {
+            "beginRegex": " \\{\\s*$",
+            "endRegex": "^\\s*\\}"
+        }
+    ]
 }</code>
 </pre>
             </td>
