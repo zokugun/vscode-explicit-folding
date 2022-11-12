@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.23.1 | 2022-11-13
+- fix indentation provider with filter
+
 ## v0.23.0 | 2022-11-12
 - fix `explicitFolding.additionalSchemes` and `explicitFolding.debug` to be configureable per language
 - add `begin`/`beginRegex` to indentation provider to filter folding regions
