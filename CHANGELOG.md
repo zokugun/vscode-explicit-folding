@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.23.0 | 2022-11-12
+- fix `explicitFolding.additionalSchemes` and `explicitFolding.debug` to be configureable per language
+- add `begin`/`beginRegex` to indentation provider to filter folding regions
+- add `explicitFolding.perFiles` to have complete new set of rules for specific files
+
 ## v0.22.0 | 2022-11-05
 - support `editor.defaultFoldingRangeProvider` setting
 - remove deprecated features
