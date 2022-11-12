@@ -47,9 +47,8 @@ class MainProvider implements vscode.FoldingRangeProvider {
 
 		const config = vscode.workspace.getConfiguration(CONFIG_KEY, document);
 		const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
-		const debug = config.get<boolean>('debug') ?? false;
 
-		const provider = buildProvider(language, config, debug);
+		const provider = buildProvider(language, config);
 
 		for(const scheme of [...SCHEMES, ...additionalSchemes]) {
 			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
@@ -70,7 +69,8 @@ function applyRules(data: any, rules: ExplicitFoldingConfig[]): void { // {{{
 	}
 } // }}}
 
-function buildProvider(language: string, config: vscode.WorkspaceConfiguration, debug: boolean): FoldingProvider { // {{{
+function buildProvider(language: string, config: vscode.WorkspaceConfiguration): FoldingProvider { // {{{
+	const debug = config.get<boolean>('debug') ?? false;
 	const perLanguages = getRules();
 	const channel = getDebugChannel(debug);
 
@@ -213,15 +213,16 @@ function setupProvidersWithoutProxy(): void { // {{{
 	$disposable.dispose();
 
 	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
-	const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
-	const debug = config.get<boolean>('debug') ?? false;
 	const wildcardExclusions = Array.isArray(config.wildcardExclusions) ? config.wildcardExclusions : [];
 
 	void vscode.languages.getLanguages().then((languages) => {
 		for(const language of languages) {
-			const provider = buildProvider(language, config, debug);
+			const config = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language });
+			const provider = buildProvider(language, config);
 
 			if(!wildcardExclusions.includes(language)) {
+				const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
+
 				for(const scheme of [...SCHEMES, ...additionalSchemes]) {
 					const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
