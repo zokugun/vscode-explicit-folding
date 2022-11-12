@@ -119,6 +119,27 @@ To avoid that, you need to add an exclusion:
 "explicitFolding.wildcardExclusions": ["python"]
 ```
 
+## Per Files
+
+You can define a complete new set of rules for specific files with the property `explicitFolding.perFiles`.
+
+```
+"[javascript]": {
+    "explicitFolding.rules": [...],
+    "explicitFolding.perFiles": {
+        "*.special.js": [...]
+    }
+},
+"[xml]": {
+    "explicitFolding.rules": [...],
+    "explicitFolding.perFiles": {
+        "*.config.xml": [...]
+    }
+}
+```
+
+[minimatch](https://github.com/isaacs/minimatch) is used to determine if a filename is matching the pattern or not.
+
 ## Auto Fold
 
 You can define the automatic folding of the ranges with the property `explicitFolding.autoFold` (an enum, `none` by default).<br/>

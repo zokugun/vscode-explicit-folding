@@ -4,6 +4,7 @@ import pkg from '../package.json';
 import { Disposable } from './disposable';
 import { FoldingHub } from './folding-hub';
 import { FoldingProvider } from './folding-provider';
+import { RouteProvider } from './route-provider';
 
 const CONFIG_KEY = 'explicitFolding';
 const VERSION_KEY = 'explicitFoldingVersion';
@@ -97,6 +98,13 @@ function buildProvider(language: string, config: vscode.WorkspaceConfiguration):
 	applyRules(perLanguages['*'], rules);
 
 	return new FoldingProvider(rules, channel, $documents);
+} // }}}
+
+function buildRouter(perFiles: Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined>, mainProvider: FoldingProvider, config: vscode.WorkspaceConfiguration): RouteProvider { // {{{
+	const debug = config.get<boolean>('debug') ?? false;
+	const channel = getDebugChannel(debug);
+
+	return new RouteProvider(perFiles, mainProvider, channel, $documents);
 } // }}}
 
 function foldDocument(document: vscode.TextDocument) { // {{{
@@ -217,10 +225,13 @@ function setupProvidersWithoutProxy(): void { // {{{
 
 	void vscode.languages.getLanguages().then((languages) => {
 		for(const language of languages) {
-			const config = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language });
-			const provider = buildProvider(language, config);
-
 			if(!wildcardExclusions.includes(language)) {
+				const config = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language });
+				const mainProvider = buildProvider(language, config);
+
+				const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
+				const provider = perFiles ? buildRouter(perFiles, mainProvider, config) : mainProvider;
+
 				const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
 
 				for(const scheme of [...SCHEMES, ...additionalSchemes]) {

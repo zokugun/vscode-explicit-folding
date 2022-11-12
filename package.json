@@ -34,7 +34,8 @@
 	},
 	"dependencies": {
 		"@daiyam/regexp": "^0.2.1",
-		"@zokugun/vscode.explicit-folding-api": "0.1.1"
+		"@zokugun/vscode.explicit-folding-api": "0.1.1",
+		"minimatch": "^5.1.0"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^17.0.3",
@@ -52,7 +53,7 @@
 		"husky": "^8.0.1",
 		"klaw-sync": "^6.0.0",
 		"lint-staged": "^13.0.3",
-		"mocha": "^8.3.2",
+		"mocha": "^10.1.0",
 		"path-browserify": "^1.0.1",
 		"process": "^0.11.10",
 		"release-it": "^15.3.0",
@@ -140,8 +141,14 @@
 						"The new version notification will always be shown"
 					]
 				},
+				"explicitFolding.perFiles": {
+					"type": "object",
+					"description": "Rules to apply to specific files",
+					"default": {},
+					"scope": "language-overridable"
+				},
 				"explicitFolding.rules": {
-					"description": "Markers that will determine the folding ranges.",
+					"description": "Rules that will determine the folding ranges.",
 					"default": [],
 					"scope": "language-overridable"
 				},
