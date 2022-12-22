@@ -10,7 +10,8 @@ Explicit Folding
 
 This extension lets you manually control how and where to fold your code.
 
-## Configuration
+Configuration
+-------------
 
 In your settings:
 
@@ -37,7 +38,8 @@ In your settings:
 }
 ```
 
-## Rules
+Rules
+-----
 
 The property `explicitFolding.rules` defines how to fold the code.
 
@@ -91,7 +93,8 @@ Additionally, the following aspects of PCRE2 syntax are supported:
 - `(?i)x`: `x` becomes case insensitive
 - `(?i:x)y`: only `x` is case insensitive
 
-## `editor.defaultFoldingRangeProvider`
+`editor.defaultFoldingRangeProvider`
+------------------------------------
 
 Since VSCode **[v1.73.0](https://code.visualstudio.com/updates/v1_73#_default-folding-provider)**, it's hightly recommanded to use the following settings:
 
@@ -100,7 +103,8 @@ Since VSCode **[v1.73.0](https://code.visualstudio.com/updates/v1_73#_default-fo
 "editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",
 ```
 
-## Wildcard Exclusions
+Wildcard Exclusions
+-------------------
 
 By default, the wildcard rule, like the following, are applied to all languages.
 ```
@@ -119,7 +123,8 @@ To avoid that, you need to add an exclusion:
 "explicitFolding.wildcardExclusions": ["python"]
 ```
 
-## Per Files
+Per Files
+---------
 
 You can define a complete new set of rules for specific files with the property `explicitFolding.perFiles`.
 
@@ -140,7 +145,8 @@ You can define a complete new set of rules for specific files with the property 
 
 [minimatch](https://github.com/isaacs/minimatch) is used to determine if a filename is matching the pattern or not.
 
-## Auto Fold
+Auto Fold
+---------
 
 You can define the automatic folding of the ranges with the property `explicitFolding.autoFold` (an enum, `none` by default).<br/>
 Each rule can overwrite that property with its own property `autoFold` (a boolean, `false` by default).
@@ -161,11 +167,13 @@ So you can auto fold only the imports with:
 
 [enum values](https://github.com/zokugun/vscode-explicit-folding/blob/master/docs/properties/auto-fold.md)
 
-## Debugging
+Debugging
+---------
 
 If the property `explicitFolding.debug` (`false` by default) is `true`, the extension will print out debug information into the channel `Folding` of the panel `Output` (menu: `View` / `Output`).
 
-## Priority/Delay
+Priority/Delay
+--------------
 
 It's <ins>only used</ins> when `editor.defaultFoldingRangeProvider` isn't set to `zokugun.explicit-folding`.
 
@@ -174,11 +182,13 @@ When starting up, VSCode loads the installed extensions. When reading a file, VS
 
 The property `explicitFolding.delay` (measured in milliseconds, and set to `1000` by default) is used so that this extension's folding provider has a higher priority than that of the language provider.
 
-## Notification
+Notification
+------------
 
 The property `explicitFolding.notification` (`minor` by default) indicates when to show the update notification.
 
-## Usages
+Usages
+------
 
 <table>
     <thead>
@@ -314,7 +324,8 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
     </tbody>
 </table>
 
-## FAQ
+FAQ
+---
 
 **Q:** Why don't I see the foldings?
 
@@ -324,7 +335,8 @@ The property `explicitFolding.notification` (`minor` by default) indicates when 
 
 **A:** The document parser is line-based. So in order to match the end of a line, you need to use `$`.
 
-## Donations
+Donations
+---------
 
 Support this project by becoming a financial contributor, using any of the following methods:
 
