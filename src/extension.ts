@@ -1,6 +1,7 @@
 import { ExplicitFoldingConfig, ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
 import vscode from 'vscode';
 import pkg from '../package.json';
+import { nudge } from './commands/nudge';
 import { FoldingHub } from './folding-hub';
 import { FoldingProvider } from './folding-provider';
 import { RouteProvider } from './route-provider';
@@ -310,12 +311,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<Explic
 	setupProviders();
 	setupAutoFold();
 
-	vscode.workspace.onDidChangeConfiguration((event) => {
-		if(event.affectsConfiguration(CONFIG_KEY)) {
-			setupProviders();
-			setupAutoFold();
-		}
-	});
+	vscode.workspace.onDidChangeConfiguration(
+		(event) => {
+			if(event.affectsConfiguration(CONFIG_KEY)) {
+				setupProviders();
+				setupAutoFold();
+			}
+		},
+		vscode.commands.registerCommand('explicitFolding.nudge', nudge),
+	);
 
 	return $hub;
 } // }}}

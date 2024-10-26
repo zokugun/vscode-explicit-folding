@@ -64,7 +64,8 @@
 		"yaml": "^1.10.2"
 	},
 	"activationEvents": [
-		"onStartupFinished"
+		"onStartupFinished",
+		"onCommand:explicitFolding.nudge"
 	],
 	"capabilities": {
 		"virtualWorkspaces": true,
@@ -73,6 +74,13 @@
 		}
 	},
 	"contributes": {
+		"commands": [
+			{
+				"command": "explicitFolding.nudge",
+				"title": "Nudge foldings",
+				"category": "Explicit Folding"
+			}
+		],
 		"configuration": {
 			"title": "Explicit Folding",
 			"properties": {
