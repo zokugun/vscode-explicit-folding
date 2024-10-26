@@ -12,11 +12,13 @@ const CONFIG_KEY = 'explicitFolding';
 const VERSION_KEY = 'explicitFoldingVersion';
 
 const SCHEMES = ['file', 'untitled', 'vscode-userdata'];
-const BAD_CONFIG_KEYS = new Set(['has', 'get', 'update', 'inspect']);
 
 const $disposable: Disposable = new Disposable();
 const $documents: vscode.TextDocument[] = [];
 const $hub = new FoldingHub(setupProviders);
+
+let $rules: Record<string, ExplicitFoldingConfig[]> = {};
+let $useWildcard: Boolean = false;
 
 class MainProvider implements vscode.FoldingRangeProvider {
 	private providers: Record<string, boolean> = {};
@@ -59,7 +61,21 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	} // }}}
 }
 
-function applyRules(data: any, rules: ExplicitFoldingConfig[]): void { // {{{
+function applyDependency(dependency: { language: string; index: number }, language: string, done: string[], dependencies: Record<string, Array<{ language: string; index: number }>>) { // {{{
+	if(!done.includes(dependency.language)) {
+		done.push(dependency.language);
+
+		if(dependencies[dependency.language]) {
+			for(const d of dependencies[dependency.language]) {
+				applyDependency(d, dependency.language, done, dependencies);
+			}
+		}
+	}
+
+	$rules[language].splice(dependency.index, 0, ...$rules[dependency.language]);
+} // }}}
+
+function applyRules(data: ExplicitFoldingConfig | ExplicitFoldingConfig[] | undefined, rules: ExplicitFoldingConfig[]): void { // {{{
 	if(Array.isArray(data)) {
 		rules.push(...data);
 	}
@@ -68,41 +84,129 @@ function applyRules(data: any, rules: ExplicitFoldingConfig[]): void { // {{{
 	}
 } // }}}
 
+function buildDependencies(language: string, newRules: ExplicitFoldingConfig[], rules: ExplicitFoldingConfig[], dependencies: Record<string, Array<{ language: string; index: number }>>): ExplicitFoldingConfig[] { // {{{
+	for(const rule of newRules) {
+		const depends = rule.include;
+
+		if(Array.isArray(depends)) {
+			dependencies[language] ??= [];
+
+			for(const dependency of depends) {
+				if(!dependencies[language].some(({ language }) => language === dependency)) {
+					dependencies[language].push({ language: dependency, index: rules.length });
+				}
+			}
+		}
+		else if(typeof depends === 'string') {
+			dependencies[language] ??= [];
+
+			if(!dependencies[language].some(({ language }) => language === depends)) {
+				dependencies[language].push({ language: depends, index: rules.length });
+			}
+		}
+		else {
+			rules.push(rule);
+		}
+	}
+
+	return rules;
+} // }}}
+
 function buildProvider(language: string, config: vscode.WorkspaceConfiguration): FoldingProvider { // {{{
 	const debug = config.get<boolean>('debug') ?? false;
-	const perLanguages = getRules();
 	const channel = getDebugChannel(debug);
 
-	const rules: ExplicitFoldingConfig[] = [];
-
-	const hubRules = $hub.getRules(language);
-
-	const langRules = config.get<Record<string, ExplicitFoldingConfig[]> | undefined>('rules');
-
-	if(hubRules) {
-		if(channel) {
-			channel.appendLine(`[register] use external rules for language: ${language}`);
-		}
-
-		applyRules(hubRules, rules);
-	}
-	else if(Array.isArray(langRules)) {
-		applyRules(langRules, rules);
-	}
-	else {
-		applyRules(perLanguages[language], rules);
-	}
-
-	applyRules(perLanguages['*'], rules);
-
-	return new FoldingProvider(rules, channel, $documents);
+	return new FoldingProvider($rules[language], channel, $documents);
 } // }}}
 
 function buildRouter(perFiles: Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined>, mainProvider: FoldingProvider, config: vscode.WorkspaceConfiguration): RouteProvider { // {{{
 	const debug = config.get<boolean>('debug') ?? false;
 	const channel = getDebugChannel(debug);
 
-	return new RouteProvider(perFiles, mainProvider, channel, $documents);
+	return new RouteProvider(perFiles, mainProvider, channel, $documents, $rules);
+} // }}}
+
+async function buildRules() { // {{{
+	$rules = {};
+
+	const languages = await vscode.languages.getLanguages();
+	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
+	const debug = config.get<boolean>('debug') ?? false;
+	const channel = getDebugChannel(debug);
+	const dependencies: Record<string, Array<{ language: string; index: number }>> = {};
+
+	const globalRules = config.get<Record<string, ExplicitFoldingConfig | ExplicitFoldingConfig[]>>('rules') ?? {};
+
+	for(const key in globalRules) {
+		if(key.includes(',')) {
+			for(const language of key.split(/\s*,\s*/)) {
+				if(!$rules[language]) {
+					if(Array.isArray(globalRules[language])) {
+						$rules[language] = globalRules[language] as ExplicitFoldingConfig[];
+					}
+					else {
+						$rules[language] = [globalRules[language] as ExplicitFoldingConfig];
+					}
+				}
+
+				applyRules(globalRules[key], $rules[language]);
+			}
+		}
+		else if(Array.isArray(globalRules[key])) {
+			$rules[key] = globalRules[key] as ExplicitFoldingConfig[];
+		}
+		else {
+			$rules[key] = [globalRules[key] as ExplicitFoldingConfig];
+		}
+	}
+
+	for(const language of Object.keys($rules).filter((lang) => !languages.includes(lang))) {
+		$rules[language] = buildDependencies(language, $rules[language], [], dependencies);
+	}
+
+	for(const language of languages) {
+		const rules: ExplicitFoldingConfig[] = [];
+
+		const hubRules = $hub.getRules(language);
+
+		if(hubRules) {
+			channel?.appendLine(`[register] use external rules for language: ${language}`);
+
+			applyRules(hubRules, rules);
+		}
+		else {
+			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get('rules');
+
+			for(const newRules of [langRules, $rules[language]]) {
+				if(Array.isArray(newRules)) {
+					buildDependencies(language, newRules, rules, dependencies);
+				}
+			}
+		}
+
+		$rules[language] = rules;
+	}
+
+	const done = [];
+
+	for(const [language, depends] of Object.entries(dependencies)) {
+		done.push(language);
+
+		for(const dependency of depends.reverse()) {
+			applyDependency(dependency, language, done, dependencies);
+		}
+	}
+
+	if(globalRules['*']) {
+		$useWildcard = true;
+
+		for(const language of languages) {
+			applyRules(globalRules['*'], $rules[language]);
+		}
+	}
+	else {
+		$useWildcard = false;
+	}
 } // }}}
 
 function foldDocument(document: vscode.TextDocument) { // {{{
@@ -138,24 +242,10 @@ function getDelay(config: vscode.WorkspaceConfiguration): number { // {{{
 	return config.get<number>('delay') ?? 0;
 } // }}}
 
-function getRules(): Record<any, string> { // {{{
-	const rules: Record<any, string> = {};
-	const config = vscode.workspace.getConfiguration(`${CONFIG_KEY}.rules`, null);
-
-	for(const key in config) {
-		if(!BAD_CONFIG_KEYS.has(key)) {
-			for(const language of key.split(/\s*,\s*/)) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				rules[language] = config[key];
-			}
-		}
-	}
-
-	return rules;
-} // }}}
-
-function setupProviders() { // {{{
+async function setupProviders() { // {{{
 	$disposable.dispose();
+
+	await buildRules();
 
 	const defaultProvider = vscode.workspace.getConfiguration('editor').get<string>('defaultFoldingRangeProvider') ?? '';
 
@@ -170,23 +260,20 @@ function setupProviders() { // {{{
 function setupProvidersWithProxy(): void { // {{{
 	const provider = new MainProvider();
 
-	const globalConfig = getRules();
-
-	if(globalConfig['*']) {
+	if($useWildcard) {
 		const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
+		const wildcardExclusions = Array.isArray(config.wildcardExclusions) ? config.wildcardExclusions : [];
 
-		if(Array.isArray(config.wildcardExclusions) && config.wildcardExclusions.length > 0) {
-			void vscode.languages.getLanguages().then((languages) => {
-				for(const language of languages) {
-					if(Array.isArray(config.wildcardExclusions) && !config.wildcardExclusions.includes(language)) {
-						for(const scheme of SCHEMES) {
-							const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
+		if(wildcardExclusions.length > 0) {
+			for(const language in $rules) {
+				if(!wildcardExclusions.includes(language)) {
+					for(const scheme of SCHEMES) {
+						const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
-							$disposable.push(disposable);
-						}
+						$disposable.push(disposable);
 					}
 				}
-			});
+			}
 		}
 		else {
 			for(const scheme of SCHEMES) {
@@ -197,19 +284,15 @@ function setupProvidersWithProxy(): void { // {{{
 		}
 	}
 	else {
-		void vscode.languages.getLanguages().then((languages) => {
-			for(const language of languages) {
-				const langConfig = vscode.workspace.getConfiguration(`[${language}]`, null);
+		for(const language in $rules) {
+			if($rules[language]) {
+				for(const scheme of SCHEMES) {
+					const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
 
-				if(globalConfig[language] || $hub.hasRules(language) || langConfig[`${CONFIG_KEY}.rules`]) {
-					for(const scheme of SCHEMES) {
-						const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
-
-						$disposable.push(disposable);
-					}
+					$disposable.push(disposable);
 				}
 			}
-		});
+		}
 	}
 
 	getContext().subscriptions.push($disposable);
@@ -321,13 +404,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<Explic
 		}
 	}
 
-	setupProviders();
+	await setupProviders();
 	setupAutoFold();
 
 	vscode.workspace.onDidChangeConfiguration(
-		(event) => {
+		async (event) => {
 			if(event.affectsConfiguration(CONFIG_KEY)) {
-				setupProviders();
+				await setupProviders();
 				setupAutoFold();
 			}
 		},
