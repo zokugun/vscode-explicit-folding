@@ -7,3 +7,5 @@ artifacts:
     version: 0.5.1
   - name: "@daiyam/artifact-vsx-zokugun"
     version: 0.2.0
+  - name: "@daiyam/artifact-vsx-bundle-ncc"
+    version: 0.3.0
