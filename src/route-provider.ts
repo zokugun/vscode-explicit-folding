@@ -52,7 +52,7 @@ export class RouteProvider implements FoldingRangeProvider {
 			}
 		}
 
-		this.debugChannel?.appendLine(`[document] fileName: ${basename(document.fileName)}, route: main`);
+		this.debugChannel?.appendLine(`[document] fileName: ${basename(document.fileName)}, route: fallback`);
 
 		return this.mainProvider.provideFoldingRanges(document);
 	} // }}}

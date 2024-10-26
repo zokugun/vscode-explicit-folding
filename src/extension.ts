@@ -49,7 +49,10 @@ class MainProvider implements vscode.FoldingRangeProvider {
 		const config = vscode.workspace.getConfiguration(CONFIG_KEY, document);
 		const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
 
-		const provider = buildProvider(language, config);
+		const mainProvider = buildProvider(language, config);
+
+		const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
+		const provider = perFiles ? buildRouter(perFiles, mainProvider, config) : mainProvider;
 
 		for(const scheme of [...SCHEMES, ...additionalSchemes]) {
 			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
