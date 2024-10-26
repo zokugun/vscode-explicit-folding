@@ -1,6 +1,6 @@
+import { basename } from 'path';
 import { escape, parse, translate, visit, Flavor, Token, TokenType } from '@daiyam/regexp';
 import { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
-import { basename } from 'path';
 import { commands, FoldingRange, FoldingRangeKind, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument, window } from 'vscode';
 
 interface EndMatch {
@@ -117,9 +117,6 @@ function shouldFoldLastLine(foldLastLine: boolean[], groupIndex: number, endGrou
 } // }}}
 
 export class FoldingProvider implements FoldingRangeProvider {
-	public id = 'explicit';
-	public isManagingLastLine = true;
-
 	private readonly autoFoldDocuments: TextDocument[];
 	private readonly debugChannel: OutputChannel | undefined;
 	private readonly mainRegex: RegExp;

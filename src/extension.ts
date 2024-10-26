@@ -1,10 +1,11 @@
 import { ExplicitFoldingConfig, ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
 import vscode from 'vscode';
 import pkg from '../package.json';
-import { Disposable } from './disposable';
 import { FoldingHub } from './folding-hub';
 import { FoldingProvider } from './folding-provider';
 import { RouteProvider } from './route-provider';
+import { Disposable } from './utils/disposable';
+import { EXTENSION_ID, getContext, getDebugChannel, setupSettings } from './utils/settings';
 
 const CONFIG_KEY = 'explicitFolding';
 const VERSION_KEY = 'explicitFoldingVersion';
@@ -15,12 +16,7 @@ const $disposable: Disposable = new Disposable();
 const $documents: vscode.TextDocument[] = [];
 const $hub = new FoldingHub(setupProviders);
 
-let $channel: vscode.OutputChannel | null = null;
-let $context: vscode.ExtensionContext | null = null;
-
 class MainProvider implements vscode.FoldingRangeProvider {
-	public id = 'explicit';
-
 	private providers: Record<string, boolean> = {};
 
 	provideFoldingRanges(document: vscode.TextDocument): vscode.ProviderResult<vscode.FoldingRange[]> { // {{{
@@ -144,24 +140,12 @@ function getRules(): vscode.WorkspaceConfiguration { // {{{
 	return vscode.workspace.getConfiguration(`${CONFIG_KEY}.rules`, null);
 } // }}}
 
-function getDebugChannel(debug: boolean): vscode.OutputChannel | undefined { // {{{
-	if(debug) {
-		if(!$channel) {
-			$channel = vscode.window.createOutputChannel('Folding');
-		}
-
-		return $channel;
-	}
-
-	return undefined;
-} // }}}
-
 function setupProviders() { // {{{
 	$disposable.dispose();
 
 	const defaultProvider = vscode.workspace.getConfiguration('editor').get<string>('defaultFoldingRangeProvider') ?? '';
 
-	if(defaultProvider === 'zokugun.explicit-folding') {
+	if(defaultProvider === EXTENSION_ID) {
 		setupProvidersWithoutProxy();
 	}
 	else {
@@ -214,12 +198,10 @@ function setupProvidersWithProxy(): void { // {{{
 		});
 	}
 
-	$context!.subscriptions.push($disposable);
+	getContext().subscriptions.push($disposable);
 } // }}}
 
 function setupProvidersWithoutProxy(): void { // {{{
-	$disposable.dispose();
-
 	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
 	const wildcardExclusions = Array.isArray(config.wildcardExclusions) ? config.wildcardExclusions : [];
 
@@ -243,7 +225,7 @@ function setupProvidersWithoutProxy(): void { // {{{
 		}
 	});
 
-	$context!.subscriptions.push($disposable);
+	getContext().subscriptions.push($disposable);
 } // }}}
 
 function setupAutoFold() { // {{{
@@ -263,7 +245,7 @@ function setupAutoFold() { // {{{
 		}
 	});
 
-	$context!.subscriptions.push(disposable);
+	getContext().subscriptions.push(disposable);
 } // }}}
 
 async function showWhatsNewMessage(version: string) { // {{{
@@ -294,8 +276,8 @@ async function showWhatsNewMessage(version: string) { // {{{
 	}
 } // }}}
 
-export function activate(context: vscode.ExtensionContext): ExplicitFoldingHub { // {{{
-	$context = context;
+export async function activate(context: vscode.ExtensionContext): Promise<ExplicitFoldingHub> { // {{{
+	await setupSettings(context);
 
 	const previousVersion = context.globalState.get<string>(VERSION_KEY);
 	const currentVersion = pkg.version;

@@ -1,8 +1,8 @@
 import fs from 'fs';
+import path from 'path';
 import { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
 import { expect } from 'chai';
 import klaw from 'klaw-sync';
-import path from 'path';
 import { FoldingRangeKind } from 'vscode';
 import YAML from 'yaml';
 import { FoldingProvider } from './folding-provider';

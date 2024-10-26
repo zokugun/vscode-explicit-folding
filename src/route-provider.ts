@@ -1,6 +1,6 @@
+import { basename } from 'path';
 import type { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
 import { IMinimatch, Minimatch } from 'minimatch';
-import { basename } from 'path';
 import type { FoldingRange, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument } from 'vscode';
 import { FoldingProvider } from './folding-provider';
 
