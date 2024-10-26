@@ -8,6 +8,8 @@ The `begin` and `beginRegex` properties are indicating the beginning of a foldin
 
 The `end` and `endRegex` properties are indicating the ending of a folding region. One of them is required.
 
+In the case that they are matched by the `begin`/`beginRegex` properties, no ending of a folding region will ever be generated because `begin`/`beginRegex` take precedence.
+
 ### docstring blocks
 
 When the `begin`/`beginRegex` and `end`/`endRegex` properties are identical, the `middle` property, capturing groups, and nested blocks aren't supported.
