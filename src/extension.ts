@@ -12,6 +12,7 @@ const CONFIG_KEY = 'explicitFolding';
 const VERSION_KEY = 'explicitFoldingVersion';
 
 const SCHEMES = ['file', 'untitled', 'vscode-userdata'];
+const BAD_CONFIG_KEYS = new Set(['has', 'get', 'update', 'inspect']);
 
 const $disposable: Disposable = new Disposable();
 const $documents: vscode.TextDocument[] = [];
@@ -85,11 +86,11 @@ function buildProvider(language: string, config: vscode.WorkspaceConfiguration):
 
 		applyRules(hubRules, rules);
 	}
-	else if(!langRules || langRules[language]) {
-		applyRules(perLanguages[language], rules);
+	else if(Array.isArray(langRules)) {
+		applyRules(langRules, rules);
 	}
 	else {
-		applyRules(langRules, rules);
+		applyRules(perLanguages[language], rules);
 	}
 
 	applyRules(perLanguages['*'], rules);
@@ -137,8 +138,20 @@ function getDelay(config: vscode.WorkspaceConfiguration): number { // {{{
 	return config.get<number>('delay') ?? 0;
 } // }}}
 
-function getRules(): vscode.WorkspaceConfiguration { // {{{
-	return vscode.workspace.getConfiguration(`${CONFIG_KEY}.rules`, null);
+function getRules(): Record<any, string> { // {{{
+	const rules: Record<any, string> = {};
+	const config = vscode.workspace.getConfiguration(`${CONFIG_KEY}.rules`, null);
+
+	for(const key in config) {
+		if(!BAD_CONFIG_KEYS.has(key)) {
+			for(const language of key.split(/\s*,\s*/)) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+				rules[language] = config[key];
+			}
+		}
+	}
+
+	return rules;
 } // }}}
 
 function setupProviders() { // {{{
