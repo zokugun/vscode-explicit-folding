@@ -50,6 +50,13 @@ The `foldEOF` property is a **boolean** (set to `false` by default).
 
 If the value is `true`, when the end of file is reached, the folding range will be closed on the last line.
 
+## `foldBeforeFirstLine`
+
+The `foldBeforeFirstLine` property is a **boolean** (set to `false` by default).
+
+If the value is `true`, the folding range will include the line before the first line. In such case, the first line won't stay visible when the range is closed.<br/>
+If the value is `false`, the folding range won't include the line before the first line.
+
 ## `foldLastLine`
 
 The `foldLastLine` property is either a **boolean**, or an **array** of booleans (set to `true` by default).

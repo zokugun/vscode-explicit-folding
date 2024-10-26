@@ -50,6 +50,7 @@ interface Rule {
 	continuation?: boolean;
 	consumeEnd?: (offset?: number, ...args: string[]) => boolean;
 	foldLastLine: (offset?: number, ...args: string[]) => boolean;
+	foldBeforeFirstLine: Boolean;
 	foldBOF: boolean;
 	foldEOF: boolean;
 	nested: boolean;
@@ -327,6 +328,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			end,
 			consumeEnd: typeof configuration.consumeEnd === 'boolean' ? id(configuration.consumeEnd) : id(true),
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBeforeFirstLine: typeof configuration.foldBeforeFirstLine === 'boolean' ? configuration.foldBeforeFirstLine : false,
 			foldBOF: false,
 			foldEOF: configuration.foldEOF ?? false,
 			nested: typeof configuration.nested === 'boolean' ? configuration.nested : !Array.isArray(configuration.nested),
@@ -466,6 +468,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			begin,
 			while: whileRegex,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBeforeFirstLine: typeof configuration.foldBeforeFirstLine === 'boolean' ? configuration.foldBeforeFirstLine : false,
 			foldBOF: false,
 			foldEOF: configuration.foldEOF ?? false,
 			nested: false,
@@ -487,6 +490,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			while: whileRegex,
 			continuation: true,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBeforeFirstLine: typeof configuration.foldBeforeFirstLine === 'boolean' ? configuration.foldBeforeFirstLine : false,
 			foldBOF: false,
 			foldEOF: configuration.foldEOF ?? false,
 			nested: false,
@@ -506,6 +510,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			index: ruleIndex,
 			begin,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBeforeFirstLine: typeof configuration.foldBeforeFirstLine === 'boolean' ? configuration.foldBeforeFirstLine : false,
 			foldBOF: false,
 			foldEOF: configuration.foldEOF ?? false,
 			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
@@ -525,6 +530,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			index: ruleIndex,
 			begin: separator,
 			foldLastLine: id(false),
+			foldBeforeFirstLine: false,
 			foldBOF: typeof configuration.foldBOF === 'boolean' ? configuration.foldBOF : true,
 			foldEOF: typeof configuration.foldEOF === 'boolean' ? configuration.foldEOF : true,
 			nested: typeof configuration.nested === 'boolean' ? configuration.nested : true,
@@ -554,6 +560,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			index: ruleIndex,
 			while: whileRegex,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldBeforeFirstLine: typeof configuration.foldBeforeFirstLine === 'boolean' ? configuration.foldBeforeFirstLine : false,
 			foldBOF: false,
 			foldEOF: configuration.foldEOF ?? false,
 			nested: false,
@@ -820,7 +827,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 					break;
 				case Marker.MIDDLE:
 					if(stack.length > 0 && stack[0].rule === rule) {
-						const begin = stack[0].line;
+						const begin = rule.foldBeforeFirstLine && stack[0].line > 0 ? stack[0].line - 1 : stack[0].line;
 						const end = line;
 
 						if(end > begin + 1) {
@@ -841,7 +848,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 								return { line, offset };
 							}
 
-							const begin = last.line;
+							const begin = rule.foldBeforeFirstLine && last.line > 0 ? last.line - 1 : last.line;
 							const end = rule.consumeEnd!() ? line : Math.max(line - 1, begin);
 
 							while(stack.length > 1) {
@@ -870,7 +877,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 					}
 
 					if(stack.length > 0 && stack[0].rule === rule) {
-						const begin = stack[0].line;
+						const begin = rule.foldBeforeFirstLine && stack[0].line > 0 ? stack[0].line - 1 : stack[0].line;
 						const end = rule.consumeEnd!() ? line : Math.max(line - 1, begin);
 
 						if(rule.foldLastLine(matchOffset, ...match)) {
