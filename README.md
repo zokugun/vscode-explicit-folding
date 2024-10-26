@@ -17,6 +17,7 @@ In your settings:
 
 ```
 "editor.foldingStrategy": "auto",
+// only if you want the folding ranges from only this extension
 "editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",
 "explicitFolding.rules": {
     "*": {
