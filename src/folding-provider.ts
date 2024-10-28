@@ -25,8 +25,9 @@ interface GroupContext {
 
 interface IndentationConfig {
 	enabled: boolean;
-	offSide: boolean;
 	filter?: RegExp;
+	nestedRegex?: RegExp;
+	offSide: boolean;
 }
 
 interface PreviousRegion {
@@ -184,9 +185,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			}
 		}
 
-		if(this.debugChannel) {
-			this.debugChannel.appendLine(`[document] foldings: ${JSON.stringify(foldingRanges)}`);
-		}
+		this.debugChannel?.appendLine(`[document] foldings: ${JSON.stringify(foldingRanges)}`);
 
 		const index = this.autoFoldDocuments.indexOf(document);
 		if(index !== -1) {
@@ -231,6 +230,16 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 				if(begin) {
 					this.indentation.filter = begin;
+				}
+
+				this.debugChannel?.appendLine(JSON.stringify(configuration));
+
+				if(Array.isArray(configuration.nested)) {
+					const regexes = configuration.nested.map((config) => this.addRegex(config, groupContext, false, [])).filter((regex) => regex.length > 0);
+
+					const source = regexes.join('|');
+
+					this.indentation.nestedRegex = source.length === 0 ? /a^/ : new RegExp(source, 'g');
 				}
 			}
 			else if(begin) {
@@ -312,9 +321,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			}
 		}
 		catch (error: unknown) {
-			if(this.debugChannel) {
-				this.debugChannel.appendLine(String(error));
-			}
+			this.debugChannel?.appendLine(String(error));
 		}
 
 		return '';
@@ -721,9 +728,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 		for(const { type, index, match, nextOffset } of this.findOfRegexp(regexp, text, offset)) {
 			const rule = this.rules[index];
 
-			if(this.debugChannel) {
-				this.debugChannel.appendLine(`[${name}] line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
-			}
+			this.debugChannel?.appendLine(`[${name}] line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
 
 			switch(type) {
 				case Marker.BEGIN:
@@ -746,9 +751,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 							const name = rule.name!;
 
-							if(this.debugChannel) {
-								this.debugChannel.appendLine(`[${name}] regex: ${loopRegex.toString()}`);
-							}
+							this.debugChannel?.appendLine(`[${name}] regex: ${loopRegex.toString()}`);
 
 							const stack: StackItem[] = [{ rule, line }];
 
@@ -982,9 +985,8 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 	private resolveIndentationRange(document: TextDocument, foldingRanges: FoldingRange[]): void { // {{{
 		const tabSize = window.activeTextEditor ? Number.parseInt(`${window.activeTextEditor.options.tabSize ?? 4}`, 10) : 4;
-		if(this.debugChannel) {
-			this.debugChannel.appendLine(`[indentation] tabSize: ${tabSize}`);
-		}
+
+		this.debugChannel?.appendLine(`[indentation] tabSize: ${tabSize}`);
 
 		const existingRanges: Record<string, boolean> = {};
 		for(const range of foldingRanges) {
@@ -996,9 +998,8 @@ export class FoldingProvider implements FoldingRangeProvider {
 		for(let line = document.lineCount - 1; line >= 0; line--) {
 			const lineContent = document.lineAt(line).text;
 			const indent = computeIndentLevel(lineContent, tabSize);
-			if(this.debugChannel) {
-				this.debugChannel.appendLine(`[indentation] line: ${line + 1}, indent: ${indent}`);
-			}
+
+			this.debugChannel?.appendLine(`[indentation] line: ${line + 1}, indent: ${indent}`);
 
 			let previous = previousRegions[previousRegions.length - 1];
 
@@ -1026,9 +1027,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 				if(this.indentation.filter) {
 					fold = this.indentation.filter.test(lineContent);
 
-					if(this.debugChannel) {
-						this.debugChannel.appendLine(`[indentation] line: ${line + 1}, match(begin): ${fold ? 'yes' : 'no'}`);
-					}
+					this.debugChannel?.appendLine(`[indentation] line: ${line + 1}, match(begin): ${fold ? 'yes' : 'no'}`);
 				}
 
 				if(fold) {
@@ -1037,6 +1036,54 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 					if(block && !existingRanges[line]) {
 						foldingRanges.push(new FoldingRange(line, endLineNumber, FoldingRangeKind.Region));
+
+						if(this.indentation.nestedRegex) {
+							const foldLines: number[] = [];
+
+							const stack: StackItem[] = [];
+							const endMatches = {};
+
+							let position: Position = { line: line + 1, offset: 0 };
+							let targetIndent = -1;
+
+							while(position.line < endLineNumber) {
+								const lineContent = document.lineAt(position.line).text;
+								const newIndent = computeIndentLevel(lineContent, tabSize);
+
+								if(newIndent > indent) {
+									targetIndent = newIndent;
+									break;
+								}
+								else {
+									position.line += 1;
+								}
+							}
+
+							while(position.line < endLineNumber) {
+								const lineContent = document.lineAt(position.line).text;
+								const newIndent = computeIndentLevel(lineContent, tabSize);
+
+								if(newIndent === targetIndent) {
+									position = this.resolveExplicitRange(document, foldingRanges, 'indentation', this.indentation.nestedRegex, stack, endMatches, 0, false, position.line, position.offset, foldLines);
+								}
+								else {
+									position.line += 1;
+									position.offset = 0;
+								}
+							}
+
+							while(stack[0]) {
+								if(stack[0].rule.foldEOF) {
+									const begin = stack[0].line;
+
+									if(endLineNumber > begin + 1) {
+										this.pushNewRange(stack[0].rule, begin, endLineNumber, foldingRanges, foldLines);
+									}
+								}
+
+								stack.shift();
+							}
+						}
 					}
 				}
 

@@ -22,7 +22,7 @@ If the value is `true`, the first separator will create a folding range from the
 
 ## `foldEOF`
 
-The `foldEOF` property is a **boolean** (set to `false` by default).
+The `foldEOF` property is a **boolean** (set to `true` by default).
 
 If the value is `true`, when the end of file is reached, the folding range will be closed on the last line.
 

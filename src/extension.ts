@@ -6,6 +6,7 @@ import { FoldingHub } from './folding-hub';
 import { FoldingProvider } from './folding-provider';
 import { RouteProvider } from './route-provider';
 import { Disposable } from './utils/disposable';
+import { hasValue } from './utils/has-value';
 import { EXTENSION_ID, getContext, getDebugChannel, setupSettings } from './utils/settings';
 
 const CONFIG_KEY = 'explicitFolding';
@@ -52,7 +53,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 		const mainProvider = buildProvider(language, config);
 
 		const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
-		const provider = perFiles ? buildRouter(perFiles, mainProvider, config) : mainProvider;
+		const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider, config) : mainProvider;
 
 		for(const scheme of [...SCHEMES, ...additionalSchemes]) {
 			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
@@ -312,7 +313,7 @@ function setupProvidersWithoutProxy(): void { // {{{
 				const mainProvider = buildProvider(language, config);
 
 				const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
-				const provider = perFiles ? buildRouter(perFiles, mainProvider, config) : mainProvider;
+				const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider, config) : mainProvider;
 
 				const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
 

@@ -298,10 +298,10 @@ Usages
             "beginRegex": "\"\"\"",
             "endRegex": "\"\"\""
         },
-		{
-			"indentation": true,
-			"offSide": true
-		}
+        {
+            "indentation": true,
+            "offSide": true
+        }
     ]
 }</code>
 </pre>
