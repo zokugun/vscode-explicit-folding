@@ -99,7 +99,7 @@ Additionally, the following aspects of PCRE2 syntax are supported:
 
 Since VSCode **[v1.73.0](https://code.visualstudio.com/updates/v1_73#_default-folding-provider)**, it's hightly recommanded to use the following settings:
 
-```
+```jsonc
 "editor.foldingStrategy": "auto",
 "editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",
 ```
@@ -108,7 +108,7 @@ Wildcard Exclusions
 -------------------
 
 By default, the wildcard rule, like the following, are applied to all languages.
-```
+```jsonc
 "explicitFolding.rules": {
     "*": {
         "begin": "{{{",
@@ -120,7 +120,7 @@ By default, the wildcard rule, like the following, are applied to all languages.
 But, for languages which are using the indentation to define foldable blocks of code (such as in Python syntax), the wildcard rule will prevent the use of the indentation provider.<br />
 To avoid that, you need to add an exclusion:
 
-```
+```jsonc
 "explicitFolding.wildcardExclusions": ["python"]
 ```
 
@@ -129,7 +129,7 @@ Per Files
 
 You can define a complete new set of rules for specific files with the property `explicitFolding.perFiles`.
 
-```
+```jsonc
 "[javascript]": {
     "explicitFolding.rules": [...],
     "explicitFolding.perFiles": {
@@ -146,6 +146,58 @@ You can define a complete new set of rules for specific files with the property 
 
 [minimatch](https://github.com/isaacs/minimatch) is used to determine if a filename is matching the pattern or not.
 
+Language List
+-------------
+
+The root `explicitFolding.rules` allows a list of languages as a language identifier. The rules will be applied to all the specified language.
+
+```jsonc
+"explicitFolding.rules": {
+    "javascript,snippets": [
+        {
+            "begin": "{",
+            "end"  : "}",
+            "foldLastLine": true,
+        },
+        {
+            "begin": "`",
+            "end"  : "`",
+            "foldLastLine": true,
+        },
+    ],
+},
+```
+
+Include Rule
+------------
+
+The `include` rule allows to include the rules from another language.
+
+```jsonc
+"explicitFolding.rules": {
+    "#region": [
+        {
+            "beginRegex": "#[\\s]*region[\\s]+([\\w]+)",
+            "endRegex": "#[\\s]*endregion",
+        },
+    ],
+},
+"[shellscript]": {
+    "explicitFolding.rules": [
+        { "include": "#region" },
+    ],
+},
+"[dockerfile]": {
+    "explicitFolding.rules": [
+        { "include": "shellscript" },
+    ],
+},
+```
+
+`#region` isn't a valid language identifier so it won't be matched to any files.<br/>
+But it can be used as a group of language features that can be included by different languages.<br/>
+It needs to defined in the root `explicitFolding.rules`.
+
 Auto Fold
 ---------
 
@@ -153,7 +205,8 @@ You can define the automatic folding of the ranges with the property `explicitFo
 Each rule can overwrite that property with its own property `autoFold` (a boolean, `false` by default).
 
 So you can auto fold only the imports with:
-```
+
+```jsonc
 "[javascript]": {
     "explicitFolding.rules": [
         {
