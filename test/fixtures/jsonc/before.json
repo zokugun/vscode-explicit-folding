@@ -1,0 +1,9 @@
+{
+	// Comment about what comes next
+	"fooBar":
+	{
+		"foo": true,
+		"bar": false
+	}
+
+}

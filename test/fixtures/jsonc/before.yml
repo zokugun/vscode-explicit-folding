@@ -1,0 +1,12 @@
+config:
+  - begin: "{"
+    end: "}"
+    foldBeforeFirstLine: true
+    foldLastLine: true
+foldings:
+  - start: 2
+    end: 6
+    kind: Region
+  - start: 0
+    end: 8
+    kind: Region
