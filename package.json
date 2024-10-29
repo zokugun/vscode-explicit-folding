@@ -35,7 +35,7 @@
 	},
 	"dependencies": {
 		"@daiyam/regexp": "^0.2.1",
-		"@zokugun/vscode.explicit-folding-api": "0.1.1",
+		"@zokugun/vscode.explicit-folding-api": "0.2.1",
 		"minimatch": "^5.1.0"
 	},
 	"devDependencies": {
