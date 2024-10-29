@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.24.0 | 2024-10-29
+- fix: use `perFiles` even if `defaultFoldingRangeProvider` isn't set
+- add `Nudge foldings` command
+- suport a list of languages as identifier
+- add `include` rule
+- add `foldBeforeFirstLine` flag to Begin/End rule
+- add `nested` rules to indentation provider
+
 ## v0.23.1 | 2022-11-13
 - fix indentation provider with filter
 
