@@ -830,7 +830,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 					break;
 				case Marker.MIDDLE:
 					if(stack.length > 0 && stack[0].rule === rule) {
-						const begin = rule.foldBeforeFirstLine && stack[0].line > 0 ? stack[0].line - 1 : stack[0].line;
+						const begin = rule.foldBeforeFirstLine && stack[0].line > 0 && stack[0].line !== line ? stack[0].line - 1 : stack[0].line;
 						const end = line;
 
 						if(end > begin + 1) {
@@ -851,7 +851,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 								return { line, offset };
 							}
 
-							const begin = rule.foldBeforeFirstLine && last.line > 0 ? last.line - 1 : last.line;
+							const begin = rule.foldBeforeFirstLine && last.line > 0 && last.line !== line ? last.line - 1 : last.line;
 							const end = rule.consumeEnd!() ? line : Math.max(line - 1, begin);
 
 							while(stack.length > 1) {
@@ -880,7 +880,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 					}
 
 					if(stack.length > 0 && stack[0].rule === rule) {
-						const begin = rule.foldBeforeFirstLine && stack[0].line > 0 ? stack[0].line - 1 : stack[0].line;
+						const begin = rule.foldBeforeFirstLine && stack[0].line > 0 && stack[0].line !== line ? stack[0].line - 1 : stack[0].line;
 						const end = rule.consumeEnd!() ? line : Math.max(line - 1, begin);
 
 						if(rule.foldLastLine(matchOffset, ...match)) {
