@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.24.1 | 2024-10-31
+- fix: don't `foldBeforeFirstLine` if the beginning and ends of the fold are on the same line
+
 ## v0.24.0 | 2024-10-29
 - fix: use `perFiles` even if `defaultFoldingRangeProvider` isn't set
 - add `Nudge foldings` command
