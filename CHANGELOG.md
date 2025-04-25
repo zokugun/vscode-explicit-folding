@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.24.2 | 2025-04-25
+- update dependencies
+
 ## v0.24.1 | 2024-10-31
 - fix: don't `foldBeforeFirstLine` if the beginning and ends of the fold are on the same line
 
