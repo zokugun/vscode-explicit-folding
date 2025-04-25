@@ -4,7 +4,7 @@ export function hasValue(object: Object | undefined): boolean {
 	}
 
 	for(const key in object) {
-		if(Object.prototype.hasOwnProperty.call(object, key)) {
+		if(Object.hasOwn(object, key)) {
 			return true;
 		}
 	}

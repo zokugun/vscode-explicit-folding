@@ -1,13 +1,13 @@
-import { ExplicitFoldingConfig, ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
+import { type ExplicitFoldingConfig, type ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
 import vscode from 'vscode';
 import pkg from '../package.json';
-import { nudge } from './commands/nudge';
-import { FoldingHub } from './folding-hub';
-import { FoldingProvider } from './folding-provider';
-import { RouteProvider } from './route-provider';
-import { Disposable } from './utils/disposable';
-import { hasValue } from './utils/has-value';
-import { EXTENSION_ID, getContext, getDebugChannel, setupSettings } from './utils/settings';
+import { nudge } from './commands/nudge.js';
+import { FoldingHub } from './folding-hub.js';
+import { FoldingProvider } from './folding-provider.js';
+import { RouteProvider } from './route-provider.js';
+import { Disposable } from './utils/disposable.js';
+import { hasValue } from './utils/has-value.js';
+import { EXTENSION_ID, getContext, getDebugChannel, setupSettings } from './utils/settings.js';
 
 const CONFIG_KEY = 'explicitFolding';
 const VERSION_KEY = 'explicitFoldingVersion';
@@ -146,10 +146,10 @@ async function buildRules() { // {{{
 			for(const language of key.split(/\s*,\s*/)) {
 				if(!$rules[language]) {
 					if(Array.isArray(globalRules[language])) {
-						$rules[language] = globalRules[language] as ExplicitFoldingConfig[];
+						$rules[language] = globalRules[language];
 					}
 					else {
-						$rules[language] = [globalRules[language] as ExplicitFoldingConfig];
+						$rules[language] = [globalRules[language]];
 					}
 				}
 
@@ -157,10 +157,10 @@ async function buildRules() { // {{{
 			}
 		}
 		else if(Array.isArray(globalRules[key])) {
-			$rules[key] = globalRules[key] as ExplicitFoldingConfig[];
+			$rules[key] = globalRules[key];
 		}
 		else {
-			$rules[key] = [globalRules[key] as ExplicitFoldingConfig];
+			$rules[key] = [globalRules[key]];
 		}
 	}
 
@@ -179,7 +179,7 @@ async function buildRules() { // {{{
 			applyRules(hubRules, rules);
 		}
 		else {
-			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get('rules');
+			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get<ExplicitFoldingConfig[]>('rules');
 
 			for(const newRules of [langRules, $rules[language]]) {
 				if(Array.isArray(newRules)) {
@@ -191,7 +191,7 @@ async function buildRules() { // {{{
 		$rules[language] = rules;
 	}
 
-	const done = [];
+	const done: string[] = [];
 
 	for(const [language, depends] of Object.entries(dependencies)) {
 		done.push(language);

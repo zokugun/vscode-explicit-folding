@@ -1,8 +1,8 @@
 import { basename } from 'path';
 import type { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
-import { IMinimatch, Minimatch } from 'minimatch';
+import { type IMinimatch, Minimatch } from 'minimatch';
 import type { FoldingRange, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument } from 'vscode';
-import { FoldingProvider } from './folding-provider';
+import { FoldingProvider } from './folding-provider.js';
 
 type Route = {
 	label: string;
@@ -58,7 +58,7 @@ export class RouteProvider implements FoldingRangeProvider {
 	} // }}}
 
 	protected applyRules(rawRules: ExplicitFoldingConfig[], langRules: Record<string, ExplicitFoldingConfig[]>): ExplicitFoldingConfig[] { // {{{
-		const rules = [];
+		const rules: ExplicitFoldingConfig[] = [];
 
 		for(const rule of rawRules) {
 			if(rule.include) {

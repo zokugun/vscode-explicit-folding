@@ -1,18 +1,18 @@
 import fs from 'fs';
 import path from 'path';
-import { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
+import { type ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
 import { expect } from 'chai';
 import klaw from 'klaw-sync';
 import { FoldingRangeKind } from 'vscode';
 import YAML from 'yaml';
-import { FoldingProvider } from './folding-provider';
-import { Document } from './test/utils';
+import { FoldingProvider } from './folding-provider.js';
+import { Document } from './test/utils.js';
 
-interface Range {
+type Range = {
 	start: number;
 	end: number;
 	kind: string | FoldingRangeKind;
-}
+};
 
 function dehumanize(foldings: Range[]): Range[] {
 	for(const folding of foldings) {

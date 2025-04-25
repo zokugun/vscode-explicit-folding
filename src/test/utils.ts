@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { EndOfLine, Position, Range, TextDocument, TextLine, Uri } from 'vscode';
+import { EndOfLine, Position, Range, type TextDocument, type TextLine, Uri } from 'vscode';
 
 export class Line implements TextLine {
 	private readonly _line: number;
@@ -79,7 +79,6 @@ export class Document implements TextDocument {
 		return this._lines[line];
 	}
 
-	/* eslint-disable @typescript-eslint/no-unused-vars */
 	getText(range?: Range): string {
 		throw new Error('Method not implemented.');
 	}
@@ -107,5 +106,4 @@ export class Document implements TextDocument {
 	validatePosition(position: Position): Position {
 		throw new Error('Method not implemented.');
 	}
-	/* eslint-enable @typescript-eslint/no-unused-vars */
 }

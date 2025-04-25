@@ -1,12 +1,12 @@
 {
 	"compilerOptions": {
-		"rootDir": ".",
 		/* Basic Options */
 		"outDir": ".",
+		"rootDir": ".",
+		"composite": true,
 
 		/* Module Resolution Options */
 		"resolveJsonModule": true,
-		"composite": true
 	},
 	"files": [
 		"package.json",

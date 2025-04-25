@@ -15,9 +15,7 @@ export function getContext(): vscode.ExtensionContext {
 
 export function getDebugChannel(debug: boolean): vscode.OutputChannel | undefined { // {{{
 	if(debug) {
-		if(!$channel) {
-			$channel = vscode.window.createOutputChannel(EXTENSION_NAME);
-		}
+		$channel ??= vscode.window.createOutputChannel(EXTENSION_NAME);
 
 		return $channel;
 	}

@@ -1,4 +1,4 @@
-import { ExplicitFoldingConfig, ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
+import type { ExplicitFoldingConfig, ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
 
 export class FoldingHub implements ExplicitFoldingHub {
 	private perLanguages: Record<string, ExplicitFoldingConfig[] | undefined> = {};
@@ -13,7 +13,7 @@ export class FoldingHub implements ExplicitFoldingHub {
 	}
 
 	hasRules(language: string): boolean {
-		return typeof this.perLanguages[language] !== 'undefined';
+		return this.perLanguages[language] !== undefined;
 	}
 
 	registerFoldingRules(language: string, rules: ExplicitFoldingConfig[]): void {
