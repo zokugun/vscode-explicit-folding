@@ -2,7 +2,7 @@
 	"name": "explicit-folding",
 	"displayName": "Explicit Folding",
 	"description": "Manually controls how and where to fold your code",
-	"version": "0.24.2",
+	"version": "0.24.3",
 	"author": {
 		"name": "Baptiste Augrain",
 		"email": "daiyam@zokugun.org"

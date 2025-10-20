@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.24.3 | 2025-10-20
+- fix error in handling a list of languages when they don't have their own rules
+
 ## v0.24.2 | 2025-04-25
 - update dependencies
 
@@ -9,7 +12,7 @@
 ## v0.24.0 | 2024-10-29
 - fix: use `perFiles` even if `defaultFoldingRangeProvider` isn't set
 - add `Nudge foldings` command
-- suport a list of languages as identifier
+- support a list of languages as identifier
 - add `include` rule
 - add `foldBeforeFirstLine` flag to Begin/End rule
 - add `nested` rules to indentation provider
