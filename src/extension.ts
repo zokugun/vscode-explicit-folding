@@ -148,8 +148,11 @@ async function buildRules() { // {{{
 					if(Array.isArray(globalRules[language])) {
 						$rules[language] = globalRules[language];
 					}
-					else {
+					else if(globalRules[language]) {
 						$rules[language] = [globalRules[language]];
+					}
+					else {
+						$rules[language] = [];
 					}
 				}
 
