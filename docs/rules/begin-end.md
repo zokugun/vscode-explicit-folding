@@ -139,8 +139,6 @@ If the value is `never`, the default value of `strict` becomes `false` for itsel
 
 The `consumeEnd` property is a **boolean** or an **array of boolean** (set to `true` by default) like the property `foldLastLine`.
 
-The `consumeEnd` property is a **boolean** or an **array of boolean** (set to `true` by default) like the property `foldLastLine`.
-
 If the value is `true`, the position will be moved after the matched `end`/`endRegex`.<br/>
 If the value is `false`, the position will stay the same as when testing for `end`/`endRegex`.
 
