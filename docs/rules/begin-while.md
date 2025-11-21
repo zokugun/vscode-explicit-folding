@@ -14,12 +14,15 @@ The `foldEOF` property is a **boolean** (set to `false` by default).
 
 If the value is `true`, when the end of file is reached, the folding range will be closed on the last line.
 
-## `foldLastLine`
+## `foldLastLine`/`foldLastLineRegex`
 
-The `foldLastLine` property is a **boolean** (set to `true` by default).
+The `foldLastLine` property is a **boolean** or a **string** (set to `true` by default).
 
 If the value is `true`, the folding range will include the last line.<br/>
-If the value is `false`, the folding range will exclude the last line. In such case, the last line will remain visible when the range is closed.
+If the value is `false`, the folding range will exclude the last line. In such case, the last line will remain visible when the range is closed.<br/>
+If the value is a **string**, the folding range won't include the last line if it matches `foldLastLine`.
+
+If `foldLastLineRegex` property is used, the folding range won't include the last line if it matches `foldLastLineRegex`.
 
 ## `kind`
 
