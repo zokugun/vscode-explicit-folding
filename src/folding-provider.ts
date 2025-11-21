@@ -596,7 +596,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 		}
 	} // }}}
 
-	private doWhile(document: TextDocument, foldingRanges: FoldingRange[], rule: Rule, line: number, continuation: boolean, foldLines: number[]): Position { // {{{
+	private doWhile(document: TextDocument, foldingRanges: FoldingRange[], name: string, rule: Rule, line: number, continuation: boolean, foldLines: number[]): Position { // {{{
 		const begin = line;
 
 		while(++line < document.lineCount) {
@@ -605,7 +605,9 @@ export class FoldingProvider implements FoldingRangeProvider {
 			if(!rule.while!.test(text)) {
 				const end = line - (continuation ? 0 : 1);
 
-				if(rule.foldLastLine()) {
+				this.debugChannel?.appendLine(`[${name}] line: ${line + 1}, offset: 0, type: ${continuation ? 'END-CONTINUE' : 'END-WHILE'}, regex: ${rule.while}`);
+
+				if(rule.foldLastLine(0, text)) {
 					if(end > begin) {
 						this.pushNewRange(rule, begin, end, foldingRanges, foldLines);
 					}
@@ -622,6 +624,8 @@ export class FoldingProvider implements FoldingRangeProvider {
 		}
 
 		const end = Math.min(line, document.lineCount - 1);
+
+		this.debugChannel?.appendLine(`[${name}] line: ${line + 1}, offset: 0, type: ${continuation ? 'END-CONTINUE' : 'END-WHILE'}, regex: ${rule.while}`);
 
 		if(rule.foldLastLine()) {
 			if(end > begin) {
@@ -820,11 +824,11 @@ export class FoldingProvider implements FoldingRangeProvider {
 								return { line: line + 1, offset: 0 };
 							}
 
-							return this.doWhile(document, foldingRanges, rule, line, true, foldLines);
+							return this.doWhile(document, foldingRanges, name, rule, line, true, foldLines);
 						}
 
 						if(rule.while) {
-							return this.doWhile(document, foldingRanges, rule, line, false, foldLines);
+							return this.doWhile(document, foldingRanges, name, rule, line, false, foldLines);
 						}
 
 						stack.unshift({ rule, line });
@@ -989,7 +993,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 				}
 
 				case Marker.WHILE: {
-					return this.doWhile(document, foldingRanges, rule, line, false, foldLines);
+					return this.doWhile(document, foldingRanges, name, rule, line, false, foldLines);
 				}
 			}
 		}
