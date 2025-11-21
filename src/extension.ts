@@ -1,5 +1,5 @@
 import { type ExplicitFoldingConfig, type ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
-import vscode from 'vscode';
+import vscode, { type OutputChannel } from 'vscode';
 import pkg from '../package.json';
 import { nudge } from './commands/nudge.js';
 import { FoldingHub } from './folding-hub.js';
@@ -65,13 +65,21 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	} // }}}
 }
 
-function applyDependency(dependency: { language: string; index: number }, language: string, done: string[], dependencies: Record<string, Array<{ language: string; index: number }>>) { // {{{
+function applyDependency(dependency: { language: string; index: number }, language: string, done: string[], dependencies: Record<string, Array<{ language: string; index: number }>>, channel: OutputChannel | undefined) { // {{{
+	if(!$rules[dependency.language]) {
+		channel ??= getDebugChannel(true);
+
+		channel.appendLine(`[init] the language '${language}' is using the undefined group: '${dependency.language}'`);
+
+		return;
+	}
+
 	if(!done.includes(dependency.language)) {
 		done.push(dependency.language);
 
 		if(dependencies[dependency.language]) {
 			for(const d of dependencies[dependency.language]) {
-				applyDependency(d, dependency.language, done, dependencies);
+				applyDependency(d, dependency.language, done, dependencies, channel);
 			}
 		}
 	}
@@ -200,7 +208,7 @@ async function buildRules() { // {{{
 		done.push(language);
 
 		for(const dependency of depends.reverse()) {
-			applyDependency(dependency, language, done, dependencies);
+			applyDependency(dependency, language, done, dependencies, channel);
 		}
 	}
 
