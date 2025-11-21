@@ -19,6 +19,8 @@ enum Marker {
 	WHILE,
 }
 
+type MatchTester = (offset?: number, ...args: string[]) => boolean;
+
 type GroupContext = {
 	index: number;
 };
@@ -49,8 +51,8 @@ type Rule = {
 	loopRegex?: RegExp;
 	while?: RegExp;
 	continuation?: boolean;
-	consumeEnd?: (offset?: number, ...args: string[]) => boolean;
-	foldLastLine: (offset?: number, ...args: string[]) => boolean;
+	consumeEnd?: MatchTester;
+	foldLastLine: MatchTester;
 	foldBeforeFirstLine: Boolean;
 	foldBOF: boolean;
 	foldEOF: boolean;
@@ -106,7 +108,7 @@ function id<T>(value: T): () => T { // {{{
 	return () => value;
 } // }}}
 
-function shouldFoldLastLine(foldLastLine: boolean[], groupIndex: number, endGroupCount: number): (offset?: number, ...args: string[]) => boolean { // {{{
+function shouldMatchCapturedGroups(foldLastLine: boolean[], groupIndex: number, endGroupCount: number): MatchTester { // {{{
 	return (offset, ...args) => {
 		for(let i = groupIndex + 1, l = groupIndex + endGroupCount; i < l; ++i) {
 			if(args[i + offset!] !== undefined) {
@@ -115,6 +117,18 @@ function shouldFoldLastLine(foldLastLine: boolean[], groupIndex: number, endGrou
 		}
 
 		return foldLastLine[0];
+	};
+} // }}}
+
+function shouldMatchRegex(matcher: RegExp): MatchTester { // {{{
+	return (_offset, ...args) => {
+		for(const argument of args) {
+			if(matcher.test(argument)) {
+				return true;
+			}
+		}
+
+		return false;
 	};
 } // }}}
 
@@ -385,14 +399,14 @@ export class FoldingProvider implements FoldingRangeProvider {
 			const consumeEnd = configuration.consumeEnd;
 			const groupIndex = 1 + (rule.nested ? groupContext.index : 0) + middleGroupCount;
 
-			rule.consumeEnd = shouldFoldLastLine(consumeEnd, groupIndex, endGroupCount);
+			rule.consumeEnd = shouldMatchCapturedGroups(consumeEnd, groupIndex, endGroupCount);
 		}
 
 		if(Array.isArray(configuration.foldLastLine) && configuration.foldLastLine.length === endGroupCount) {
 			const foldLastLine = configuration.foldLastLine;
 			const groupIndex = 1 + (rule.nested ? groupContext.index : 0) + middleGroupCount;
 
-			rule.foldLastLine = shouldFoldLastLine(foldLastLine, groupIndex, endGroupCount);
+			rule.foldLastLine = shouldMatchCapturedGroups(foldLastLine, groupIndex, endGroupCount);
 		}
 
 		if(rule.nested) {
@@ -471,11 +485,27 @@ export class FoldingProvider implements FoldingRangeProvider {
 	private addBeginWhileRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp, groupContext: GroupContext): string { // {{{
 		groupContext.index += 1 + this.getCaptureGroupCount(begin.source);
 
+		let foldLastLine: MatchTester;
+
+		if(typeof configuration.foldLastLine === 'string') {
+			const matcher = new RegExp(escape(configuration.foldLastLine));
+
+			foldLastLine = shouldMatchRegex(matcher);
+		}
+		else if(typeof configuration.foldLastLineRegex === 'string') {
+			const matcher = new RegExp(translate(configuration.foldLastLineRegex, Flavor.ES2018));
+
+			foldLastLine = shouldMatchRegex(matcher);
+		}
+		else {
+			foldLastLine = typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true);
+		}
+
 		const rule = {
 			index: ruleIndex,
 			begin,
 			while: whileRegex,
-			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
+			foldLastLine,
 			foldBeforeFirstLine: typeof configuration.foldBeforeFirstLine === 'boolean' ? configuration.foldBeforeFirstLine : false,
 			foldBOF: false,
 			foldEOF: configuration.foldEOF ?? false,
