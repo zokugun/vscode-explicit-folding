@@ -175,6 +175,8 @@ async function buildRules() { // {{{
 		}
 	}
 
+	$useWildcard = Boolean(globalRules['*']);
+
 	for(const language of Object.keys($rules).filter((lang) => !languages.includes(lang))) {
 		$rules[language] = buildDependencies(language, $rules[language], [], dependencies);
 	}
@@ -190,13 +192,17 @@ async function buildRules() { // {{{
 			applyRules(hubRules, rules);
 		}
 		else {
+			$rules[language] ??= [];
+
+			if($useWildcard) {
+				applyRules(globalRules['*'], $rules[language]);
+			}
+
 			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get<ExplicitFoldingConfig[]>('rules');
 
-			for(const newRules of [langRules, $rules[language]]) {
-				if(Array.isArray(newRules)) {
-					buildDependencies(language, newRules, rules, dependencies);
-				}
-			}
+			applyRules(langRules, $rules[language]);
+
+			buildDependencies(language, $rules[language], rules, dependencies);
 		}
 
 		$rules[language] = rules;
@@ -210,17 +216,6 @@ async function buildRules() { // {{{
 		for(const dependency of depends.reverse()) {
 			applyDependency(dependency, language, done, dependencies, channel);
 		}
-	}
-
-	if(globalRules['*']) {
-		$useWildcard = true;
-
-		for(const language of languages) {
-			applyRules(globalRules['*'], $rules[language]);
-		}
-	}
-	else {
-		$useWildcard = false;
 	}
 } // }}}
 
