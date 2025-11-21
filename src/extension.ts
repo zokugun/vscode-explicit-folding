@@ -84,7 +84,7 @@ function applyDependency(dependency: { language: string; index: number }, langua
 		}
 	}
 
-	$rules[language].splice(dependency.index, 0, ...$rules[dependency.language]);
+	$rules[language].splice(dependency.index, 0, ...$rules[dependency.language].map((rule) => ({ ...rule, name: `${dependency.language}${rule.name?.length ? `, ${rule.name}` : ''}` })));
 } // }}}
 
 function applyRules(data: ExplicitFoldingConfig | ExplicitFoldingConfig[] | undefined, rules: ExplicitFoldingConfig[]): void { // {{{

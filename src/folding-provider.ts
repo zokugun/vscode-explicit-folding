@@ -63,6 +63,7 @@ type Rule = {
 	strict?: boolean;
 	name?: string;
 	autoFold?: boolean;
+	label: string;
 };
 
 type StackItem = {
@@ -345,6 +346,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 	private addBeginEndRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, middle: RegExp | undefined, end: RegExp, groupContext: GroupContext, strict: boolean, parents: number[]): string { // {{{
 		const rule: Rule = {
 			index: ruleIndex,
+			label: configuration.name?.length ? `, ${configuration.name}` : '',
 			begin,
 			middle,
 			end,
@@ -503,6 +505,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		const rule = {
 			index: ruleIndex,
+			label: configuration.name?.length ? `, ${configuration.name}` : '',
 			begin,
 			while: whileRegex,
 			foldLastLine,
@@ -524,6 +527,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		const rule = {
 			index: ruleIndex,
+			label: configuration.name?.length ? `, ${configuration.name}` : '',
 			begin,
 			while: whileRegex,
 			continuation: true,
@@ -546,6 +550,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		const rule = {
 			index: ruleIndex,
+			label: configuration.name?.length ? `, ${configuration.name}` : '',
 			begin,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
 			foldBeforeFirstLine: typeof configuration.foldBeforeFirstLine === 'boolean' ? configuration.foldBeforeFirstLine : false,
@@ -566,6 +571,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		const rule = {
 			index: ruleIndex,
+			label: configuration.name?.length ? `, ${configuration.name}` : '',
 			begin: separator,
 			foldLastLine: id(false),
 			foldBeforeFirstLine: false,
@@ -596,6 +602,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		const rule = {
 			index: ruleIndex,
+			label: configuration.name?.length ? `, ${configuration.name}` : '',
 			while: whileRegex,
 			foldLastLine: typeof configuration.foldLastLine === 'boolean' ? id(configuration.foldLastLine) : id(true),
 			foldBeforeFirstLine: typeof configuration.foldBeforeFirstLine === 'boolean' ? configuration.foldBeforeFirstLine : false,
@@ -757,13 +764,13 @@ export class FoldingProvider implements FoldingRangeProvider {
 		}
 	} // }}}
 
-	private resolveExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], name: string, regexp: RegExp, stack: StackItem[], endMatches: EndMatches, matchOffset: number, secondaryLoop: boolean, line: number, offset: number, foldLines: number[]): Position { // {{{
+	private resolveExplicitRange(document: TextDocument, foldingRanges: FoldingRange[], loopLabel: string, regexp: RegExp, stack: StackItem[], endMatches: EndMatches, matchOffset: number, secondaryLoop: boolean, line: number, offset: number, foldLines: number[]): Position { // {{{
 		const text = document.lineAt(line).text;
 
 		for(const { type, index, match, nextOffset } of this.findOfRegexp(regexp, text, offset)) {
 			const rule = this.rules[index];
 
-			this.debugChannel?.appendLine(`[${name}] line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
+			this.debugChannel?.appendLine(`[${loopLabel}${rule.label}] line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
 
 			switch(type) {
 				case Marker.BEGIN: {
@@ -835,10 +842,10 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 							const loopStack: StackItem[] = [{ rule, line, endIndex }];
 
-							let position = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, loopStack, endMatches, matchOffset, true, line, nextOffset, foldLines);
+							let position = this.resolveExplicitRange(document, foldingRanges, loopLabel, loopRegex, loopStack, endMatches, matchOffset, true, line, nextOffset, foldLines);
 
 							while(loopStack.length > 0 && position.line < document.lineCount) {
-								position = this.resolveExplicitRange(document, foldingRanges, name, loopRegex, loopStack, endMatches, matchOffset, true, position.line, position.offset, foldLines);
+								position = this.resolveExplicitRange(document, foldingRanges, loopLabel, loopRegex, loopStack, endMatches, matchOffset, true, position.line, position.offset, foldLines);
 							}
 
 							if(nf) {
@@ -854,11 +861,11 @@ export class FoldingProvider implements FoldingRangeProvider {
 								return { line: line + 1, offset: 0 };
 							}
 
-							return this.doWhile(document, foldingRanges, name, rule, line, true, foldLines);
+							return this.doWhile(document, foldingRanges, loopLabel, rule, line, true, foldLines);
 						}
 
 						if(rule.while) {
-							return this.doWhile(document, foldingRanges, name, rule, line, false, foldLines);
+							return this.doWhile(document, foldingRanges, loopLabel, rule, line, false, foldLines);
 						}
 
 						stack.unshift({ rule, line });
@@ -1023,7 +1030,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 				}
 
 				case Marker.WHILE: {
-					return this.doWhile(document, foldingRanges, name, rule, line, false, foldLines);
+					return this.doWhile(document, foldingRanges, loopLabel, rule, line, false, foldLines);
 				}
 			}
 		}
