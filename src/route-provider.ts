@@ -1,5 +1,5 @@
 import { basename } from 'path';
-import type { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
+import type API from '@zokugun/vscode.explicit-folding-api';
 import { type IMinimatch, Minimatch } from 'minimatch';
 import type { FoldingRange, FoldingRangeProvider, OutputChannel, ProviderResult, TextDocument } from 'vscode';
 import { FoldingProvider } from './folding-provider.js';
@@ -17,7 +17,7 @@ export class RouteProvider implements FoldingRangeProvider {
 	private readonly mainProvider: FoldingProvider;
 	private readonly routes: Route[] = [];
 
-	constructor(perFiles: Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined>, mainProvider: FoldingProvider, debugChannel: OutputChannel | undefined, documents: TextDocument[], langRules: Record<string, ExplicitFoldingConfig[]>) { // {{{
+	constructor(perFiles: Record<string, API.Config[] | API.Config | undefined>, mainProvider: FoldingProvider, debugChannel: OutputChannel | undefined, documents: TextDocument[], langRules: Record<string, API.Config[]>) { // {{{
 		this.mainProvider = mainProvider;
 		this.debugChannel = debugChannel;
 
@@ -57,11 +57,14 @@ export class RouteProvider implements FoldingRangeProvider {
 		return this.mainProvider.provideFoldingRanges(document);
 	} // }}}
 
-	protected applyRules(rawRules: ExplicitFoldingConfig[], langRules: Record<string, ExplicitFoldingConfig[]>): ExplicitFoldingConfig[] { // {{{
-		const rules: ExplicitFoldingConfig[] = [];
+	protected applyRules(rawRules: API.Config[], langRules: Record<string, API.Config[]>): API.Config[] { // {{{
+		const rules: API.Config[] = [];
 
 		for(const rule of rawRules) {
-			if(rule.include) {
+			if(rule.variables) {
+				rules.push(rule);
+			}
+			else if(rule.include) {
 				if(Array.isArray(rule.include)) {
 					for(const lang of rule.include) {
 						rules.push(...langRules[lang]);
