@@ -1,4 +1,4 @@
-import { type ExplicitFoldingConfig, type ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
+import type API from '@zokugun/vscode.explicit-folding-api';
 import vscode, { type OutputChannel } from 'vscode';
 import pkg from '../package.json';
 import { nudge } from './commands/nudge.js';
@@ -18,7 +18,7 @@ const $disposable: Disposable = new Disposable();
 const $documents: vscode.TextDocument[] = [];
 const $hub = new FoldingHub(setupProviders);
 
-let $rules: Record<string, ExplicitFoldingConfig[]> = {};
+let $rules: Record<string, API.Config[]> = {};
 let $useWildcard: Boolean = false;
 
 class MainProvider implements vscode.FoldingRangeProvider {
@@ -52,7 +52,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 
 		const mainProvider = buildProvider(language, config);
 
-		const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
+		const perFiles = config.get<Record<string, API.Config[] | API.Config | undefined> | undefined>('perFiles');
 		const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider, config) : mainProvider;
 
 		for(const scheme of [...SCHEMES, ...additionalSchemes]) {
@@ -84,10 +84,18 @@ function applyDependency(dependency: { language: string; index: number }, langua
 		}
 	}
 
-	$rules[language].splice(dependency.index, 0, ...$rules[dependency.language].map((rule) => ({ ...rule, name: `${dependency.language}${rule.name?.length ? `, ${rule.name}` : ''}` })));
+	const rules = $rules[dependency.language].map((rule) => {
+		if(rule.variables) {
+			return rule;
+		}
+
+		return { ...rule, name: `${dependency.language}${rule.name?.length ? `, ${rule.name}` : ''}` };
+	});
+
+	$rules[language].splice(dependency.index, 0, ...rules);
 } // }}}
 
-function applyRules(data: ExplicitFoldingConfig | ExplicitFoldingConfig[] | undefined, rules: ExplicitFoldingConfig[]): void { // {{{
+function applyRules(data: API.Config | API.Config[] | undefined, rules: API.Config[]): void { // {{{
 	if(Array.isArray(data)) {
 		rules.push(...data);
 	}
@@ -96,28 +104,33 @@ function applyRules(data: ExplicitFoldingConfig | ExplicitFoldingConfig[] | unde
 	}
 } // }}}
 
-function buildDependencies(language: string, newRules: ExplicitFoldingConfig[], rules: ExplicitFoldingConfig[], dependencies: Record<string, Array<{ language: string; index: number }>>): ExplicitFoldingConfig[] { // {{{
+function buildDependencies(language: string, newRules: API.Config[], rules: API.Config[], dependencies: Record<string, Array<{ language: string; index: number }>>): API.Config[] { // {{{
 	for(const rule of newRules) {
-		const depends = rule.include;
-
-		if(Array.isArray(depends)) {
-			dependencies[language] ??= [];
-
-			for(const dependency of depends) {
-				if(!dependencies[language].some(({ language }) => language === dependency)) {
-					dependencies[language].push({ language: dependency, index: rules.length });
-				}
-			}
-		}
-		else if(typeof depends === 'string') {
-			dependencies[language] ??= [];
-
-			if(!dependencies[language].some(({ language }) => language === depends)) {
-				dependencies[language].push({ language: depends, index: rules.length });
-			}
+		if(rule.variables) {
+			rules.push(rule);
 		}
 		else {
-			rules.push(rule);
+			const depends = rule.include;
+
+			if(Array.isArray(depends)) {
+				dependencies[language] ??= [];
+
+				for(const dependency of depends) {
+					if(!dependencies[language].some(({ language }) => language === dependency)) {
+						dependencies[language].push({ language: dependency, index: rules.length });
+					}
+				}
+			}
+			else if(typeof depends === 'string') {
+				dependencies[language] ??= [];
+
+				if(!dependencies[language].some(({ language }) => language === depends)) {
+					dependencies[language].push({ language: depends, index: rules.length });
+				}
+			}
+			else {
+				rules.push(rule);
+			}
 		}
 	}
 
@@ -131,7 +144,7 @@ function buildProvider(language: string, config: vscode.WorkspaceConfiguration):
 	return new FoldingProvider($rules[language], channel, $documents);
 } // }}}
 
-function buildRouter(perFiles: Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined>, mainProvider: FoldingProvider, config: vscode.WorkspaceConfiguration): RouteProvider { // {{{
+function buildRouter(perFiles: Record<string, API.Config[] | API.Config | undefined>, mainProvider: FoldingProvider, config: vscode.WorkspaceConfiguration): RouteProvider { // {{{
 	const debug = config.get<boolean>('debug') ?? false;
 	const channel = getDebugChannel(debug);
 
@@ -147,7 +160,7 @@ async function buildRules() { // {{{
 	const channel = getDebugChannel(debug);
 	const dependencies: Record<string, Array<{ language: string; index: number }>> = {};
 
-	const globalRules = config.get<Record<string, ExplicitFoldingConfig | ExplicitFoldingConfig[]>>('rules') ?? {};
+	const globalRules = config.get<Record<string, API.Config | API.Config[]>>('rules') ?? {};
 
 	for(const key in globalRules) {
 		if(key.includes(',')) {
@@ -182,7 +195,7 @@ async function buildRules() { // {{{
 	}
 
 	for(const language of languages) {
-		const rules: ExplicitFoldingConfig[] = [];
+		const rules: API.Config[] = [];
 
 		const hubRules = $hub.getRules(language);
 
@@ -198,7 +211,7 @@ async function buildRules() { // {{{
 				applyRules(globalRules['*'], $rules[language]);
 			}
 
-			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get<ExplicitFoldingConfig[]>('rules');
+			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get<API.Config[]>('rules');
 
 			applyRules(langRules, $rules[language]);
 
@@ -318,7 +331,7 @@ function setupProvidersWithoutProxy(): void { // {{{
 				const config = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language });
 				const mainProvider = buildProvider(language, config);
 
-				const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
+				const perFiles = config.get<Record<string, API.Config[] | API.Config | undefined> | undefined>('perFiles');
 				const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider, config) : mainProvider;
 
 				const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
@@ -383,7 +396,7 @@ async function showWhatsNewMessage(version: string) { // {{{
 	}
 } // }}}
 
-export async function activate(context: vscode.ExtensionContext): Promise<ExplicitFoldingHub> { // {{{
+export async function activate(context: vscode.ExtensionContext): Promise<API.Hub> { // {{{
 	await setupSettings(context);
 
 	const previousVersion = context.globalState.get<string>(VERSION_KEY);

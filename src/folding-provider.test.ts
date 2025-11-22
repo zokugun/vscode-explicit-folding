@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { type ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
+import type API from '@zokugun/vscode.explicit-folding-api';
 import { expect } from 'chai';
 import klaw from 'klaw-sync';
 import { FoldingRangeKind } from 'vscode';
@@ -28,7 +28,7 @@ describe('fold', () => {
 		const name = path.basename(file).slice(0, path.basename(file).lastIndexOf('.'));
 
 		it(`${language}.${name}`, () => {
-			const { config, foldings } = YAML.parse(fs.readFileSync(path.join(path.dirname(file), `${name}.yml`), 'utf8')) as { config: ExplicitFoldingConfig[]; foldings: Range[] };
+			const { config, foldings } = YAML.parse(fs.readFileSync(path.join(path.dirname(file), `${name}.yml`), 'utf8')) as { config: API.Config[]; foldings: Range[] };
 
 			const provider = new FoldingProvider(config, undefined, []);
 

@@ -221,6 +221,27 @@ So you can auto fold only the imports with:
 
 [enum values](https://github.com/zokugun/vscode-explicit-folding/blob/master/docs/properties/auto-fold.md)
 
+Variables
+---------
+
+```jsonc
+{
+    "variables": {
+        "BeginComment1": "\\/\\*",
+        "EndComment1": "\\*\\/",
+    },
+},
+{
+    "beginRegex": "{{!BeginComment1}}",
+    "endRegex": "{{!EndComment1}}",
+},
+```
+
+| property  | `{{:varname}}` (escape) | `{{!varname}}` (raw) |
+| --------- | :---------------------: | :------------------: |
+| non-regex |           ✅            |         ☠️         |
+| regex     |           ✅            |          ✅          |
+
 Debugging
 ---------
 

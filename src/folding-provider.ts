@@ -1,7 +1,9 @@
 import { basename } from 'path';
 import { escape, parse, translate, visit, Flavor, type Token, TokenType } from '@daiyam/regexp';
-import { type ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
+import type API from '@zokugun/vscode.explicit-folding-api';
+import { err, ok, type Result } from '@zokugun/xtry';
 import { commands, FoldingRange, FoldingRangeKind, type FoldingRangeProvider, type OutputChannel, type ProviderResult, type TextDocument, window } from 'vscode';
+import { getDebugChannel } from './utils/settings.js';
 
 type EndMatch = {
 	index: number;
@@ -76,6 +78,7 @@ type StackItem = {
 
 const TAB = 9;
 const SPACE = 32;
+const VARIABLE_REGEX = /{{(:|!)(\w+)}}/;
 
 function computeIndentLevel(line: string, tabSize: number): number { // {{{
 	let indent = 0;
@@ -143,8 +146,9 @@ export class FoldingProvider implements FoldingRangeProvider {
 	};
 
 	private readonly rules: Rule[] = [];
+	private readonly variables = new Map<string, string>();
 
-	constructor(configuration: ExplicitFoldingConfig[], debugChannel: OutputChannel | undefined, documents: TextDocument[]) { // {{{
+	constructor(configuration: API.Config[], debugChannel: OutputChannel | undefined, documents: TextDocument[]) { // {{{
 		this.debugChannel = debugChannel;
 		this.autoFoldDocuments = documents;
 
@@ -153,14 +157,28 @@ export class FoldingProvider implements FoldingRangeProvider {
 		let source = '';
 
 		for(const value of configuration) {
-			const regexSource = this.addRegex(value, groupContext, true, []);
-
-			if(regexSource.length > 0) {
-				if(source.length > 0) {
-					source += '|';
+			if(value.variables) {
+				for(const key in value.variables) {
+					if(Object.hasOwn(value.variables, key)) {
+						this.variables.set(key, value.variables[key]);
+					}
 				}
+			}
+			else {
+				const result = this.addRegex(value, groupContext, true, []);
 
-				source += regexSource;
+				if(result.fails) {
+					const channel = debugChannel ?? getDebugChannel(true);
+
+					channel.appendLine(result.error);
+				}
+				else if(result.value.length > 0) {
+					if(source.length > 0) {
+						source += '|';
+					}
+
+					source += result.value;
+				}
 			}
 		}
 
@@ -217,7 +235,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 		return foldingRanges;
 	} // }}}
 
-	private addRegex(configuration: ExplicitFoldingConfig, groupContext: GroupContext, strict: boolean, parents: number[]): string { // {{{
+	private addRegex(configuration: API.UnkownRule, groupContext: GroupContext, strict: boolean, parents: number[]): Result<string, string> { // {{{
 		const ruleIndex = this.rules.length;
 
 		try {
@@ -226,23 +244,35 @@ export class FoldingProvider implements FoldingRangeProvider {
 			let begin: RegExp | undefined;
 
 			if(configuration.beginRegex) {
-				begin = new RegExp(translate(configuration.beginRegex, Flavor.ES2018));
+				const result = this.toRegex(configuration.beginRegex, true, false);
+				if(result.fails) {
+					return result;
+				}
+
+				begin = result.value;
 
 				if(configuration.beginRegex === configuration.endRegex) {
-					return this.addDocstringRegex(configuration, ruleIndex, begin, groupContext);
+					return this.addDocstringRegex(configuration as API.BeginEndRule, ruleIndex, begin, groupContext);
 				}
 			}
 			else if(configuration.begin) {
-				begin = new RegExp(escape(configuration.begin));
+				const result = this.toRegex(configuration.begin, false, false);
+				if(result.fails) {
+					return result;
+				}
+
+				begin = result.value;
 
 				if(configuration.begin === configuration.end) {
-					return this.addDocstringRegex(configuration, ruleIndex, begin, groupContext);
+					return this.addDocstringRegex(configuration as API.BeginEndRule, ruleIndex, begin, groupContext);
 				}
 			}
 
 			if(configuration.indentation) {
-				this.indentation.enabled = configuration.indentation;
-				this.indentation.offSide = configuration.offSide ?? false;
+				const indentationConfig = configuration as API.IndentationRule;
+
+				this.indentation.enabled = true;
+				this.indentation.offSide = indentationConfig.offSide ?? false;
 
 				if(begin) {
 					this.indentation.filter = begin;
@@ -250,89 +280,151 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 				this.debugChannel?.appendLine(JSON.stringify(configuration));
 
-				if(Array.isArray(configuration.nested)) {
-					const regexes = configuration.nested.map((config) => this.addRegex(config, groupContext, false, [])).filter((regex) => regex.length > 0);
+				if(Array.isArray(indentationConfig.nested)) {
+					const regexes: string[] = [];
+
+					for(const config of indentationConfig.nested) {
+						const result = this.addRegex(config, groupContext, false, []);
+						if(result.fails) {
+							return result;
+						}
+
+						if(result.value.length > 0) {
+							regexes.push(result.value);
+						}
+					}
 
 					const source = regexes.join('|');
 
 					this.indentation.nestedRegex = source.length === 0 ? /a^/ : new RegExp(source, 'g');
 				}
 			}
-			else if(begin) {
+
+			if(begin) {
 				let continuation: RegExp | undefined;
 				let end: RegExp | undefined;
 				let whileRegex: RegExp | undefined;
 
 				if(configuration.endRegex) {
-					end = new RegExp(translate(configuration.endRegex, Flavor.ES2018));
+					const result = this.toRegex(configuration.endRegex, true, false);
+					if(result.fails) {
+						return result;
+					}
+
+					end = result.value;
 				}
 				else if(configuration.end) {
-					end = new RegExp(escape(configuration.end));
+					const result = this.toRegex(configuration.end, false, false);
+					if(result.fails) {
+						return result;
+					}
+
+					end = result.value;
 				}
 				else if(configuration.continuationRegex) {
-					const source = translate(configuration.continuationRegex, Flavor.ES2018);
+					const result = this.toRegex(configuration.continuationRegex, true, true);
+					if(result.fails) {
+						return result;
+					}
 
-					continuation = new RegExp(`${source}$`);
+					continuation = result.value;
 				}
 				else if(configuration.continuation) {
-					continuation = new RegExp(`${escape(configuration.continuation)}$`);
+					const result = this.toRegex(configuration.continuation, false, true);
+					if(result.fails) {
+						return result;
+					}
+
+					continuation = result.value;
 				}
 				else if(configuration.whileRegex) {
-					whileRegex = new RegExp(translate(configuration.whileRegex, Flavor.ES2018));
+					const result = this.toRegex(configuration.whileRegex, true, false);
+					if(result.fails) {
+						return result;
+					}
+
+					whileRegex = result.value;
 				}
 				else if(configuration.while) {
-					whileRegex = new RegExp(escape(configuration.while));
+					const result = this.toRegex(configuration.while, false, false);
+					if(result.fails) {
+						return result;
+					}
+
+					whileRegex = result.value;
 				}
 
 				if(end) {
 					let middle: RegExp | undefined;
 
 					if(configuration.middleRegex) {
-						middle = new RegExp(translate(configuration.middleRegex, Flavor.ES2018));
+						const result = this.toRegex(configuration.middleRegex, true, false);
+						if(result.fails) {
+							return result;
+						}
+
+						middle = result.value;
 					}
 					else if(configuration.middle) {
-						middle = new RegExp(escape(configuration.middle));
+						const result = this.toRegex(configuration.middle, false, false);
+						if(result.fails) {
+							return result;
+						}
+
+						middle = result.value;
 					}
 
 					if(this.isSupportedRegex(bypassProtection, begin, middle, end)) {
-						return this.addBeginEndRegex(configuration, ruleIndex, begin, middle, end, groupContext, strict, parents);
+						return this.addBeginEndRegex(configuration as API.BeginEndRule, ruleIndex, begin, middle, end, groupContext, strict, parents);
 					}
 				}
 				else if(continuation) {
 					if(this.isSupportedRegex(bypassProtection, begin, continuation)) {
-						return this.addContinuationRegex(configuration, ruleIndex, begin, continuation, groupContext);
+						return this.addContinuationRegex(configuration as API.BeginContinuationRule, ruleIndex, begin, continuation, groupContext);
 					}
 				}
 				else if(whileRegex && this.isSupportedRegex(bypassProtection, begin, whileRegex)) {
-					return this.addBeginWhileRegex(configuration, ruleIndex, begin, whileRegex, groupContext);
+					return this.addBeginWhileRegex(configuration as API.BeginWhileRule, ruleIndex, begin, whileRegex, groupContext);
 				}
 			}
 			else if(configuration.whileRegex) {
-				const whileRegex = new RegExp(translate(configuration.whileRegex, Flavor.ES2018));
+				const result = this.toRegex(configuration.whileRegex, true, false);
+				if(result.fails) {
+					return result;
+				}
 
-				if(this.isSupportedRegex(bypassProtection, whileRegex)) {
-					return this.addWhileRegex(configuration, ruleIndex, whileRegex, groupContext);
+				if(this.isSupportedRegex(bypassProtection, result.value)) {
+					return this.addWhileRegex(configuration as API.WhileRule, ruleIndex, result.value, groupContext);
 				}
 			}
 			else if(configuration.while) {
-				const whileRegex = new RegExp(escape(configuration.while));
+				const result = this.toRegex(configuration.while, false, false);
+				if(result.fails) {
+					return result;
+				}
 
-				if(this.isSupportedRegex(bypassProtection, whileRegex)) {
-					return this.addWhileRegex(configuration, ruleIndex, whileRegex, groupContext);
+				if(this.isSupportedRegex(bypassProtection, result.value)) {
+					return this.addWhileRegex(configuration as API.WhileRule, ruleIndex, result.value, groupContext);
 				}
 			}
 			else if(configuration.separatorRegex) {
-				const separator = new RegExp(translate(configuration.separatorRegex, Flavor.ES2018));
+				const result = this.toRegex(configuration.separatorRegex, true, false);
+				if(result.fails) {
+					return result;
+				}
 
-				if(this.isSupportedRegex(bypassProtection, separator)) {
-					return this.addSeparatorRegex(configuration, ruleIndex, separator, groupContext, strict, parents);
+				if(this.isSupportedRegex(bypassProtection, result.value)) {
+					return this.addSeparatorRegex(configuration as API.SeparatorRule, ruleIndex, result.value, groupContext, strict, parents);
 				}
 			}
 			else if(configuration.separator) {
-				const separator = new RegExp(escape(configuration.separator));
+				const result = this.toRegex(configuration.separator, false, false);
+				if(result.fails) {
+					return result;
+				}
 
-				if(this.isSupportedRegex(bypassProtection, separator)) {
-					return this.addSeparatorRegex(configuration, ruleIndex, separator, groupContext, strict, parents);
+				if(this.isSupportedRegex(bypassProtection, result.value)) {
+					return this.addSeparatorRegex(configuration as API.SeparatorRule, ruleIndex, result.value, groupContext, strict, parents);
 				}
 			}
 		}
@@ -340,10 +432,10 @@ export class FoldingProvider implements FoldingRangeProvider {
 			this.debugChannel?.appendLine(String(error));
 		}
 
-		return '';
+		return ok('');
 	} // }}}
 
-	private addBeginEndRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, middle: RegExp | undefined, end: RegExp, groupContext: GroupContext, strict: boolean, parents: number[]): string { // {{{
+	private addBeginEndRegex(configuration: API.BeginEndRule, ruleIndex: number, begin: RegExp, middle: RegExp | undefined, end: RegExp, groupContext: GroupContext, strict: boolean, parents: number[]): Result<string, string> { // {{{
 		const rule: Rule = {
 			index: ruleIndex,
 			label: configuration.name?.length ? `, ${configuration.name}` : '',
@@ -429,14 +521,38 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 			if(Array.isArray(configuration.nested)) {
 				const strictParent = configuration.strict === 'never' ? false : strict;
+				const nestedParents = [...parents, ruleIndex];
+
 				if(!strictParent) {
-					const regexes = configuration.nested.map((config) => this.addRegex(config, groupContext, false, [...parents, ruleIndex])).filter((regex) => regex.length > 0);
+					const regexes: string[] = [];
+
+					for(const config of configuration.nested) {
+						const result = this.addRegex(config, groupContext, false, nestedParents);
+						if(result.fails) {
+							return result;
+						}
+
+						if(result.value.length > 0) {
+							regexes.push(result.value);
+						}
+					}
 
 					source += `|${regexes.join('|')}`;
 				}
 
 				const subgroupContext = { index: 1 };
-				const regexes = configuration.nested.map((config) => this.addRegex(config, subgroupContext, strictParent, [...parents, ruleIndex])).filter((regex) => regex.length > 0);
+				const regexes: string[] = [];
+
+				for(const config of configuration.nested) {
+					const result = this.addRegex(config, subgroupContext, strictParent, nestedParents);
+					if(result.fails) {
+						return result;
+					}
+
+					if(result.value.length > 0) {
+						regexes.push(result.value);
+					}
+				}
 
 				let loopSource = '';
 
@@ -481,10 +597,10 @@ export class FoldingProvider implements FoldingRangeProvider {
 			}
 		}
 
-		return source;
+		return ok(source);
 	} // }}}
 
-	private addBeginWhileRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp, groupContext: GroupContext): string { // {{{
+	private addBeginWhileRegex(configuration: API.BeginWhileRule, ruleIndex: number, begin: RegExp, whileRegex: RegExp, groupContext: GroupContext): Result<string, string> { // {{{
 		groupContext.index += 1 + this.getCaptureGroupCount(begin.source);
 
 		let foldLastLine: MatchTester;
@@ -519,10 +635,10 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		this.rules.push(rule);
 
-		return `(?<_${Marker.BEGIN}_${ruleIndex}>${rule.begin.source})`;
+		return ok(`(?<_${Marker.BEGIN}_${ruleIndex}>${rule.begin.source})`);
 	} // }}}
 
-	private addContinuationRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, whileRegex: RegExp, groupContext: GroupContext): string { // {{{
+	private addContinuationRegex(configuration: API.BeginContinuationRule, ruleIndex: number, begin: RegExp, whileRegex: RegExp, groupContext: GroupContext): Result<string, string> { // {{{
 		groupContext.index += 1 + this.getCaptureGroupCount(begin.source);
 
 		const rule = {
@@ -542,10 +658,10 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		this.rules.push(rule);
 
-		return `(?<_${Marker.BEGIN}_${ruleIndex}>${rule.begin.source})`;
+		return ok(`(?<_${Marker.BEGIN}_${ruleIndex}>${rule.begin.source})`);
 	} // }}}
 
-	private addDocstringRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, begin: RegExp, groupContext: GroupContext): string { // {{{
+	private addDocstringRegex(configuration: API.BeginEndRule, ruleIndex: number, begin: RegExp, groupContext: GroupContext): Result<string, string> { // {{{
 		groupContext.index += 1 + this.getCaptureGroupCount(begin.source);
 
 		const rule = {
@@ -563,10 +679,10 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		this.rules.push(rule);
 
-		return `(?<_${Marker.DOCSTRING}_${ruleIndex}>${rule.begin.source})`;
+		return ok(`(?<_${Marker.DOCSTRING}_${ruleIndex}>${rule.begin.source})`);
 	} // }}}
 
-	private addSeparatorRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, separator: RegExp, groupContext: GroupContext, strict: boolean, parents: number[]): string { // {{{
+	private addSeparatorRegex(configuration: API.SeparatorRule, ruleIndex: number, separator: RegExp, groupContext: GroupContext, strict: boolean, parents: number[]): Result<string, string> { // {{{
 		groupContext.index += 1 + this.getCaptureGroupCount(separator.source);
 
 		const rule = {
@@ -589,15 +705,28 @@ export class FoldingProvider implements FoldingRangeProvider {
 		const nested = configuration.descendants ?? (Array.isArray(configuration.nested) ? configuration.nested : null);
 
 		if(nested) {
-			const regexes = nested.map((config) => this.addRegex(config, groupContext, configuration.strict === 'never' ? false : strict, [...parents, ruleIndex])).filter((regex) => regex.length > 0);
+			const regexes: string[] = [];
+			const nestedStrict = configuration.strict === 'never' ? false : strict;
+			const nestedParents = [...parents, ruleIndex];
 
-			return `(?<_${Marker.SEPARATOR}_${ruleIndex}>${rule.begin.source})|${regexes.join('|')}`;
+			for(const config of nested) {
+				const result = this.addRegex(config, groupContext, nestedStrict, nestedParents);
+				if(result.fails) {
+					return result;
+				}
+
+				if(result.value.length > 0) {
+					regexes.push(result.value);
+				}
+			}
+
+			return ok(`(?<_${Marker.SEPARATOR}_${ruleIndex}>${rule.begin.source})|${regexes.join('|')}`);
 		}
 
-		return `(?<_${Marker.SEPARATOR}_${ruleIndex}>${rule.begin.source})`;
+		return ok(`(?<_${Marker.SEPARATOR}_${ruleIndex}>${rule.begin.source})`);
 	} // }}}
 
-	private addWhileRegex(configuration: ExplicitFoldingConfig, ruleIndex: number, whileRegex: RegExp, groupContext: GroupContext): string { // {{{
+	private addWhileRegex(configuration: API.WhileRule, ruleIndex: number, whileRegex: RegExp, groupContext: GroupContext): Result<string, string> { // {{{
 		groupContext.index += 1 + this.getCaptureGroupCount(whileRegex.source);
 
 		const rule = {
@@ -615,7 +744,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		this.rules.push(rule);
 
-		return `(?<_${Marker.WHILE}_${ruleIndex}>${rule.while.source})`;
+		return ok(`(?<_${Marker.WHILE}_${ruleIndex}>${rule.while.source})`);
 	} // }}}
 
 	private doEOF(document: TextDocument, foldingRanges: FoldingRange[], stack: StackItem[], foldLines: number[]): void { // {{{
@@ -1151,5 +1280,37 @@ export class FoldingProvider implements FoldingRangeProvider {
 				previousRegions.push({ indent, begin: line, end: line });
 			}
 		}
+	} // }}}
+
+	toRegex(value: string, isRegex: boolean, isEnder: boolean): Result<RegExp, string> { // {{{
+		let match: RegExpExecArray | null;
+
+		while((match = VARIABLE_REGEX.exec(value))) {
+			const [{ length }, type, key] = match;
+
+			if(!this.variables.has(key)) {
+				return err(`can't find the variable: '${key}'`);
+			}
+
+			let replacement = this.variables.get(key)!;
+
+			if(type === ':') {
+				if(isRegex) {
+					replacement = escape(replacement);
+				}
+			}
+			else {
+				if(!isRegex) {
+					return err('non-regex property don\'t support raw replacement');
+				}
+			}
+
+			value = value.slice(0, match.index) + replacement + value.slice(match.index + length);
+		}
+
+		const source = isRegex ? translate(value, Flavor.ES2018) : escape(value);
+		const regex = new RegExp(isEnder ? `${source}$` : source);
+
+		return ok(regex);
 	} // }}}
 }
