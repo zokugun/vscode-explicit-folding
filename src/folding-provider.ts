@@ -892,7 +892,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 				case Marker.END: {
 					if(secondaryLoop) {
 						const last = stack.length > 0 && stack.at(-1);
-						if(last && last.rule === rule) {
+						if(last && (last.rule === rule || last.rule.end?.test(match[0]))) {
 							if(last.endIndex && match.groups && !match.groups[`_${Marker.END}_${rule.index}_${last.endIndex}`]) {
 								stack.pop();
 
@@ -927,7 +927,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 						}
 					}
 
-					if(stack.length > 0 && stack[0].rule === rule) {
+					if(stack.length > 0 && (stack[0].rule === rule || stack[0].rule.end?.test(match[0]))) {
 						const begin = rule.foldBeforeFirstLine && stack[0].line > 0 && stack[0].line !== line ? stack[0].line - 1 : stack[0].line;
 						const end = rule.consumeEnd!() ? line : Math.max(line - 1, begin);
 
