@@ -24,7 +24,6 @@
 	"browser": "./lib/index.js",
 	"scripts": {
 		"bundle": "ncc build out/extension --out lib",
-		"commit": "cz",
 		"compile": "tsc -p src",
 		"lint": "xo",
 		"package": "rm -f *.vsix && vsce package",
@@ -35,7 +34,7 @@
 	},
 	"dependencies": {
 		"@daiyam/regexp": "^0.2.1",
-		"@zokugun/vscode.explicit-folding-api": "0.2.1",
+		"@zokugun/vscode.explicit-folding-api": "^0.2.2",
 		"minimatch": "^5.1.0"
 	},
 	"devDependencies": {
@@ -49,14 +48,13 @@
 		"@types/vscode": "^1.23.0",
 		"@vercel/ncc": "^0.38.3",
 		"chai": "^4.3.4",
-		"commitizen": "^4.3.1",
 		"fixpack": "^4.0.0",
 		"glob": "^7.1.6",
 		"husky": "^9.1.7",
 		"klaw-sync": "^6.0.0",
 		"lint-staged": "^15.4.3",
 		"mocha": "^10.1.0",
-		"release-it": "^18.1.2",
+		"release-it": "^19.2.4",
 		"tsc-watch": "^6.3.0",
 		"typescript": "^5.7.3",
 		"vscode-test": "^1.5.2",
