@@ -152,6 +152,8 @@ async function buildRules() { // {{{
 	const config = vscode.workspace.getConfiguration(CONFIG_KEY, referenceUri);
 	const debug = config.get<boolean>('debug') ?? false;
 	const channel = getDebugChannel(debug);
+	channel?.appendLine(`[config] referenceUri: ${referenceUri?.fsPath ?? 'null'}`);
+	channel?.appendLine(`[config] activeDocumentUri: ${vscode.window.activeTextEditor?.document?.uri.fsPath ?? 'null'}`);
 	const dependencies: Record<string, Array<{ language: string; index: number }>> = {};
 
 	const globalRules = config.get<Record<string, ExplicitFoldingConfig | ExplicitFoldingConfig[]>>('rules') ?? {};
@@ -319,6 +321,9 @@ function setupProvidersWithProxy(): void { // {{{
 function setupProvidersWithoutProxy(): void { // {{{
 	const referenceUri = getReferenceUri();
 	const config = vscode.workspace.getConfiguration(CONFIG_KEY, referenceUri);
+	const debug = config.get<boolean>('debug') ?? false;
+	const channel = getDebugChannel(debug);
+	channel?.appendLine(`[config] setupProvidersWithoutProxy referenceUri: ${referenceUri?.fsPath ?? 'null'}`);
 	const wildcardExclusions = Array.isArray(config.wildcardExclusions) ? config.wildcardExclusions : [];
 
 	void vscode.languages.getLanguages().then((languages) => {
@@ -326,6 +331,7 @@ function setupProvidersWithoutProxy(): void { // {{{
 			if(!wildcardExclusions.includes(language)) {
 				const langScope = referenceUri ? { languageId: language, uri: referenceUri } : { languageId: language };
 				const config = vscode.workspace.getConfiguration(CONFIG_KEY, langScope);
+				channel?.appendLine(`[config] languageScope: ${language}, uri: ${referenceUri?.fsPath ?? 'null'}`);
 				const mainProvider = buildProvider(language, config);
 
 				const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
