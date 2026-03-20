@@ -21,6 +21,12 @@ const $hub = new FoldingHub(setupProviders);
 let $rules: Record<string, ExplicitFoldingConfig[]> = {};
 let $useWildcard: Boolean = false;
 
+function getReferenceUri(): vscode.Uri | null { // {{{
+	return vscode.window.activeTextEditor?.document?.uri
+		?? vscode.workspace.workspaceFolders?.[0]?.uri
+		?? null;
+} // }}}
+
 class MainProvider implements vscode.FoldingRangeProvider {
 	private providers: Record<string, boolean> = {};
 
@@ -142,9 +148,12 @@ async function buildRules() { // {{{
 	$rules = {};
 
 	const languages = await vscode.languages.getLanguages();
-	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
+	const referenceUri = getReferenceUri();
+	const config = vscode.workspace.getConfiguration(CONFIG_KEY, referenceUri);
 	const debug = config.get<boolean>('debug') ?? false;
 	const channel = getDebugChannel(debug);
+	channel?.appendLine(`[config] referenceUri: ${referenceUri?.fsPath ?? 'null'}`);
+	channel?.appendLine(`[config] activeDocumentUri: ${vscode.window.activeTextEditor?.document?.uri.fsPath ?? 'null'}`);
 	const dependencies: Record<string, Array<{ language: string; index: number }>> = {};
 
 	const globalRules = config.get<Record<string, ExplicitFoldingConfig | ExplicitFoldingConfig[]>>('rules') ?? {};
@@ -198,7 +207,8 @@ async function buildRules() { // {{{
 				applyRules(globalRules['*'], $rules[language]);
 			}
 
-			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get<ExplicitFoldingConfig[]>('rules');
+			const langScope = referenceUri ? { languageId: language, uri: referenceUri } : { languageId: language };
+			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, langScope).get<ExplicitFoldingConfig[]>('rules');
 
 			applyRules(langRules, $rules[language]);
 
@@ -309,13 +319,19 @@ function setupProvidersWithProxy(): void { // {{{
 } // }}}
 
 function setupProvidersWithoutProxy(): void { // {{{
-	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
+	const referenceUri = getReferenceUri();
+	const config = vscode.workspace.getConfiguration(CONFIG_KEY, referenceUri);
+	const debug = config.get<boolean>('debug') ?? false;
+	const channel = getDebugChannel(debug);
+	channel?.appendLine(`[config] setupProvidersWithoutProxy referenceUri: ${referenceUri?.fsPath ?? 'null'}`);
 	const wildcardExclusions = Array.isArray(config.wildcardExclusions) ? config.wildcardExclusions : [];
 
 	void vscode.languages.getLanguages().then((languages) => {
 		for(const language of languages) {
 			if(!wildcardExclusions.includes(language)) {
-				const config = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language });
+				const langScope = referenceUri ? { languageId: language, uri: referenceUri } : { languageId: language };
+				const config = vscode.workspace.getConfiguration(CONFIG_KEY, langScope);
+				channel?.appendLine(`[config] languageScope: ${language}, uri: ${referenceUri?.fsPath ?? 'null'}`);
 				const mainProvider = buildProvider(language, config);
 
 				const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
