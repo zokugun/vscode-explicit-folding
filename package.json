@@ -15,7 +15,7 @@
 		"url": "https://github.com/zokugun/vscode-explicit-folding.git"
 	},
 	"bugs": {
-		"url": "https://github.com/zokugun/vscode-explicit-folding/issues"
+		"url": "https://github.com/zokugun/vscode-explicit-folding/discussions/categories/issue-triage"
 	},
 	"engines": {
 		"vscode": "^1.23.0"
