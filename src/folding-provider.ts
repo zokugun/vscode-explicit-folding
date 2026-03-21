@@ -1,7 +1,8 @@
 import { basename } from 'path';
 import { escape, parse, translate, visit, Flavor, type Token, TokenType } from '@daiyam/regexp';
 import { type ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
-import { commands, FoldingRange, FoldingRangeKind, type FoldingRangeProvider, type OutputChannel, type ProviderResult, type TextDocument, window } from 'vscode';
+import { commands, FoldingRange, FoldingRangeKind, type FoldingRangeProvider, type ProviderResult, type TextDocument, window } from 'vscode';
+import { Logger } from './utils/logger.js';
 
 type EndMatch = {
 	index: number;
@@ -135,7 +136,6 @@ function shouldMatchRegex(matcher: RegExp): MatchTester { // {{{
 
 export class FoldingProvider implements FoldingRangeProvider {
 	private readonly autoFoldDocuments: TextDocument[];
-	private readonly debugChannel: OutputChannel | undefined;
 	private readonly mainRegex: RegExp;
 	private readonly indentation: IndentationConfig = {
 		enabled: false,
@@ -144,8 +144,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 	private readonly rules: Rule[] = [];
 
-	constructor(configuration: ExplicitFoldingConfig[], debugChannel: OutputChannel | undefined, documents: TextDocument[]) { // {{{
-		this.debugChannel = debugChannel;
+	constructor(configuration: ExplicitFoldingConfig[], documents: TextDocument[]) { // {{{
 		this.autoFoldDocuments = documents;
 
 		const groupContext = { index: 0 };
@@ -168,12 +167,10 @@ export class FoldingProvider implements FoldingRangeProvider {
 	} // }}}
 
 	public provideFoldingRanges(document: TextDocument): ProviderResult<FoldingRange[]> { // {{{
-		if(this.debugChannel) {
-			this.debugChannel.show(true);
+		Logger.show();
 
-			this.debugChannel.appendLine(`[document] lang: ${document.languageId}, fileName: ${basename(document.fileName)}`);
-			this.debugChannel.appendLine(`[main] regex: ${this.mainRegex.toString()}`);
-		}
+		Logger.info(`[document] lang: ${document.languageId}, fileName: ${basename(document.fileName)}`);
+		Logger.info(`[main] regex: ${this.mainRegex.toString()}`);
 
 		const foldingRanges: FoldingRange[] = [];
 		const foldLines: number[] = [];
@@ -195,12 +192,10 @@ export class FoldingProvider implements FoldingRangeProvider {
 			}
 		}
 		catch (error: unknown) {
-			if(this.debugChannel && error) {
-				this.debugChannel.appendLine(String(error));
-			}
+			Logger.error(String(error));
 		}
 
-		this.debugChannel?.appendLine(`[document] foldings: ${JSON.stringify(foldingRanges)}`);
+		Logger.info(`[document] foldings: ${JSON.stringify(foldingRanges)}`);
 
 		const index = this.autoFoldDocuments.indexOf(document);
 		if(index !== -1) {
@@ -248,7 +243,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 					this.indentation.filter = begin;
 				}
 
-				this.debugChannel?.appendLine(JSON.stringify(configuration));
+				Logger.info(configuration);
 
 				if(Array.isArray(configuration.nested)) {
 					const regexes = configuration.nested.map((config) => this.addRegex(config, groupContext, false, [])).filter((regex) => regex.length > 0);
@@ -337,7 +332,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			}
 		}
 		catch (error: unknown) {
-			this.debugChannel?.appendLine(String(error));
+			Logger.error(String(error));
 		}
 
 		return '';
@@ -642,7 +637,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			if(!rule.while!.test(text)) {
 				const end = line - (continuation ? 0 : 1);
 
-				this.debugChannel?.appendLine(`[${name}] line: ${line + 1}, offset: 0, type: ${continuation ? 'END-CONTINUE' : 'END-WHILE'}, regex: ${rule.while}`);
+				Logger.info(`[${name}] line: ${line + 1}, offset: 0, type: ${continuation ? 'END-CONTINUE' : 'END-WHILE'}, regex: ${rule.while}`);
 
 				if(rule.foldLastLine(0, text)) {
 					if(end > begin) {
@@ -662,7 +657,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 		const end = Math.min(line, document.lineCount - 1);
 
-		this.debugChannel?.appendLine(`[${name}] line: ${line + 1}, offset: 0, type: ${continuation ? 'END-CONTINUE' : 'END-WHILE'}, regex: ${rule.while}`);
+		Logger.info(`[${name}] line: ${line + 1}, offset: 0, type: ${continuation ? 'END-CONTINUE' : 'END-WHILE'}, regex: ${rule.while}`);
 
 		if(rule.foldLastLine()) {
 			if(end > begin) {
@@ -770,7 +765,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 		for(const { type, index, match, nextOffset } of this.findOfRegexp(regexp, text, offset)) {
 			const rule = this.rules[index];
 
-			this.debugChannel?.appendLine(`[${loopLabel}${rule.label}] line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
+			Logger.info(`[${loopLabel}${rule.label}] line: ${line + 1}, offset: ${offset}, type: ${Marker[type]}, match: ${match[0]}, regex: ${index}`);
 
 			switch(type) {
 				case Marker.BEGIN: {
@@ -793,7 +788,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 
 							const name = rule.name!;
 
-							this.debugChannel?.appendLine(`[${name}] regex: ${loopRegex.toString()}`);
+							Logger.info(`[${name}] regex: ${loopRegex.toString()}`);
 
 							const stack: StackItem[] = [{ rule, line }];
 
@@ -1041,7 +1036,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 	private resolveIndentationRange(document: TextDocument, foldingRanges: FoldingRange[]): void { // {{{
 		const tabSize = window.activeTextEditor ? Number.parseInt(`${window.activeTextEditor.options.tabSize ?? 4}`, 10) : 4;
 
-		this.debugChannel?.appendLine(`[indentation] tabSize: ${tabSize}`);
+		Logger.info(`[indentation] tabSize: ${tabSize}`);
 
 		const existingRanges: Record<string, boolean> = {};
 		for(const range of foldingRanges) {
@@ -1054,7 +1049,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 			const lineContent = document.lineAt(line).text;
 			const indent = computeIndentLevel(lineContent, tabSize);
 
-			this.debugChannel?.appendLine(`[indentation] line: ${line + 1}, indent: ${indent}`);
+			Logger.info(`[indentation] line: ${line + 1}, indent: ${indent}`);
 
 			let previous = previousRegions.at(-1)!;
 
@@ -1082,7 +1077,7 @@ export class FoldingProvider implements FoldingRangeProvider {
 				if(this.indentation.filter) {
 					fold = this.indentation.filter.test(lineContent);
 
-					this.debugChannel?.appendLine(`[indentation] line: ${line + 1}, match(begin): ${fold ? 'yes' : 'no'}`);
+					Logger.info(`[indentation] line: ${line + 1}, match(begin): ${fold ? 'yes' : 'no'}`);
 				}
 
 				if(fold) {

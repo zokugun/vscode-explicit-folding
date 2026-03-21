@@ -3,6 +3,7 @@
 	"search.exclude": {
 		"lib/**": true,
 		"out/**": true,
+		"package-lock.json": true,
 	},
 	"taskExplorer.exclude": [
 		".husky",

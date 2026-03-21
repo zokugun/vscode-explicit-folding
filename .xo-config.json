@@ -1,6 +1,7 @@
 {
 	"ignores": [
 		"*.config.js",
+		"*.config.ts",
 		"test/fixtures"
 	],
 	"rules": {
@@ -55,13 +56,21 @@
 				"format": [
 					"camelCase",
 					"UPPER_CASE"
-				]
+				],
+				"filter": {
+					"regex": "^(__filename|__dirname)$",
+					"match": false
+				}
 			},
 			{
 				"selector": "variable",
 				"format": [
 					"camelCase"
-				]
+				],
+				"filter": {
+					"regex": "^(__filename|__dirname)$",
+					"match": false
+				}
 			}
 		],
 		"@typescript-eslint/no-confusing-void-expression": "off",
@@ -134,12 +143,18 @@
 			"error",
 			{
 				"replacements": {
+					"arg": false,
 					"args": false,
+					"dir": false,
 					"err": false,
+					"fn": false,
 					"func": false,
 					"i": false,
 					"j": false,
-					"pkg": false
+					"mod": false,
+					"num": false,
+					"pkg": false,
+					"str": false
 				}
 			}
 		]

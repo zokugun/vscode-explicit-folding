@@ -47,6 +47,7 @@ export class Document implements TextDocument {
 	fileName: string;
 	isUntitled: boolean;
 	languageId: string;
+	encoding: string;
 	version: number;
 	isDirty: boolean;
 	isClosed: boolean;
@@ -59,6 +60,7 @@ export class Document implements TextDocument {
 		this.fileName = path.basename(file);
 		this.isUntitled = false;
 		this.languageId = 'text';
+		this.encoding = 'utf8';
 		this.version = 0;
 		this.isDirty = false;
 		this.isClosed = false;

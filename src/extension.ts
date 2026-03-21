@@ -1,5 +1,5 @@
 import { type ExplicitFoldingConfig, type ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
-import vscode, { type OutputChannel } from 'vscode';
+import vscode from 'vscode';
 import pkg from '../package.json';
 import { nudge } from './commands/nudge.js';
 import { FoldingHub } from './folding-hub.js';
@@ -7,7 +7,8 @@ import { FoldingProvider } from './folding-provider.js';
 import { RouteProvider } from './route-provider.js';
 import { Disposable } from './utils/disposable.js';
 import { hasValue } from './utils/has-value.js';
-import { EXTENSION_ID, getContext, getDebugChannel, setupSettings } from './utils/settings.js';
+import { Logger } from './utils/logger.js';
+import { EXTENSION_ID, getContext, setupSettings } from './utils/settings.js';
 
 const CONFIG_KEY = 'explicitFolding';
 const VERSION_KEY = 'explicitFoldingVersion';
@@ -50,10 +51,10 @@ class MainProvider implements vscode.FoldingRangeProvider {
 		const config = vscode.workspace.getConfiguration(CONFIG_KEY, document);
 		const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
 
-		const mainProvider = buildProvider(language, config);
+		const mainProvider = buildProvider(language);
 
 		const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
-		const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider, config) : mainProvider;
+		const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider) : mainProvider;
 
 		for(const scheme of [...SCHEMES, ...additionalSchemes]) {
 			const disposable = vscode.languages.registerFoldingRangeProvider({ language, scheme }, provider);
@@ -65,11 +66,9 @@ class MainProvider implements vscode.FoldingRangeProvider {
 	} // }}}
 }
 
-function applyDependency(dependency: { language: string; index: number }, language: string, done: string[], dependencies: Record<string, Array<{ language: string; index: number }>>, channel: OutputChannel | undefined) { // {{{
+function applyDependency(dependency: { language: string; index: number }, language: string, done: string[], dependencies: Record<string, Array<{ language: string; index: number }>>) { // {{{
 	if(!$rules[dependency.language]) {
-		channel ??= getDebugChannel(true);
-
-		channel.appendLine(`[init] the language '${language}' is using the undefined group: '${dependency.language}'`);
+		Logger.info(`[init] the language '${language}' is using the undefined group: '${dependency.language}'`);
 
 		return;
 	}
@@ -79,7 +78,7 @@ function applyDependency(dependency: { language: string; index: number }, langua
 
 		if(dependencies[dependency.language]) {
 			for(const d of dependencies[dependency.language]) {
-				applyDependency(d, dependency.language, done, dependencies, channel);
+				applyDependency(d, dependency.language, done, dependencies);
 			}
 		}
 	}
@@ -124,18 +123,12 @@ function buildDependencies(language: string, newRules: ExplicitFoldingConfig[], 
 	return rules;
 } // }}}
 
-function buildProvider(language: string, config: vscode.WorkspaceConfiguration): FoldingProvider { // {{{
-	const debug = config.get<boolean>('debug') ?? false;
-	const channel = getDebugChannel(debug);
-
-	return new FoldingProvider($rules[language], channel, $documents);
+function buildProvider(language: string): FoldingProvider { // {{{
+	return new FoldingProvider($rules[language], $documents);
 } // }}}
 
-function buildRouter(perFiles: Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined>, mainProvider: FoldingProvider, config: vscode.WorkspaceConfiguration): RouteProvider { // {{{
-	const debug = config.get<boolean>('debug') ?? false;
-	const channel = getDebugChannel(debug);
-
-	return new RouteProvider(perFiles, mainProvider, channel, $documents, $rules);
+function buildRouter(perFiles: Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined>, mainProvider: FoldingProvider): RouteProvider { // {{{
+	return new RouteProvider(perFiles, mainProvider, $documents, $rules);
 } // }}}
 
 async function buildRules() { // {{{
@@ -143,8 +136,6 @@ async function buildRules() { // {{{
 
 	const languages = await vscode.languages.getLanguages();
 	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
-	const debug = config.get<boolean>('debug') ?? false;
-	const channel = getDebugChannel(debug);
 	const dependencies: Record<string, Array<{ language: string; index: number }>> = {};
 
 	const globalRules = config.get<Record<string, ExplicitFoldingConfig | ExplicitFoldingConfig[]>>('rules') ?? {};
@@ -187,7 +178,7 @@ async function buildRules() { // {{{
 		const hubRules = $hub.getRules(language);
 
 		if(hubRules) {
-			channel?.appendLine(`[register] use external rules for language: ${language}`);
+			Logger.info(`[register] use external rules for language: ${language}`);
 
 			applyRules(hubRules, rules);
 		}
@@ -214,7 +205,7 @@ async function buildRules() { // {{{
 		done.push(language);
 
 		for(const dependency of depends.reverse()) {
-			applyDependency(dependency, language, done, dependencies, channel);
+			applyDependency(dependency, language, done, dependencies);
 		}
 	}
 } // }}}
@@ -316,10 +307,10 @@ function setupProvidersWithoutProxy(): void { // {{{
 		for(const language of languages) {
 			if(!wildcardExclusions.includes(language)) {
 				const config = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language });
-				const mainProvider = buildProvider(language, config);
+				const mainProvider = buildProvider(language);
 
 				const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
-				const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider, config) : mainProvider;
+				const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider) : mainProvider;
 
 				const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
 
@@ -385,6 +376,8 @@ async function showWhatsNewMessage(version: string) { // {{{
 
 export async function activate(context: vscode.ExtensionContext): Promise<ExplicitFoldingHub> { // {{{
 	await setupSettings(context);
+
+	Logger.setup(false);
 
 	const previousVersion = context.globalState.get<string>(VERSION_KEY);
 	const currentVersion = pkg.version;

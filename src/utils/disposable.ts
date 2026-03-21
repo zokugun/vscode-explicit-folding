@@ -15,7 +15,7 @@ export class Disposable extends vscode.Disposable {
 		this.subscriptions.length = 0;
 	}
 
-	push(disposable: vscode.Disposable) {
-		this.subscriptions.push(disposable);
+	push(...disposables: vscode.Disposable[]) {
+		this.subscriptions.push(...disposables);
 	}
 }

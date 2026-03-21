@@ -30,7 +30,7 @@ describe('fold', () => {
 		it(`${language}.${name}`, () => {
 			const { config, foldings } = YAML.parse(fs.readFileSync(path.join(path.dirname(file), `${name}.yml`), 'utf8')) as { config: ExplicitFoldingConfig[]; foldings: Range[] };
 
-			const provider = new FoldingProvider(config, undefined, []);
+			const provider = new FoldingProvider(config, []);
 
 			const ranges = provider.provideFoldingRanges(new Document(file));
 
