@@ -31,16 +31,39 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: Reproduction Steps
-      description: |-
-        Provide a detailed set of step-by-step instructions for reproducing this issue.
+      label: Code Example
+      description: Provide a code example.
+      placeholder: |-
+        ```
+        class Foobar {
+        }
+        ```
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Settings
+      description: Provide the settings used.
+      placeholder: |-
+        ```
+        "folding": {
+          "*": {
+            "begin": "{{{",
+            "end": "}}}",
+          }
+        }
+        ```
     validations:
       required: true
   - type: textarea
     attributes:
       label: Version
-      description: Paste the output the version here.
-      render: text
+      description: Paste the versions here.
+      placeholder: |-
+        - VSCode: <!-- 1.x.x -->
+        - Explicit Folding: <!-- 0.x.x -->
+        - Language: <!-- cpp -->
+        - Language Provider: <!-- if applicable, the extension which adds the language support -->
     validations:
       required: true
   - type: markdown
