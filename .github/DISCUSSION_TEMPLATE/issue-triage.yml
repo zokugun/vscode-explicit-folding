@@ -43,7 +43,7 @@ body:
   - type: textarea
     attributes:
       label: Settings
-      description: Provide the settings used.
+      description: Provide the settings used. This will be automatically formatted into JSONC, so no need for backticks.
       render: jsonc
       placeholder: |
         "folding": {
