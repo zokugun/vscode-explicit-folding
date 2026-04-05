@@ -33,7 +33,7 @@ body:
     attributes:
       label: Code Example
       description: Provide a code example.
-      placeholder: |-
+      placeholder: |
         ```
         class Foobar {
         }
@@ -44,26 +44,29 @@ body:
     attributes:
       label: Settings
       description: Provide the settings used.
-      placeholder: |-
-        ```
+      render: jsonc
+      placeholder: |
         "folding": {
           "*": {
             "begin": "{{{",
             "end": "}}}",
           }
         }
-        ```
     validations:
       required: true
   - type: textarea
     attributes:
-      label: Version
-      description: Paste the versions here.
-      placeholder: |-
-        - VSCode: <!-- 1.x.x -->
-        - Explicit Folding: <!-- 0.x.x -->
-        - Language: <!-- cpp -->
-        - Language Provider: <!-- if applicable, the extension which adds the language support -->
+      label: Environment
+      description: |
+        - VSCode: v1.110.0
+        - Explicit Folding: v0.24.3
+        - Language: COBOL
+        - Language Provider: IBM Z Open Editor <!-- if applicable, the extension which adds the language support -->
+      value: |
+        - VSCode:
+        - Explicit Folding:
+        - Language:
+        - Language Provider:
     validations:
       required: true
   - type: markdown
