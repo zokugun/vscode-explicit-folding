@@ -1,0 +1,11 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		/* Basic Options */
+		"outDir": "../.test",							/* Specify an output folder for all emitted files. */
+		"rootDir": "..",								/* Specify the root directory of input files. */
+
+		/* Source Map Options */
+		"sourceMap": true,								/* Create source map files for emitted JavaScript files. */
+	},
+}

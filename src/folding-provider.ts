@@ -1,5 +1,5 @@
 import { basename } from 'path';
-import { escape, parse, translate, visit, Flavor, type Token, TokenType } from '@daiyam/regexp';
+import { escape, parse, translate, visit, Flavor, type Token, TokenType } from '@zokugun/regexp';
 import { type ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
 import { commands, FoldingRange, FoldingRangeKind, type FoldingRangeProvider, type ProviderResult, type TextDocument, window } from 'vscode';
 import { Logger } from './utils/logger.js';

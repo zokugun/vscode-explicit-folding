@@ -4,3 +4,4 @@
 /.vscode-test/
 /*.vsix
 /icon.sketch
+/.test/

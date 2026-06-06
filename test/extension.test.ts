@@ -5,8 +5,8 @@ import { expect } from 'chai';
 import klaw from 'klaw-sync';
 import { FoldingRangeKind } from 'vscode';
 import YAML from 'yaml';
-import { FoldingProvider } from './folding-provider.js';
-import { Document } from './test/utils.js';
+import { FoldingProvider } from '../src/folding-provider.js';
+import { Document } from './mocks/vscode.js';
 
 type Range = {
 	start: number;
@@ -47,7 +47,7 @@ describe('fold', () => {
 		});
 	}
 
-	const files = klaw(path.join(__dirname, '..', 'test', 'fixtures'), {
+	const files = klaw(path.join(__dirname, '..', '..', 'test', 'fixtures'), {
 		nodir: true,
 		traverseAll: true,
 		filter: (item) => !item.path.endsWith('.yml'),

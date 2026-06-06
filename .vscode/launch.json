@@ -2,7 +2,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Extension",
+			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -15,32 +15,13 @@
 			"preLaunchTask": "npm: watch:src"
 		},
 		{
-			"name": "Extension Tests",
+			"name": "Run Unit Tests",
 			"type": "extensionHost",
 			"request": "launch",
-			"runtimeExecutable": "${execPath}",
+			"testConfiguration": "${workspaceFolder}/.vscode-test.mjs",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test/suite"
-			],
-			"outFiles": [
-				"${workspaceFolder}/out/test/*.js"
-			],
-			"preLaunchTask": "npm: watch:src"
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			]
 		},
-		{
-			"name": "Web Extension",
-			"type": "pwa-extensionHost",
-			"debugWebWorkerHost": true,
-			"request": "launch",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionDevelopmentKind=web"
-			],
-			"outFiles": [
-				"${workspaceFolder}/lib/**/*.js"
-			],
-			"preLaunchTask": "npm: watch:src"
-		}
 	]
 }
