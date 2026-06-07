@@ -1,13 +1,13 @@
 import { basename } from 'path';
 import type { ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
-import { type IMinimatch, Minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import type { FoldingRange, FoldingRangeProvider, ProviderResult, TextDocument } from 'vscode';
 import { FoldingProvider } from './folding-provider.js';
 import { Logger } from './utils/logger.js';
 
 type Route = {
 	label: string;
-	route: IMinimatch;
+	route: Minimatch;
 	provider: FoldingProvider;
 };
 

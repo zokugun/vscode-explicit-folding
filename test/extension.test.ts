@@ -1,8 +1,6 @@
-import fs from 'fs';
-import path from 'path';
+import fse from '@zokugun/fs-extra-plus/sync';
 import { type ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
 import { expect } from 'chai';
-import klaw from 'klaw-sync';
 import { FoldingRangeKind } from 'vscode';
 import YAML from 'yaml';
 import { FoldingProvider } from '../src/folding-provider.js';
@@ -24,11 +22,17 @@ function dehumanize(foldings: Range[]): Range[] {
 
 describe('fold', () => {
 	function prepare(file: string) {
-		const language = path.basename(path.dirname(file));
-		const name = path.basename(file).slice(0, path.basename(file).lastIndexOf('.'));
+		const language = fse.parentName(file);
+		const name = fse.leafName(file, 1);
 
 		it(`${language}.${name}`, () => {
-			const { config, foldings } = YAML.parse(fs.readFileSync(path.join(path.dirname(file), `${name}.yml`), 'utf8')) as { config: ExplicitFoldingConfig[]; foldings: Range[] };
+			const path = fse.join(fse.parentPath(file), `${name}.yml`);
+			const content = fse.readFile(path, 'utf8');
+			if(content.fails) {
+				throw content.error;
+			}
+
+			const { config, foldings } = YAML.parse(content.value) as { config: ExplicitFoldingConfig[]; foldings: Range[] };
 
 			const provider = new FoldingProvider(config, []);
 
@@ -47,13 +51,19 @@ describe('fold', () => {
 		});
 	}
 
-	const files = klaw(path.join(__dirname, '..', '..', 'test', 'fixtures'), {
-		nodir: true,
+	const files = fse.walk(fse.join(__dirname, '..', '..', 'test', 'fixtures'), {
+		absolute: true,
+		collect: true,
+		onlyFiles: true,
 		traverseAll: true,
 		filter: (item) => !item.path.endsWith('.yml'),
 	});
 
-	for(const file of files) {
+	if(files.fails) {
+		throw files.error;
+	}
+
+	for(const file of files.value) {
 		prepare(file.path);
 	}
 });
