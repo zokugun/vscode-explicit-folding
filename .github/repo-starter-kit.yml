@@ -11,3 +11,8 @@ migrate:
     "needs more info": S-needs-info
     question: T-question
     stale: S-stale
+extend:
+  categories:
+    - name: Show and tell
+      description: Show off something you've made
+      emoji: ':raised_hands:'
