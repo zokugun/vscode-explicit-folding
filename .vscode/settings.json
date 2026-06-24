@@ -5,6 +5,7 @@
 		"out/**": true,
 		"package-lock.json": true,
 		".test/**": true,
+		".vscode-test/**": true,
 	},
 	"taskExplorer.exclude": [
 		".husky",

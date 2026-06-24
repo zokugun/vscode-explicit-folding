@@ -28,7 +28,7 @@
 		"bundle": "ncc build out/extension --out lib",
 		"ci:lint": "zizmor .",
 		"ci:lint:fix": "zizmor . --fix=all",
-		"clean": "rimraf lib out .test *.vsix",
+		"clean": "rimraf lib out .test .vscode-test *.vsix",
 		"compile:src": "tsc -p src",
 		"lint": "xo",
 		"lint:all": "npm run lint:package && npm audit && npm run ci:lint && npm run lint",
@@ -60,11 +60,12 @@
 		"@types/chai": "5.2.3",
 		"@types/minimatch": "5.1.2",
 		"@types/mocha": "10.0.10",
-		"@types/node": "20.19.41",
+		"@types/node": "20.19.43",
 		"@types/vscode": "1.56.0",
 		"@vercel/ncc": "0.38.4",
 		"@vscode/test-cli": "0.0.12",
 		"@vscode/test-electron": "2.5.2",
+		"@vscode/vsce": "3.9.2",
 		"@zokugun/fs-extra-plus": "0.5.0",
 		"chai": "6.2.2",
 		"eslint-plugin-chai-friendly": "1.2.0",
@@ -78,16 +79,24 @@
 		"tsc-watch": "7.2.0",
 		"typescript": "5.9.3",
 		"xo": "0.60.0",
-		"yaml": "1.10.3"
+		"yaml": "2.9.0"
 	},
 	"overrides": {
 		"mocha": {
 			"diff": "8.0.3",
 			"serialize-javascript": "7.0.5"
 		},
+		"release-it": {
+			"undici": "7.28.0"
+		},
 		"terser-webpack-plugin": {
 			"serialize-javascript": "7.0.5"
 		}
+	},
+	"allowScripts": {
+		"@vscode/vsce-sign": true,
+		"fsevents": true,
+		"keytar": true
 	},
 	"activationEvents": [
 		"onStartupFinished",
