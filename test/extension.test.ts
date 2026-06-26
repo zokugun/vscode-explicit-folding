@@ -1,5 +1,6 @@
 import fse from '@zokugun/fs-extra-plus/sync';
-import { type ExplicitFoldingConfig } from '@zokugun/vscode.explicit-folding-api';
+import type api from '@zokugun/vscode.explicit-folding-api';
+import { xtry } from '@zokugun/xtry/sync';
 import { expect } from 'chai';
 import { FoldingRangeKind } from 'vscode';
 import YAML from 'yaml';
@@ -32,7 +33,12 @@ describe('fold', () => {
 				throw content.error;
 			}
 
-			const { config, foldings } = YAML.parse(content.value) as { config: ExplicitFoldingConfig[]; foldings: Range[] };
+			const document = xtry(() => YAML.parse(content.value) as unknown);
+			if(document.fails) {
+				throw document.error;
+			}
+
+			const { config, foldings } = document.value as { config: api.Rule[]; foldings: Range[] };
 
 			const provider = new FoldingProvider(config, []);
 

@@ -1,4 +1,4 @@
-import { type ExplicitFoldingConfig, type ExplicitFoldingHub } from '@zokugun/vscode.explicit-folding-api';
+import type api from '@zokugun/vscode.explicit-folding-api';
 import vscode from 'vscode';
 import pkg from '../package.json';
 import { nudge } from './commands/nudge.js';
@@ -19,7 +19,7 @@ const $disposable: Disposable = new Disposable();
 const $documents: vscode.TextDocument[] = [];
 const $hub = new FoldingHub(setupProviders);
 
-let $rules: Record<string, ExplicitFoldingConfig[]> = {};
+let $rules: Record<string, api.Rule[]> = {};
 let $useWildcard: Boolean = false;
 
 class MainProvider implements vscode.FoldingRangeProvider {
@@ -53,7 +53,7 @@ class MainProvider implements vscode.FoldingRangeProvider {
 
 		const mainProvider = buildProvider(language);
 
-		const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
+		const perFiles = config.get<Record<string, api.Rule[] | api.Rule | undefined> | undefined>('perFiles');
 		const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider) : mainProvider;
 
 		for(const scheme of [...SCHEMES, ...additionalSchemes]) {
@@ -86,7 +86,7 @@ function applyDependency(dependency: { language: string; index: number }, langua
 	$rules[language].splice(dependency.index, 0, ...$rules[dependency.language].map((rule) => ({ ...rule, name: `${dependency.language}${rule.name?.length ? `, ${rule.name}` : ''}` })));
 } // }}}
 
-function applyRules(data: ExplicitFoldingConfig | ExplicitFoldingConfig[] | undefined, rules: ExplicitFoldingConfig[]): void { // {{{
+function applyRules(data: api.Config | api.Config[] | undefined, rules: api.Config[]): void { // {{{
 	if(Array.isArray(data)) {
 		rules.push(...data);
 	}
@@ -95,7 +95,7 @@ function applyRules(data: ExplicitFoldingConfig | ExplicitFoldingConfig[] | unde
 	}
 } // }}}
 
-function buildDependencies(language: string, newRules: ExplicitFoldingConfig[], rules: ExplicitFoldingConfig[], dependencies: Record<string, Array<{ language: string; index: number }>>): ExplicitFoldingConfig[] { // {{{
+function buildDependencies(language: string, newRules: api.Rule[], rules: api.Rule[], dependencies: Record<string, Array<{ language: string; index: number }>>): api.Rule[] { // {{{
 	for(const rule of newRules) {
 		const depends = rule.include;
 
@@ -127,7 +127,7 @@ function buildProvider(language: string): FoldingProvider { // {{{
 	return new FoldingProvider($rules[language], $documents);
 } // }}}
 
-function buildRouter(perFiles: Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined>, mainProvider: FoldingProvider): RouteProvider { // {{{
+function buildRouter(perFiles: Record<string, api.Rule[] | api.Rule | undefined>, mainProvider: FoldingProvider): RouteProvider { // {{{
 	return new RouteProvider(perFiles, mainProvider, $documents, $rules);
 } // }}}
 
@@ -138,7 +138,7 @@ async function buildRules() { // {{{
 	const config = vscode.workspace.getConfiguration(CONFIG_KEY, null);
 	const dependencies: Record<string, Array<{ language: string; index: number }>> = {};
 
-	const globalRules = config.get<Record<string, ExplicitFoldingConfig | ExplicitFoldingConfig[]>>('rules') ?? {};
+	const globalRules = config.get<Record<string, api.Rule | api.Rule[]>>('rules') ?? {};
 
 	for(const key in globalRules) {
 		if(key.includes(',')) {
@@ -173,7 +173,7 @@ async function buildRules() { // {{{
 	}
 
 	for(const language of languages) {
-		const rules: ExplicitFoldingConfig[] = [];
+		const rules: api.Rule[] = [];
 
 		const hubRules = $hub.getRules(language);
 
@@ -189,7 +189,7 @@ async function buildRules() { // {{{
 				applyRules(globalRules['*'], $rules[language]);
 			}
 
-			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get<ExplicitFoldingConfig[]>('rules');
+			const langRules = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language }).get<api.Config[]>('rules');
 
 			applyRules(langRules, $rules[language]);
 
@@ -309,7 +309,7 @@ function setupProvidersWithoutProxy(): void { // {{{
 				const config = vscode.workspace.getConfiguration(CONFIG_KEY, { languageId: language });
 				const mainProvider = buildProvider(language);
 
-				const perFiles = config.get<Record<string, ExplicitFoldingConfig[] | ExplicitFoldingConfig | undefined> | undefined>('perFiles');
+				const perFiles = config.get<Record<string, api.Rule[] | api.Rule | undefined> | undefined>('perFiles');
 				const provider = hasValue(perFiles) ? buildRouter(perFiles!, mainProvider) : mainProvider;
 
 				const additionalSchemes = config.get<string[]>('additionalSchemes') ?? [];
@@ -374,7 +374,7 @@ async function showWhatsNewMessage(version: string) { // {{{
 	}
 } // }}}
 
-export async function activate(context: vscode.ExtensionContext): Promise<ExplicitFoldingHub> { // {{{
+export async function activate(context: vscode.ExtensionContext): Promise<api.Hub> { // {{{
 	await setupSettings(context);
 
 	Logger.setup(false);

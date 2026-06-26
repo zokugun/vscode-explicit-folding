@@ -28,7 +28,7 @@
 		"bundle": "ncc build out/extension --out lib",
 		"ci:lint": "zizmor .",
 		"ci:lint:fix": "zizmor . --fix=all",
-		"clean": "rimraf lib out .test .vscode-test *.vsix",
+		"clean": "rimraf .test .vscode-test lib out *.vsix",
 		"compile:src": "tsc -p src",
 		"lint": "xo",
 		"lint:all": "npm run lint:package && npm audit && npm run ci:lint && npm run lint",
@@ -50,7 +50,7 @@
 	"dependencies": {
 		"@zokugun/is-it-type": "0.8.1",
 		"@zokugun/regexp": "0.3.0",
-		"@zokugun/vscode.explicit-folding-api": "0.2.2",
+		"@zokugun/vscode.explicit-folding-api": "0.3.2",
 		"@zokugun/xtry": "0.11.6",
 		"minimatch": "5.1.9"
 	},
@@ -88,9 +88,6 @@
 		},
 		"release-it": {
 			"undici": "7.28.0"
-		},
-		"terser-webpack-plugin": {
-			"serialize-javascript": "7.0.5"
 		}
 	},
 	"allowScripts": {
