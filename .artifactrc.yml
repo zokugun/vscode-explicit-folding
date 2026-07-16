@@ -1,13 +1,13 @@
 $schema: https://raw.githubusercontent.com/zokugun/artifact/v0.12.0/schemas/v4/install.json
 artifacts:
   "@daiyam/artifact-lang-js":
-    version: 0.14.4
+    version: 0.14.7
     requires:
       - "20"
   "@daiyam/artifact-lang-ts":
-    version: 0.10.5
+    version: 0.10.6
   "@daiyam/artifact-vsx-ts":
-    version: 0.11.14
+    version: 0.11.17
     update:
       src/**:
         if_exists: skip
@@ -17,7 +17,7 @@ artifacts:
   "@daiyam/artifact-vsx-bundle-ncc":
     version: 0.4.2
   "@daiyam/artifact-vsx-test-mocha":
-    version: 0.1.2
+    version: 0.1.3
     features:
       - test
   "@daiyam/artifact-gh-issuehub":
