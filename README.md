@@ -375,6 +375,25 @@ Usages
 </pre>
             </td>
         </tr>
+        <tr>
+            <th>Helm</th>
+            <td>
+<pre>
+<code>"helm": [
+    {
+        "beginRegex": "\\{\\{-?\\s*if",
+        "middleRegex": "\\{\\{-?\\s*else",
+        "endRegex": "\\{\\{-?\\s*end"
+    },
+    {
+        "beginRegex": "\\{\\{-?\\s*(range|with|define|block)",
+        "middleRegex": "\\{\\{-?\\s*else",
+        "endRegex": "\\{\\{-?\\s*end"
+    }
+]</code>
+</pre>
+            </td>
+        </tr>
     </tbody>
 </table>
 
